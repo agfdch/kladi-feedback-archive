@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- saved from url=(0059)file:///C:/Users/YK/Downloads/kladi-feedback-archive_1.html -->
+<!-- saved from url=(0059)file:///C:/Users/YK/Downloads/kladi-feedback-archive_3.html -->
 <html lang="ko"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -211,7 +211,7 @@
 
 <div class="wrap">
   <div class="page-title">학부모 피드백 모음</div>
-  <div class="page-sub">박유경T · 그날그날 보낸 피드백을 모아둡니다</div>
+  <div class="page-sub">박유경T · 그날그날 보낸 피드백을 모아둡니다<br><span style="font-size:12px;">데이터는 이 브라우저에 저장됩니다.</span></div>
 
   <div class="toolbar">
     <input type="text" class="search-input" id="searchInput" placeholder="학생 이름으로 검색">
@@ -237,7 +237,7 @@
     </div>
   </div>
 
-  <div id="archiveList"><div class="empty-state">기록을 불러오지 못했습니다.</div></div>
+  <div id="archiveList"><div class="empty-state">아직 저장된 피드백이 없습니다. "+ 새 피드백"으로 추가해보세요.</div></div>
 </div>
 
 <script>
@@ -260,6 +260,21 @@ function toggleForm() {
   }
 }
 
+const STORE_KEY = 'kladi_feedback_archive_v1';
+
+function loadStore() {
+  try {
+    const raw = localStorage.getItem(STORE_KEY);
+    return raw ? JSON.parse(raw) : {};
+  } catch (e) {
+    return {};
+  }
+}
+
+function saveStore(store) {
+  localStorage.setItem(STORE_KEY, JSON.stringify(store));
+}
+
 async function saveEntry() {
   const name = document.getElementById('fName').value.trim();
   const date = document.getElementById('fDate').value;
@@ -274,8 +289,9 @@ async function saveEntry() {
   const key = 'feedback:' + id;
 
   try {
-    const result = await window.storage.set(key, JSON.stringify({ name: name, date: date, text: text }), false);
-    if (!result) throw new Error('save failed');
+    const store = loadStore();
+    store[key] = { name: name, date: date, text: text };
+    saveStore(store);
   } catch (e) {
     alert('저장에 실패했습니다. 다시 시도해주세요.');
     return;
@@ -288,7 +304,9 @@ async function saveEntry() {
 async function deleteEntry(key) {
   if (!confirm('이 피드백을 삭제할까요?')) return;
   try {
-    await window.storage.delete(key, false);
+    const store = loadStore();
+    delete store[key];
+    saveStore(store);
   } catch (e) {}
   loadArchive();
 }
@@ -309,18 +327,12 @@ let allEntries = [];
 
 async function loadArchive() {
   const listEl = document.getElementById('archiveList');
-  listEl.innerHTML = '<div class="empty-state">불러오는 중...</div>';
   try {
-    const listRes = await window.storage.list('feedback:', false);
-    const keys = (listRes && listRes.keys) ? listRes.keys.slice() : [];
-    const entries = [];
-    for (const k of keys) {
-      try {
-        const r = await window.storage.get(k, false);
-        const data = JSON.parse(r.value);
-        entries.push({ key: k, name: data.name, date: data.date, text: data.text });
-      } catch (e) {}
-    }
+    const store = loadStore();
+    const entries = Object.keys(store).map(function(k) {
+      const data = store[k];
+      return { key: k, name: data.name, date: data.date, text: data.text };
+    });
     entries.sort(function(a, b) { return (b.date + b.key).localeCompare(a.date + a.key); });
     allEntries = entries;
     renderArchive();
