@@ -161,7 +161,7 @@
     line-height: 1.6;
   }
 
-  .form-row textarea { min-height: 90px; resize: vertical; }
+  .form-row textarea { min-height: 240px; resize: vertical; line-height: 1.8; }
   .form-row input:focus, .form-row textarea:focus { outline: none; border-color: var(--accent); }
 
   .name-history {
@@ -370,6 +370,14 @@ document.getElementById('fDate').value = todayStr();
 
 let editingKey = null;
 
+function autoGrowText() {
+  const ta = document.getElementById('fText');
+  ta.style.height = 'auto';
+  ta.style.height = Math.max(ta.scrollHeight, 240) + 'px';
+}
+
+document.getElementById('fText').addEventListener('input', autoGrowText);
+
 function toggleForm(prefill) {
   const card = document.getElementById('formCard');
   const heading = document.getElementById('formHeading');
@@ -383,6 +391,7 @@ function toggleForm(prefill) {
     document.getElementById('fName').value = prefill.name;
     document.getElementById('fText').value = prefill.text;
     document.getElementById('fDate').value = prefill.date;
+    autoGrowText();
     document.getElementById('fText').focus();
   } else if (show) {
     editingKey = null;
@@ -390,6 +399,7 @@ function toggleForm(prefill) {
     document.getElementById('fName').value = '';
     document.getElementById('fText').value = '';
     document.getElementById('fDate').value = todayStr();
+    autoGrowText();
     document.getElementById('fName').focus();
   } else {
     editingKey = null;
