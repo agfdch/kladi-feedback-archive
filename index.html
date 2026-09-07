@@ -1,631 +1,654 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>학부모 피드백 모음 · 클라디수학학원</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Pretendard:wght@400;500;600;700&display=swap">
 <style>
-  @font-face {
-    font-family: 'Pretendard';
-    src: url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/woff2/PretendardVariable.woff2') format('woff2-variations');
-    font-weight: 45 920;
-  }
-  @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@500;700&display=swap');
-
   :root{
-    --paper: #fbf6ee;
-    --ink: #2c2416;
-    --ink-soft: #6b6152;
-    --rule: #e6dcc8;
-    --accent: #d97a2e;
-    --accent-deep: #a85a1e;
-    --sage: #74805f;
-    --sage-bg: #eef0e6;
+    --bg:#ECE4D4;
+    --surface:#FFFDF9;
+    --surface-2:#F5EFE2;
+    --ink:#2C2416;
+    --muted:#8C8270;
+    --faint:#B3A98F;
+    --border:#E6DCC8;
+    --accent:#D97A2E;
+    --accent-ink:#FFFFFF;
+    --accent-soft:#F7E4D2;
+    --sage:#74805F;
+    --sage-soft:#EEF0E6;
+    --sage-ink:#4E5740;
+    --shadow: 0 1px 2px rgba(44,36,22,0.04), 0 8px 24px -14px rgba(44,36,22,0.28);
   }
-
-  * { box-sizing: border-box; }
-
-  html, body {
-    margin: 0;
-    padding: 0;
-    background: #ece4d4;
-    font-family: 'Pretendard', -apple-system, sans-serif;
-    color: var(--ink);
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#1C1811;
+      --surface:#252017;
+      --surface-2:#2C2619;
+      --ink:#F1E9D8;
+      --muted:#A79C84;
+      --faint:#6E6653;
+      --border:#3A3325;
+      --accent:#E8934F;
+      --accent-ink:#211505;
+      --accent-soft:#3A2A17;
+      --sage:#9BAA84;
+      --sage-soft:#2B301F;
+      --sage-ink:#D8E2C6;
+      --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 8px 24px -14px rgba(0,0,0,0.6);
+    }
   }
-
-  .wrap {
-    max-width: 880px;
-    margin: 0 auto;
-    padding: 40px 24px 60px;
+  :root[data-theme="dark"]{
+    --bg:#1C1811; --surface:#252017; --surface-2:#2C2619; --ink:#F1E9D8;
+    --muted:#A79C84; --faint:#6E6653; --border:#3A3325;
+    --accent:#E8934F; --accent-ink:#211505; --accent-soft:#3A2A17;
+    --sage:#9BAA84; --sage-soft:#2B301F; --sage-ink:#D8E2C6;
+    --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 8px 24px -14px rgba(0,0,0,0.6);
   }
-
-  .layout {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--ink);
+    font-family:'Pretendard',-apple-system,'Malgun Gothic',sans-serif;
+    padding:40px 20px 80px;
   }
+  .wrap{max-width:760px;margin:0 auto;display:flex;flex-direction:column;gap:22px;}
+  h1{font-size:24px;margin:0;font-weight:700;}
+  .sub{font-size:13.5px;color:var(--muted);margin:6px 0 0;line-height:1.6;}
 
-  .sidebar {
-    width: 100%;
+  .toolbar{display:flex;gap:10px;}
+  input[type=text], input[type=date], input[type=time], textarea, select{
+    font-family:inherit;
+    font-size:14px;
+    color:var(--ink);
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:12px;
+    padding:10px 14px;
   }
+  input[type=text]{border-radius:100px;flex:1;}
+  input:focus, textarea:focus, select:focus{outline:2px solid var(--accent);outline-offset:1px;}
 
-  .sidebar-title {
-    font-size: 13px;
-    color: var(--ink-soft);
-    font-weight: 600;
-    margin-bottom: 10px;
+  button{
+    font-family:inherit;
+    font-size:14px;
+    font-weight:600;
+    border:none;
+    cursor:pointer;
+    border-radius:100px;
+    padding:10px 18px;
+    background:var(--surface-2);
+    color:var(--ink);
   }
+  button.primary{background:var(--accent);color:var(--accent-ink);}
+  button.ghost{background:transparent;color:var(--muted);padding:6px 12px;}
+  button.ghost:hover{color:var(--ink);}
+  button:disabled{opacity:0.5;cursor:default;}
 
-  .student-list {
-    display: flex;
-    flex-direction: row;
-    flex-wrap: wrap;
-    gap: 8px;
+  /* Tabs */
+  .tabs{display:flex;gap:6px;border-bottom:1px solid var(--border);}
+  .tab-btn{
+    background:transparent;border-radius:10px 10px 0 0;padding:10px 16px;
+    color:var(--muted);font-weight:600;
   }
+  .tab-btn.active{color:var(--ink);background:var(--surface);}
+  .panel{display:none;flex-direction:column;gap:18px;}
+  .panel.active{display:flex;}
 
-  .student-item {
-    padding: 7px 16px;
-    border-radius: 100px;
-    border: 1px solid var(--rule);
-    cursor: pointer;
-    font-size: 14px;
-    color: var(--ink-soft);
-    background: #fffdf9;
-    text-align: left;
-    font-family: 'Pretendard', sans-serif;
-    white-space: nowrap;
+  /* Chips */
+  .chip-label{font-size:12.5px;font-weight:700;color:var(--muted);letter-spacing:0.02em;}
+  .chips{display:flex;flex-wrap:wrap;gap:8px;}
+  .chip{
+    background:var(--surface);border:0.7px solid var(--border);color:var(--faint);
+    padding:7px 14px;font-size:13.5px;font-weight:500;
   }
-  .student-item:hover { color: var(--accent-deep); border-color: var(--accent); }
-  .student-item.active { background: var(--sage-bg); color: var(--accent-deep); font-weight: 700; border-color: var(--sage); }
-  .student-all-btn {
-    font-weight: 700;
+  .chip.has-data{color:var(--ink);}
+  .chip.active{background:var(--sage-soft);border-color:var(--sage);color:var(--sage-ink);font-weight:700;}
+
+  /* Feedback list */
+  .date-group{border-top:1px solid var(--border);}
+  .date-head{
+    display:flex;align-items:center;gap:8px;padding:14px 2px;cursor:pointer;
+    font-weight:700;color:var(--accent);
   }
-
-  .student-item.no-entry { color: #c2b8a3; }
-  .student-item.no-entry:hover { color: var(--accent-deep); }
-
-  .main-col { flex: 1; min-width: 0; }
-
-  .page-title {
-    font-family: 'Noto Serif KR', serif;
-    font-weight: 700;
-    font-size: 22px;
-    margin: 0 0 6px;
+  .date-head .count{color:var(--muted);font-weight:500;font-size:13px;}
+  .date-arrow{font-size:12px;width:14px;}
+  .entries{display:flex;flex-direction:column;gap:14px;padding:0 2px 16px;}
+  .entry{
+    background:var(--surface);border:1px solid var(--border);border-radius:14px;
+    padding:16px 18px;box-shadow:var(--shadow);
   }
+  .entry-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px;}
+  .entry-name{font-weight:700;font-size:15px;}
+  .entry-actions{display:flex;gap:4px;}
+  .entry-actions button{padding:5px 10px;font-size:12.5px;font-weight:500;}
+  .entry-text{white-space:pre-wrap;line-height:1.65;font-size:14px;color:var(--ink);}
 
-  .page-sub {
-    font-size: 13.5px;
-    color: var(--ink-soft);
-    margin-bottom: 20px;
+  /* Add / edit form */
+  .form-card{
+    background:var(--surface);border:1px solid var(--border);border-radius:16px;
+    padding:20px;display:flex;flex-direction:column;gap:14px;box-shadow:var(--shadow);
   }
+  .form-title{font-weight:700;color:var(--accent);font-size:14px;}
+  .field label{display:block;font-size:12.5px;font-weight:700;color:var(--muted);margin-bottom:6px;}
+  .field textarea{width:100%;min-height:120px;resize:vertical;border-radius:12px;}
+  .field input{width:100%;}
+  .form-row{display:flex;gap:12px;flex-wrap:wrap;}
+  .form-row .field{flex:1;min-width:140px;}
+  .form-actions{display:flex;justify-content:flex-end;gap:8px;}
 
-  .toolbar {
-    display: flex;
-    gap: 10px;
-    margin-bottom: 24px;
+  /* Calendar */
+  .cal-head{display:flex;align-items:center;justify-content:space-between;}
+  .cal-title{font-size:17px;font-weight:700;font-variant-numeric:tabular-nums;}
+  .cal-nav{display:flex;gap:6px;}
+  .cal-nav button{padding:6px 12px;}
+  .cal-grid{
+    display:grid;grid-template-columns:repeat(7,1fr);gap:6px;
   }
-
-  .search-input {
-    flex: 1;
-    padding: 9px 12px;
-    border-radius: 100px;
-    border: 1px solid var(--rule);
-    background: #fffdf9;
-    font-size: 14px;
-    font-family: 'Pretendard', sans-serif;
-    color: var(--ink);
+  .cal-dow{text-align:center;font-size:12px;font-weight:700;color:var(--muted);padding-bottom:4px;}
+  .cal-cell{
+    aspect-ratio:1/1;border-radius:12px;background:var(--surface);border:1px solid var(--border);
+    padding:6px;display:flex;flex-direction:column;gap:4px;cursor:pointer;min-height:56px;
   }
-  .search-input:focus { outline: none; border-color: var(--accent); }
+  .cal-cell.empty{background:transparent;border-color:transparent;cursor:default;}
+  .cal-cell.today{border-color:var(--accent);}
+  .cal-cell.selected{background:var(--sage-soft);border-color:var(--sage);}
+  .cal-daynum{font-size:12.5px;font-weight:600;font-variant-numeric:tabular-nums;color:var(--muted);}
+  .cal-cell.today .cal-daynum{color:var(--accent);}
+  .cal-dots{display:flex;gap:3px;flex-wrap:wrap;}
+  .dot{width:7px;height:7px;border-radius:50%;}
+  .dot.gwanli{background:var(--accent);}
+  .dot.gyeolseok{background:var(--sage);}
 
-  .add-btn {
-    background: var(--accent);
-    color: #fff;
-    border: none;
-    border-radius: 100px;
-    padding: 9px 20px;
-    font-size: 14px;
-    font-family: 'Pretendard', sans-serif;
-    cursor: pointer;
-    white-space: nowrap;
+  .selected-date-title{font-size:15px;font-weight:700;}
+  .bogang-list{display:flex;flex-direction:column;gap:10px;}
+  .bogang-row{
+    display:flex;align-items:center;gap:12px;background:var(--surface);
+    border:1px solid var(--border);border-radius:12px;padding:12px 14px;box-shadow:var(--shadow);
   }
-  .add-btn:hover { background: var(--accent-deep); }
-
-  .form-card {
-    display: none;
-    background: var(--paper);
-    border-radius: 6px;
-    padding: 20px;
-    margin-bottom: 24px;
-    box-shadow: 0 1px 3px rgba(44,36,22,0.08);
+  .type-chip{
+    flex:none;font-size:11.5px;font-weight:700;border-radius:100px;padding:4px 10px;
   }
+  .type-chip.gwanli{background:var(--accent-soft);color:var(--accent);}
+  .type-chip.gyeolseok{background:var(--sage-soft);color:var(--sage-ink);}
+  .bogang-body{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px;}
+  .bogang-name{font-weight:700;font-size:14.5px;}
+  .bogang-meta{font-size:12.5px;color:var(--muted);font-variant-numeric:tabular-nums;}
+  .bogang-memo{font-size:13px;color:var(--muted);}
+  .empty-note{color:var(--faint);font-size:13.5px;padding:18px 2px;}
 
-  .form-row { margin-bottom: 12px; }
+  datalist{}
 
-  .form-row label {
-    display: block;
-    font-size: 12px;
-    color: var(--sage);
-    font-weight: 600;
-    margin-bottom: 5px;
+  /* Confirm modal */
+  .modal-overlay{
+    position:fixed;inset:0;background:rgba(28,24,17,0.45);
+    display:flex;align-items:center;justify-content:center;padding:20px;z-index:50;
   }
-
-  .form-row input[type=text], .form-row input[type=date], .form-row textarea {
-    width: 100%;
-    padding: 9px 11px;
-    border-radius: 4px;
-    border: 1px solid var(--rule);
-    background: #fffdf9;
-    color: var(--ink);
-    font-size: 14.5px;
-    font-family: 'Pretendard', sans-serif;
-    line-height: 1.6;
+  .modal-card{
+    background:var(--surface);border-radius:18px;border:1px solid var(--border);
+    padding:22px;max-width:420px;width:100%;box-shadow:var(--shadow);
+    display:flex;flex-direction:column;gap:14px;
   }
+  .modal-title{font-weight:700;font-size:15.5px;}
+  .modal-hint{font-size:12.5px;color:var(--muted);line-height:1.6;background:var(--surface-2);border-radius:10px;padding:10px 12px;}
+  .modal-actions{display:flex;justify-content:flex-end;gap:8px;}
 
-  .form-row textarea { min-height: 240px; resize: vertical; line-height: 1.8; }
-  .form-row input:focus, .form-row textarea:focus { outline: none; border-color: var(--accent); }
-
-  .name-history {
-    display: none;
-    background: var(--sage-bg);
-    border-radius: 4px;
-    padding: 10px 12px;
-    margin: -4px 0 12px;
-  }
-
-  .name-history-label {
-    font-size: 11.5px;
-    color: var(--sage);
-    font-weight: 600;
-    margin-bottom: 6px;
-  }
-
-  .name-history-item {
-    font-size: 13px;
-    line-height: 1.6;
-    color: #3d4331;
-    padding: 6px 0;
-    border-top: 1px dashed var(--rule);
-  }
-  .name-history-item:first-child { border-top: none; }
-
-  .name-history-date {
-    font-size: 11px;
-    color: var(--sage);
-    font-weight: 600;
-    margin-right: 4px;
-  }
-
-  .form-actions { display: flex; gap: 8px; justify-content: flex-end; }
-
-  .btn-secondary {
-    background: transparent;
-    border: 1px solid var(--rule);
-    color: var(--ink-soft);
-    border-radius: 100px;
-    padding: 8px 18px;
-    font-size: 13.5px;
-    cursor: pointer;
-    font-family: 'Pretendard', sans-serif;
-  }
-  .btn-secondary:hover { border-color: var(--accent); color: var(--accent-deep); }
-
-  .btn-primary {
-    background: var(--accent);
-    color: #fff;
-    border: none;
-    border-radius: 100px;
-    padding: 8px 20px;
-    font-size: 13.5px;
-    cursor: pointer;
-    font-family: 'Pretendard', sans-serif;
-  }
-  .btn-primary:hover { background: var(--accent-deep); }
-
-  .day-group { margin-bottom: 12px; }
-
-  .day-label {
-    font-family: 'Noto Serif KR', serif;
-    font-weight: 700;
-    font-size: 15px;
-    color: var(--accent-deep);
-    margin-bottom: 0;
-    padding: 10px 4px;
-    border-bottom: 1px solid var(--rule);
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    -webkit-user-select: none;
-    user-select: none;
-  }
-  .day-label:hover { color: var(--accent); }
-
-  .day-toggle-icon {
-    font-size: 11px;
-    color: var(--ink-soft);
-    width: 12px;
-    display: inline-block;
-  }
-
-  .day-count {
-    font-family: 'Pretendard', sans-serif;
-    font-weight: 500;
-    font-size: 12px;
-    color: var(--ink-soft);
-  }
-
-  .day-body {
-    padding-top: 12px;
-  }
-  .day-group.collapsed .day-body { display: none; }
-
-  .entry-card {
-    background: var(--paper);
-    border-radius: 6px;
-    padding: 16px 18px;
-    margin-bottom: 10px;
-    box-shadow: 0 1px 3px rgba(44,36,22,0.08);
-  }
-
-  .entry-head {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 8px;
-  }
-
-  .entry-name {
-    font-family: 'Noto Serif KR', serif;
-    font-weight: 700;
-    font-size: 15.5px;
-    color: var(--ink);
-  }
-
-  .entry-actions { display: flex; gap: 6px; }
-
-  .mini-btn {
-    background: transparent;
-    border: 1px solid var(--rule);
-    color: var(--ink-soft);
-    border-radius: 100px;
-    padding: 3px 11px;
-    font-size: 12px;
-    cursor: pointer;
-    font-family: 'Pretendard', sans-serif;
-  }
-  .mini-btn:hover { border-color: var(--accent); color: var(--accent-deep); }
-  .mini-btn.copied { color: var(--sage); border-color: var(--sage); }
-
-  .entry-text {
-    font-size: 14px;
-    line-height: 1.75;
-    white-space: pre-line;
-    color: var(--ink);
-  }
-
-  .empty-state {
-    text-align: center;
-    color: var(--ink-soft);
-    font-size: 13.5px;
-    padding: 30px 0;
+  @media (max-width:520px){
+    .cal-cell{min-height:44px;padding:4px;}
+    .cal-daynum{font-size:11px;}
   }
 </style>
 </head>
 <body>
-
 <div class="wrap">
-  <div class="page-title">학부모 피드백 모음</div>
-  <div class="page-sub">박유경T · 그날그날 보낸 피드백을 모아둡니다<br><span style="font-size:12px;">데이터는 이 브라우저에 저장됩니다.</span></div>
 
-  <div class="toolbar">
-    <input type="text" class="search-input" id="searchInput" placeholder="학생 이름으로 검색">
-    <button class="add-btn" onclick="toggleForm()">+ 새 피드백</button>
+  <div>
+    <h1>학부모 피드백 모음</h1>
+    <p class="sub">박유경T · 그날그날 보낸 피드백을 모아둡니다<br>데이터는 이 브라우저에 저장됩니다.</p>
   </div>
 
-  <div class="form-card" id="formCard">
-    <div class="form-row">
-      <label id="formHeading" style="font-size:13px;color:var(--accent-deep);font-weight:700;">새 피드백</label>
+  <div class="tabs">
+    <button class="tab-btn active" data-tab="feedback">피드백</button>
+    <button class="tab-btn" data-tab="bogang">보강 관리</button>
+  </div>
+
+  <!-- ===== FEEDBACK PANEL ===== -->
+  <div class="panel active" id="panel-feedback">
+    <div class="toolbar">
+      <input type="text" id="fb-search" placeholder="학생 이름으로 검색">
+      <button class="primary" id="fb-add-open">+ 새 피드백</button>
     </div>
-    <div class="form-row">
-      <label>학생 이름</label>
-      <input type="text" id="fName" placeholder="예: 유지아 (입력 후 Enter)">
+
+    <div id="fb-form-slot"></div>
+
+    <div>
+      <div class="chip-label">학생 목록</div>
+      <div class="chips" id="fb-chips" style="margin-top:8px;"></div>
     </div>
-    <div class="name-history" id="nameHistory">
-      <div class="name-history-label">이 학생의 지난 기록</div>
-      <div id="nameHistoryList"></div>
+
+    <div id="fb-list"></div>
+  </div>
+
+  <!-- ===== BOGANG PANEL ===== -->
+  <div class="panel" id="panel-bogang">
+    <div class="toolbar">
+      <button class="ghost" id="bg-today">오늘로 이동</button>
+      <div style="flex:1;"></div>
+      <button class="primary" id="bg-add-open">+ 보강 등록</button>
     </div>
-    <div class="form-row">
-      <label>날짜</label>
-      <input type="date" id="fDate">
+
+    <div id="bg-form-slot"></div>
+
+    <div class="form-card" style="gap:16px;">
+      <div class="cal-head">
+        <div class="cal-nav"><button id="cal-prev">‹</button></div>
+        <div class="cal-title" id="cal-title"></div>
+        <div class="cal-nav"><button id="cal-next">›</button></div>
+      </div>
+      <div class="cal-grid" id="cal-dow"></div>
+      <div class="cal-grid" id="cal-grid"></div>
     </div>
-    <div class="form-row">
-      <label>피드백 내용</label>
-      <textarea id="fText" placeholder="정리된 피드백 문구를 붙여넣으세요"></textarea>
-    </div>
-    <div class="form-actions">
-      <button class="btn-secondary" onclick="toggleForm()">취소</button>
-      <button class="btn-primary" onclick="saveEntry()">저장</button>
+
+    <div>
+      <div class="selected-date-title" id="bg-selected-title"></div>
+      <div class="bogang-list" id="bg-list" style="margin-top:10px;"></div>
     </div>
   </div>
 
-  <div class="layout">
-    <div class="sidebar">
-      <div class="sidebar-title">학생 목록</div>
-      <button class="student-item student-all-btn" id="allBtn" onclick="selectStudent(null)" style="margin-bottom:6px;">전체</button>
-      <div class="student-list" id="studentList"></div>
-    </div>
-    <div class="main-col">
-      <div id="archiveList"><div class="empty-state">불러오는 중...</div></div>
-    </div>
-  </div>
 </div>
 
 <script>
-function todayStr() {
-  const d = new Date();
-  return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
-}
+  const STUDENTS = ["김리사","김유주","김이준","박하윤","배경윤","배은빈","서민경","엄승유","여채율","유소율","유이재","유지아","이서현","이아영","이아진","이준철","이준현","이채원B","이환","장서은","전윤아","전재우","정지현","최준서","최태훈","홍제인","황유찬"];
+  const FEEDBACK_KEY = 'kladi_feedback_archive_v1';
+  const BOGANG_KEY = 'kladi_bogang_v1';
+  const DOW = ['일','월','화','수','목','금','토'];
 
-document.getElementById('fDate').value = todayStr();
+  const loadObj = (key) => { try { return JSON.parse(localStorage.getItem(key)) || {}; } catch(e){ return {}; } };
+  const saveObj = (key, obj) => localStorage.setItem(key, JSON.stringify(obj));
+  const todayStr = () => new Date().toISOString().slice(0,10);
+  const uid = () => 'id_' + Date.now() + '_' + Math.random().toString(36).slice(2,8);
+  const fmtDate = (d) => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  const dowLabel = (dateStr) => DOW[new Date(dateStr+'T00:00:00').getDay()];
 
-let editingKey = null;
-
-function autoGrowText() {
-  const ta = document.getElementById('fText');
-  ta.style.height = 'auto';
-  ta.style.height = Math.max(ta.scrollHeight, 240) + 'px';
-}
-
-document.getElementById('fText').addEventListener('input', autoGrowText);
-
-function toggleForm(prefill) {
-  const card = document.getElementById('formCard');
-  const heading = document.getElementById('formHeading');
-  const show = prefill ? true : card.style.display !== 'block';
-  card.style.display = show ? 'block' : 'none';
-  document.getElementById('nameHistory').style.display = 'none';
-
-  if (show && prefill) {
-    editingKey = prefill.key;
-    heading.textContent = prefill.name + ' 피드백 수정';
-    document.getElementById('fName').value = prefill.name;
-    document.getElementById('fText').value = prefill.text;
-    document.getElementById('fDate').value = prefill.date;
-    autoGrowText();
-    document.getElementById('fText').focus();
-  } else if (show) {
-    editingKey = null;
-    heading.textContent = '새 피드백';
-    document.getElementById('fName').value = '';
-    document.getElementById('fText').value = '';
-    document.getElementById('fDate').value = todayStr();
-    autoGrowText();
-    document.getElementById('fName').focus();
-  } else {
-    editingKey = null;
+  // ---------- datalist for student names ----------
+  function ensureDatalist(){
+    if(document.getElementById('student-list')) return;
+    const dl = document.createElement('datalist');
+    dl.id = 'student-list';
+    dl.innerHTML = STUDENTS.map(s=>`<option value="${s}">`).join('');
+    document.body.appendChild(dl);
   }
-}
+  ensureDatalist();
 
-function editEntry(key) {
-  const entry = allEntries.find(function(e) { return e.key === key; });
-  if (!entry) return;
-  toggleForm({ key: entry.key, name: entry.name, date: entry.date, text: entry.text });
-  window.scrollTo({ top: 0, behavior: 'smooth' });
-}
-
-function showNameHistory(name) {
-  const panel = document.getElementById('nameHistory');
-  const listEl = document.getElementById('nameHistoryList');
-  if (!name) {
-    panel.style.display = 'none';
-    return;
-  }
-  const matches = allEntries.filter(function(e) {
-    return e.name === name && e.key !== editingKey;
-  });
-  if (matches.length === 0) {
-    listEl.innerHTML = '<div class="name-history-item">지난 기록이 없습니다.</div>';
-  } else {
-    listEl.innerHTML = matches.map(function(e) {
-      const escText = e.text.replace(/</g, '&lt;');
-      return '<div class="name-history-item"><span class="name-history-date">' + e.date + '</span>' + escText.replace(/\n/g, '<br>') + '</div>';
-    }).join('');
-  }
-  panel.style.display = 'block';
-}
-
-document.getElementById('fName').addEventListener('keydown', function(ev) {
-  if (ev.key === 'Enter') {
-    ev.preventDefault();
-    showNameHistory(this.value.trim());
-  }
-});
-
-document.getElementById('fName').addEventListener('input', function() {
-  document.getElementById('nameHistory').style.display = 'none';
-});
-
-const STORE_KEY = 'kladi_feedback_archive_v1';
-
-function loadStore() {
-  try {
-    const raw = localStorage.getItem(STORE_KEY);
-    return raw ? JSON.parse(raw) : {};
-  } catch (e) {
-    return {};
-  }
-}
-
-function saveStore(store) {
-  localStorage.setItem(STORE_KEY, JSON.stringify(store));
-}
-
-async function saveEntry() {
-  const name = document.getElementById('fName').value.trim();
-  const date = document.getElementById('fDate').value;
-  const text = document.getElementById('fText').value.trim();
-
-  if (!name || !text || !date) {
-    alert('학생 이름, 날짜, 피드백 내용을 모두 입력해주세요.');
-    return;
-  }
-
-  const key = editingKey || ('feedback:' + date + '-' + Date.now());
-
-  try {
-    const store = loadStore();
-    store[key] = { name: name, date: date, text: text };
-    saveStore(store);
-  } catch (e) {
-    alert('저장에 실패했습니다. 다시 시도해주세요.');
-    return;
-  }
-
-  editingKey = null;
-  toggleForm();
-  loadArchive();
-}
-
-async function deleteEntry(key) {
-  if (!confirm('이 피드백을 삭제할까요?')) return;
-  try {
-    const store = loadStore();
-    delete store[key];
-    saveStore(store);
-  } catch (e) {}
-  loadArchive();
-}
-
-function copyEntry(text, btn) {
-  navigator.clipboard.writeText(text).then(function() {
-    const original = btn.textContent;
-    btn.textContent = '복사됨';
-    btn.classList.add('copied');
-    setTimeout(function() {
-      btn.textContent = original;
-      btn.classList.remove('copied');
-    }, 1500);
-  });
-}
-
-let allEntries = [];
-let activeStudent = null;
-const expandedDates = new Set();
-
-async function loadArchive() {
-  const listEl = document.getElementById('archiveList');
-  try {
-    const store = loadStore();
-    const entries = Object.keys(store).map(function(k) {
-      const data = store[k];
-      return { key: k, name: data.name, date: data.date, text: data.text };
+  // ================= TABS =================
+  document.querySelectorAll('.tab-btn').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+      document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById('panel-'+btn.dataset.tab).classList.add('active');
+      if(btn.dataset.tab === 'bogang') renderBogang();
     });
-    entries.sort(function(a, b) { return (b.date + b.key).localeCompare(a.date + a.key); });
-    allEntries = entries;
-    renderStudentList();
-    renderArchive();
-  } catch (e) {
-    listEl.innerHTML = '<div class="empty-state">기록을 불러오지 못했습니다.</div>';
-  }
-}
-
-const ALL_STUDENTS = ["서민경", "이서현", "장서은", "황유찬", "전재우", "이환", "홍제인", "박하윤", "이아영", "유지아", "김리사", "이아진", "엄승유", "최준서", "정지현", "이준철", "전윤아", "이준현", "김이준", "여채율", "유소율", "유이재", "최태훈", "김유주", "배경윤", "이채원B", "배은빈"];
-
-function renderStudentList() {
-  const el = document.getElementById('studentList');
-  const allBtn = document.getElementById('allBtn');
-  allBtn.classList.toggle('active', activeStudent === null);
-  const names = ALL_STUDENTS.slice().sort(function(a, b) { return a.localeCompare(b, 'ko'); });
-
-  let html = '';
-  names.forEach(function(name) {
-    const escName = name.replace(/'/g, "\\'");
-    const hasEntries = allEntries.some(function(e) { return e.name === name; });
-    html += '<button class="student-item' + (activeStudent === name ? ' active' : '') + (hasEntries ? '' : ' no-entry') + '" onclick="selectStudent(\'' + escName + '\')">' + name + '</button>';
   });
-  el.innerHTML = html;
-}
 
-function selectStudent(name) {
-  activeStudent = name;
-  document.getElementById('searchInput').value = '';
-  if (name !== null) {
-    allEntries.filter(function(e) { return e.name === name; }).forEach(function(e) {
-      expandedDates.add(e.date);
+  // ================= FEEDBACK TAB =================
+  let fbFilter = null;
+  let fbSearch = '';
+  let fbOpenDates = new Set();
+
+  function renderFeedbackChips(){
+    const data = loadObj(FEEDBACK_KEY);
+    const counts = {};
+    Object.values(data).forEach(e => counts[e.name] = (counts[e.name]||0) + 1);
+    const chips = document.getElementById('fb-chips');
+    chips.innerHTML = '';
+    const allChip = document.createElement('button');
+    allChip.className = 'chip has-data' + (fbFilter===null ? ' active' : '');
+    allChip.textContent = '전체';
+    allChip.onclick = () => { fbFilter = null; renderFeedbackChips(); renderFeedbackList(); };
+    chips.appendChild(allChip);
+    STUDENTS.forEach(name=>{
+      const c = document.createElement('button');
+      c.className = 'chip' + (counts[name] ? ' has-data' : '') + (fbFilter===name ? ' active' : '');
+      c.textContent = name;
+      c.onclick = () => { fbFilter = name; renderFeedbackChips(); renderFeedbackList(); };
+      chips.appendChild(c);
     });
   }
-  renderStudentList();
-  renderArchive();
-}
 
-function toggleDay(date) {
-  if (expandedDates.has(date)) {
-    expandedDates.delete(date);
-  } else {
-    expandedDates.add(date);
-  }
-  renderArchive();
-}
-
-function renderArchive() {
-  const listEl = document.getElementById('archiveList');
-  const query = document.getElementById('searchInput').value.trim();
-  let filtered = allEntries;
-  if (activeStudent !== null) {
-    filtered = filtered.filter(function(e) { return e.name === activeStudent; });
-  } else if (query) {
-    filtered = filtered.filter(function(e) { return e.name.includes(query); });
-  }
-
-  if (filtered.length === 0) {
-    listEl.innerHTML = '<div class="empty-state">' + (query || activeStudent ? '검색 결과가 없습니다.' : '아직 저장된 피드백이 없습니다. "+ 새 피드백"으로 추가해보세요.') + '</div>';
-    return;
-  }
-
-  const groups = {};
-  const order = [];
-  filtered.forEach(function(e) {
-    if (!groups[e.date]) { groups[e.date] = []; order.push(e.date); }
-    groups[e.date].push(e);
-  });
-
-  let html = '';
-  order.forEach(function(date) {
-    const isOpen = expandedDates.has(date);
-    html += '<div class="day-group' + (isOpen ? '' : ' collapsed') + '">' +
-      '<div class="day-label" onclick="toggleDay(\'' + date + '\')">' +
-        '<span class="day-toggle-icon">' + (isOpen ? '▾' : '▸') + '</span>' +
-        '<span>' + date + '</span>' +
-        '<span class="day-count">' + groups[date].length + '건</span>' +
-      '</div>' +
-      '<div class="day-body">';
-    groups[date].forEach(function(e) {
-      const escText = e.text.replace(/</g, '&lt;');
-      html +=
-        '<div class="entry-card">' +
-          '<div class="entry-head">' +
-            '<div class="entry-name">' + e.name + '</div>' +
-            '<div class="entry-actions">' +
-              '<button class="mini-btn" onclick=\'copyEntry(document.getElementById("txt-' + e.key + '").textContent, this)\'>복사</button>' +
-              '<button class="mini-btn" onclick="editEntry(\'' + e.key + '\')">수정</button>' +
-              '<button class="mini-btn" onclick="deleteEntry(\'' + e.key + '\')">삭제</button>' +
-            '</div>' +
-          '</div>' +
-          '<div class="entry-text" id="txt-' + e.key + '">' + escText + '</div>' +
-        '</div>';
+  function renderFeedbackList(){
+    const data = loadObj(FEEDBACK_KEY);
+    const list = document.getElementById('fb-list');
+    let entries = Object.entries(data).map(([id,e])=>({id,...e}));
+    if(fbFilter) entries = entries.filter(e=>e.name===fbFilter);
+    if(fbSearch) entries = entries.filter(e=>e.name.includes(fbSearch));
+    const byDate = {};
+    entries.forEach(e=>{ (byDate[e.date] = byDate[e.date]||[]).push(e); });
+    const dates = Object.keys(byDate).sort((a,b)=>b.localeCompare(a));
+    list.innerHTML = '';
+    if(dates.length===0){ list.innerHTML = '<div class="empty-note">해당하는 피드백이 없어요.</div>'; return; }
+    dates.forEach(date=>{
+      const group = document.createElement('div');
+      group.className = 'date-group';
+      const open = fbOpenDates.has(date);
+      const head = document.createElement('div');
+      head.className = 'date-head';
+      head.innerHTML = `<span class="date-arrow">${open?'▾':'▸'}</span> ${date} <span class="count">${byDate[date].length}건</span>`;
+      head.onclick = () => { open ? fbOpenDates.delete(date) : fbOpenDates.add(date); renderFeedbackList(); };
+      group.appendChild(head);
+      if(open){
+        const wrap = document.createElement('div');
+        wrap.className = 'entries';
+        byDate[date].forEach(e=>{
+          wrap.appendChild(renderFeedbackEntry(e));
+        });
+        group.appendChild(wrap);
+      }
+      list.appendChild(group);
     });
-    html += '</div></div>';
-  });
-  listEl.innerHTML = html;
-}
+  }
 
-document.getElementById('searchInput').addEventListener('input', function() {
-  if (this.value.trim()) { activeStudent = null; renderStudentList(); }
-  renderArchive();
-});
+  function renderFeedbackEntry(e){
+    const card = document.createElement('div');
+    card.className = 'entry';
+    card.innerHTML = `
+      <div class="entry-head">
+        <span class="entry-name">${e.name}</span>
+        <span class="entry-actions">
+          <button class="ghost" data-act="copy">복사</button>
+          <button class="ghost" data-act="edit">수정</button>
+          <button class="ghost" data-act="delete">삭제</button>
+        </span>
+      </div>
+      <div class="entry-text"></div>
+    `;
+    card.querySelector('.entry-text').textContent = e.text;
+    card.querySelector('[data-act=copy]').onclick = () => navigator.clipboard && navigator.clipboard.writeText(e.text);
+    card.querySelector('[data-act=delete]').onclick = () => {
+      if(!confirm(`${e.name} 피드백을 삭제할까요?`)) return;
+      const data = loadObj(FEEDBACK_KEY); delete data[e.id]; saveObj(FEEDBACK_KEY, data);
+      renderFeedbackChips(); renderFeedbackList();
+    };
+    card.querySelector('[data-act=edit]').onclick = () => openFeedbackForm(e);
+    return card;
+  }
 
-loadArchive();
+  function openFeedbackForm(existing){
+    const slot = document.getElementById('fb-form-slot');
+    const isEdit = !!existing;
+    slot.innerHTML = `
+      <div class="form-card">
+        <div class="form-title">${isEdit ? '피드백 수정' : '새 피드백'}</div>
+        <div class="field">
+          <label>학생 이름</label>
+          <input type="text" id="fb-f-name" list="student-list" placeholder="예: 유지아" value="${isEdit?existing.name:''}">
+        </div>
+        <div class="field">
+          <label>날짜</label>
+          <input type="date" id="fb-f-date" value="${isEdit?existing.date:todayStr()}">
+        </div>
+        <div class="field">
+          <label>피드백 내용</label>
+          <textarea id="fb-f-text" placeholder="정리된 피드백 문구를 붙여넣으세요">${isEdit?existing.text:''}</textarea>
+        </div>
+        <div class="form-actions">
+          <button id="fb-f-cancel">취소</button>
+          <button class="primary" id="fb-f-save">저장</button>
+        </div>
+      </div>`;
+    document.getElementById('fb-f-cancel').onclick = () => { slot.innerHTML=''; };
+    document.getElementById('fb-f-save').onclick = () => {
+      const name = document.getElementById('fb-f-name').value.trim();
+      const date = document.getElementById('fb-f-date').value;
+      const text = document.getElementById('fb-f-text').value.trim();
+      if(!name || !date || !text) return;
+      const data = loadObj(FEEDBACK_KEY);
+      const id = isEdit ? existing.id : ('feedback:' + date + '-' + Date.now());
+      data[id] = { name, date, text };
+      saveObj(FEEDBACK_KEY, data);
+      slot.innerHTML = '';
+      fbOpenDates.add(date);
+      renderFeedbackChips(); renderFeedbackList();
+      const candidate = detectBogangCandidate(text, date);
+      if(candidate) showBogangConfirm(candidate, name);
+    };
+  }
+
+  document.getElementById('fb-add-open').onclick = () => openFeedbackForm(null);
+  document.getElementById('fb-search').addEventListener('input', (e)=>{ fbSearch = e.target.value.trim(); renderFeedbackList(); });
+
+  // ---------- 보강 키워드 감지 (피드백 저장 시) ----------
+  // "관리보강" / "결석보강" 이라는 단어가 있고, "N월 N일" 형식의 명확한 날짜가 같이 있을 때만 후보로 인식한다.
+  // 날짜가 없으면(스케줄 설명 등 단순 언급) 조용히 무시한다.
+  function detectBogangCandidate(text, refDateStr){
+    let type = null;
+    if(text.includes('결석보강')) type = '결석보강';
+    else if(text.includes('관리보강')) type = '관리보강';
+    if(!type) return null;
+
+    const dateMatch = text.match(/(\d{1,2})\s*월\s*(\d{1,2})\s*일/);
+    if(!dateMatch) return null;
+    const month = String(dateMatch[1]).padStart(2,'0');
+    const day = String(dateMatch[2]).padStart(2,'0');
+    const year = (refDateStr || todayStr()).slice(0,4);
+    const date = `${year}-${month}-${day}`;
+
+    let time = '';
+    const halfMatch = text.match(/(\d{1,2})\s*시\s*반/);
+    const hmMatch = text.match(/(\d{1,2})\s*시\s*(\d{1,2})\s*분/);
+    const hOnlyMatch = !hmMatch && !halfMatch ? text.match(/(\d{1,2})\s*시(?!간)/) : null;
+    let hour = null, minute = 0;
+    if(halfMatch){ hour = parseInt(halfMatch[1],10); minute = 30; }
+    else if(hmMatch){ hour = parseInt(hmMatch[1],10); minute = parseInt(hmMatch[2],10); }
+    else if(hOnlyMatch){ hour = parseInt(hOnlyMatch[1],10); minute = 0; }
+    if(hour !== null){
+      if(hour >= 1 && hour <= 7 && !text.includes('오전')) hour += 12; // 학원 특성상 오후로 간주
+      time = `${String(hour).padStart(2,'0')}:${String(minute).padStart(2,'0')}`;
+    }
+
+    return { type, date, time };
+  }
+
+  function showBogangConfirm(candidate, studentName){
+    const overlay = document.createElement('div');
+    overlay.className = 'modal-overlay';
+    overlay.innerHTML = `
+      <div class="modal-card">
+        <div class="modal-title">보강 일정을 발견했어요</div>
+        <div class="modal-hint">피드백 내용에서 "${candidate.type}"와 날짜가 감지됐어요. 캘린더에 추가하기 전에 내용을 확인·수정해주세요.</div>
+        <div class="form-row">
+          <div class="field">
+            <label>학생 이름</label>
+            <input type="text" id="bc-name" list="student-list" value="${studentName}">
+          </div>
+          <div class="field">
+            <label>유형</label>
+            <select id="bc-type">
+              <option value="관리보강" ${candidate.type==='관리보강'?'selected':''}>관리보강</option>
+              <option value="결석보강" ${candidate.type==='결석보강'?'selected':''}>결석보강</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="field">
+            <label>날짜</label>
+            <input type="date" id="bc-date" value="${candidate.date}">
+          </div>
+          <div class="field">
+            <label>시간 (선택)</label>
+            <input type="time" id="bc-time" value="${candidate.time || ''}">
+          </div>
+        </div>
+        <div class="modal-actions">
+          <button id="bc-skip">추가 안 함</button>
+          <button class="primary" id="bc-confirm">캘린더에 추가</button>
+        </div>
+      </div>`;
+    document.body.appendChild(overlay);
+    document.getElementById('bc-skip').onclick = () => overlay.remove();
+    document.getElementById('bc-confirm').onclick = () => {
+      const name = document.getElementById('bc-name').value.trim();
+      const type = document.getElementById('bc-type').value;
+      const date = document.getElementById('bc-date').value;
+      const time = document.getElementById('bc-time').value;
+      if(!name || !date){ overlay.remove(); return; }
+      const data = loadObj(BOGANG_KEY);
+      data[uid()] = { name, type, date, time, memo: '' };
+      saveObj(BOGANG_KEY, data);
+      overlay.remove();
+    };
+  }
+
+  // ================= BOGANG TAB =================
+  let calCursor = new Date(); calCursor.setDate(1);
+  let selectedDate = todayStr();
+
+  function renderCalDow(){
+    const el = document.getElementById('cal-dow');
+    el.innerHTML = DOW.map(d=>`<div class="cal-dow">${d}</div>`).join('');
+  }
+
+  function renderCalendar(){
+    document.getElementById('cal-title').textContent = `${calCursor.getFullYear()}년 ${calCursor.getMonth()+1}월`;
+    const bogang = loadObj(BOGANG_KEY);
+    const byDate = {};
+    Object.values(bogang).forEach(b => { (byDate[b.date] = byDate[b.date]||[]).push(b); });
+
+    const grid = document.getElementById('cal-grid');
+    grid.innerHTML = '';
+    const firstDow = calCursor.getDay();
+    const daysInMonth = new Date(calCursor.getFullYear(), calCursor.getMonth()+1, 0).getDate();
+    for(let i=0;i<firstDow;i++){
+      const blank = document.createElement('div');
+      blank.className = 'cal-cell empty';
+      grid.appendChild(blank);
+    }
+    for(let d=1; d<=daysInMonth; d++){
+      const dateObj = new Date(calCursor.getFullYear(), calCursor.getMonth(), d);
+      const dateStr = fmtDate(dateObj);
+      const cell = document.createElement('div');
+      cell.className = 'cal-cell';
+      if(dateStr === todayStr()) cell.classList.add('today');
+      if(dateStr === selectedDate) cell.classList.add('selected');
+      const items = byDate[dateStr] || [];
+      const gwanli = items.filter(b=>b.type==='관리보강').length;
+      const gyeolseok = items.filter(b=>b.type==='결석보강').length;
+      cell.innerHTML = `<div class="cal-daynum">${d}</div><div class="cal-dots">${gwanli?`<span class="dot gwanli"></span>`:''}${gyeolseok?`<span class="dot gyeolseok"></span>`:''}</div>`;
+      cell.onclick = () => { selectedDate = dateStr; renderCalendar(); renderBogangList(); };
+      grid.appendChild(cell);
+    }
+  }
+
+  function renderBogangList(){
+    const bogang = loadObj(BOGANG_KEY);
+    const entries = Object.entries(bogang).map(([id,b])=>({id,...b})).filter(b=>b.date===selectedDate);
+    entries.sort((a,b)=> (a.time||'').localeCompare(b.time||''));
+    document.getElementById('bg-selected-title').textContent = `${selectedDate} (${dowLabel(selectedDate)}) 보강 — ${entries.length}건`;
+    const list = document.getElementById('bg-list');
+    list.innerHTML = '';
+    if(entries.length===0){ list.innerHTML = '<div class="empty-note">이 날짜에 등록된 보강이 없어요.</div>'; return; }
+    entries.forEach(b=>{
+      const row = document.createElement('div');
+      row.className = 'bogang-row';
+      row.innerHTML = `
+        <span class="type-chip ${b.type==='결석보강'?'gyeolseok':'gwanli'}">${b.type}</span>
+        <div class="bogang-body">
+          <div class="bogang-name">${b.name}</div>
+          <div class="bogang-meta">${b.time ? b.time+' · ' : ''}${selectedDate}</div>
+          ${b.memo ? `<div class="bogang-memo">${b.memo}</div>` : ''}
+        </div>
+        <span class="entry-actions">
+          <button class="ghost" data-act="edit">수정</button>
+          <button class="ghost" data-act="delete">삭제</button>
+        </span>`;
+      row.querySelector('[data-act=delete]').onclick = () => {
+        if(!confirm(`${b.name} ${b.type} 항목을 삭제할까요?`)) return;
+        const data = loadObj(BOGANG_KEY); delete data[b.id]; saveObj(BOGANG_KEY, data);
+        renderCalendar(); renderBogangList();
+      };
+      row.querySelector('[data-act=edit]').onclick = () => openBogangForm(b);
+      list.appendChild(row);
+    });
+  }
+
+  function openBogangForm(existing){
+    const slot = document.getElementById('bg-form-slot');
+    const isEdit = !!existing;
+    slot.innerHTML = `
+      <div class="form-card">
+        <div class="form-title">${isEdit ? '보강 수정' : '보강 등록'}</div>
+        <div class="form-row">
+          <div class="field">
+            <label>학생 이름</label>
+            <input type="text" id="bg-f-name" list="student-list" placeholder="예: 유지아" value="${isEdit?existing.name:''}">
+          </div>
+          <div class="field">
+            <label>유형</label>
+            <select id="bg-f-type">
+              <option value="관리보강" ${isEdit && existing.type==='관리보강' ? 'selected':''}>관리보강</option>
+              <option value="결석보강" ${isEdit && existing.type==='결석보강' ? 'selected':''}>결석보강</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="field">
+            <label>날짜</label>
+            <input type="date" id="bg-f-date" value="${isEdit?existing.date:selectedDate}">
+          </div>
+          <div class="field">
+            <label>시간 (선택)</label>
+            <input type="time" id="bg-f-time" value="${isEdit&&existing.time?existing.time:''}">
+          </div>
+        </div>
+        <div class="field">
+          <label>메모 (선택)</label>
+          <input type="text" id="bg-f-memo" placeholder="예: 수만프 4회 오답 마무리" value="${isEdit&&existing.memo?existing.memo:''}">
+        </div>
+        <div class="form-actions">
+          <button id="bg-f-cancel">취소</button>
+          <button class="primary" id="bg-f-save">저장</button>
+        </div>
+      </div>`;
+    document.getElementById('bg-f-cancel').onclick = () => { slot.innerHTML=''; };
+    document.getElementById('bg-f-save').onclick = () => {
+      const name = document.getElementById('bg-f-name').value.trim();
+      const type = document.getElementById('bg-f-type').value;
+      const date = document.getElementById('bg-f-date').value;
+      const time = document.getElementById('bg-f-time').value;
+      const memo = document.getElementById('bg-f-memo').value.trim();
+      if(!name || !date) return;
+      const data = loadObj(BOGANG_KEY);
+      const id = isEdit ? existing.id : uid();
+      data[id] = { name, type, date, time, memo };
+      saveObj(BOGANG_KEY, data);
+      slot.innerHTML = '';
+      selectedDate = date;
+      calCursor = new Date(date+'T00:00:00'); calCursor.setDate(1);
+      renderCalendar(); renderBogangList();
+    };
+  }
+
+  document.getElementById('bg-add-open').onclick = () => openBogangForm(null);
+  document.getElementById('bg-today').onclick = () => {
+    selectedDate = todayStr();
+    calCursor = new Date(); calCursor.setDate(1);
+    renderCalendar(); renderBogangList();
+  };
+  document.getElementById('cal-prev').onclick = () => { calCursor.setMonth(calCursor.getMonth()-1); renderCalendar(); };
+  document.getElementById('cal-next').onclick = () => { calCursor.setMonth(calCursor.getMonth()+1); renderCalendar(); };
+
+  function renderBogang(){
+    renderCalDow();
+    renderCalendar();
+    renderBogangList();
+  }
+
+  // ================= INIT =================
+  renderFeedbackChips();
+  renderFeedbackList();
 </script>
-
 </body>
 </html>
