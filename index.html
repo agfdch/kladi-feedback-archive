@@ -6,775 +6,834 @@
 <title>학부모 피드백 모음 · 클라디수학학원</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Pretendard:wght@400;500;600;700&display=swap">
 <style>
-  :root{
-    --bg:#ECE4D4;
-    --surface:#FFFDF9;
-    --surface-2:#F5EFE2;
-    --ink:#2C2416;
-    --muted:#8C8270;
-    --faint:#B3A98F;
-    --border:#E6DCC8;
-    --accent:#D97A2E;
-    --accent-ink:#FFFFFF;
-    --accent-soft:#F7E4D2;
-    --sage:#74805F;
-    --sage-soft:#EEF0E6;
-    --sage-ink:#4E5740;
-    --absent:#4A6FA5;
-    --absent-soft:#E4EAF3;
-    --absent-ink:#33507A;
-    --shadow: 0 1px 2px rgba(44,36,22,0.04), 0 8px 24px -14px rgba(44,36,22,0.28);
-  }
-  @media (prefers-color-scheme: dark){
-    :root:not([data-theme="light"]){
-      --bg:#1C1811;
-      --surface:#252017;
-      --surface-2:#2C2619;
-      --ink:#F1E9D8;
-      --muted:#A79C84;
-      --faint:#6E6653;
-      --border:#3A3325;
-      --accent:#E8934F;
-      --accent-ink:#211505;
-      --accent-soft:#3A2A17;
-      --sage:#9BAA84;
-      --sage-soft:#2B301F;
-      --sage-ink:#D8E2C6;
-      --absent:#7FA3D6;
-      --absent-soft:#22304A;
-      --absent-ink:#BFD4F0;
-      --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 8px 24px -14px rgba(0,0,0,0.6);
-    }
-  }
-  :root[data-theme="dark"]{
-    --bg:#1C1811; --surface:#252017; --surface-2:#2C2619; --ink:#F1E9D8;
-    --muted:#A79C84; --faint:#6E6653; --border:#3A3325;
-    --accent:#E8934F; --accent-ink:#211505; --accent-soft:#3A2A17;
-    --sage:#9BAA84; --sage-soft:#2B301F; --sage-ink:#D8E2C6;
-    --absent:#7FA3D6; --absent-soft:#22304A; --absent-ink:#BFD4F0;
-    --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 8px 24px -14px rgba(0,0,0,0.6);
-  }
-  *{box-sizing:border-box;}
-  body{
-    margin:0;
-    background:var(--bg);
-    color:var(--ink);
-    font-family:'Pretendard',-apple-system,'Malgun Gothic',sans-serif;
-    padding:40px 20px 80px;
-  }
-  .wrap{max-width:760px;margin:0 auto;display:flex;flex-direction:column;gap:22px;}
-  h1{font-size:24px;margin:0;font-weight:700;}
-  .sub{font-size:13.5px;color:var(--muted);margin:6px 0 0;line-height:1.6;}
+:root{
+--bg:#ECE4D4;
+--surface:#FFFDF9;
+--surface-2:#F5EFE2;
+--ink:#2C2416;
+--muted:#8C8270;
+--faint:#B3A98F;
+--border:#E6DCC8;
+--accent:#D97A2E;
+--accent-ink:#FFFFFF;
+--accent-soft:#F7E4D2;
+--sage:#74805F;
+--sage-soft:#EEF0E6;
+--sage-ink:#4E5740;
+--absent:#4A6FA5;
+--absent-soft:#E4EAF3;
+--absent-ink:#33507A;
+--shadow: 0 1px 2px rgba(44,36,22,0.04), 0 8px 24px -14px rgba(44,36,22,0.28);
+}
+@media (prefers-color-scheme: dark){
+:root:not([data-theme="light"]){
+--bg:#1C1811;
+--surface:#252017;
+--surface-2:#2C2619;
+--ink:#F1E9D8;
+--muted:#A79C84;
+--faint:#6E6653;
+--border:#3A3325;
+--accent:#E8934F;
+--accent-ink:#211505;
+--accent-soft:#3A2A17;
+--sage:#9BAA84;
+--sage-soft:#2B301F;
+--sage-ink:#D8E2C6;
+--absent:#7FA3D6;
+--absent-soft:#22304A;
+--absent-ink:#BFD4F0;
+--shadow: 0 1px 2px rgba(0,0,0,0.3), 0 8px 24px -14px rgba(0,0,0,0.6);
+}
+}
+:root[data-theme="dark"]{
+--bg:#1C1811; --surface:#252017; --surface-2:#2C2619; --ink:#F1E9D8;
+--muted:#A79C84; --faint:#6E6653; --border:#3A3325;
+--accent:#E8934F; --accent-ink:#211505; --accent-soft:#3A2A17;
+--sage:#9BAA84; --sage-soft:#2B301F; --sage-ink:#D8E2C6;
+--absent:#7FA3D6; --absent-soft:#22304A; --absent-ink:#BFD4F0;
+--shadow: 0 1px 2px rgba(0,0,0,0.3), 0 8px 24px -14px rgba(0,0,0,0.6);
+}
+}
+*{box-sizing:border-box;}
+body{
+margin:0;
+background:var(--bg);
+color:var(--ink);
+font-family:'Pretendard',-apple-system,'Malgun Gothic',sans-serif;
+padding:40px 20px 80px;
+}
+.wrap{max-width:760px;margin:0 auto;display:flex;flex-direction:column;gap:22px;}
+h1{font-size:24px;margin:0;font-weight:700;}
+.sub{font-size:13.5px;color:var(--muted);margin:6px 0 0;line-height:1.6;}
 
-  .toolbar{display:flex;gap:10px;}
-  input[type=text], input[type=date], input[type=time], textarea, select{
-    font-family:inherit;
-    font-size:14px;
-    color:var(--ink);
-    background:var(--surface);
-    border:1px solid var(--border);
-    border-radius:12px;
-    padding:10px 14px;
-  }
-  input[type=text]{border-radius:100px;flex:1;}
-  input:focus, textarea:focus, select:focus{outline:2px solid var(--accent);outline-offset:1px;}
+.toolbar{display:flex;gap:10px;}
+input[type=text], input[type=date], input[type=time], textarea, select{
+font-family:inherit;
+font-size:14px;
+color:var(--ink);
+background:var(--surface);
+border:1px solid var(--border);
+border-radius:12px;
+padding:10px 14px;
+}
+input[type=text]{border-radius:100px;flex:1;}
+input:focus, textarea:focus, select:focus{outline:2px solid var(--accent);outline-offset:1px;}
 
-  button{
-    font-family:inherit;
-    font-size:14px;
-    font-weight:600;
-    border:none;
-    cursor:pointer;
-    border-radius:100px;
-    padding:10px 18px;
-    background:var(--surface-2);
-    color:var(--ink);
-  }
-  button.primary{background:var(--accent);color:var(--accent-ink);}
-  button.ghost{background:transparent;color:var(--muted);padding:6px 12px;}
-  button.ghost:hover{color:var(--ink);}
-  button:disabled{opacity:0.5;cursor:default;}
+button{
+font-family:inherit;
+font-size:14px;
+font-weight:600;
+border:none;
+cursor:pointer;
+border-radius:100px;
+padding:10px 18px;
+background:var(--surface-2);
+color:var(--ink);
+}
+button.primary{background:var(--accent);color:var(--accent-ink);}
+button.ghost{background:transparent;color:var(--muted);padding:6px 12px;}
+button.ghost:hover{color:var(--ink);}
+button:disabled{opacity:0.5;cursor:default;}
 
-  /* Tabs */
-  .tabs{display:flex;gap:6px;border-bottom:1px solid var(--border);}
-  .tab-btn{
-    background:transparent;border-radius:10px 10px 0 0;padding:10px 16px;
-    color:var(--muted);font-weight:600;
-  }
-  .tab-btn.active{color:var(--ink);background:var(--surface);}
-  .panel{display:none;flex-direction:column;gap:18px;}
-  .panel.active{display:flex;}
+/* Tabs */
+.tabs{display:flex;gap:6px;border-bottom:1px solid var(--border);}
+.tab-btn{
+background:transparent;border-radius:10px 10px 0 0;padding:10px 16px;
+color:var(--muted);font-weight:600;
+}
+.tab-btn.active{color:var(--ink);background:var(--surface);}
+.panel{display:none;flex-direction:column;gap:18px;}
+.panel.active{display:flex;}
 
-  /* Chips */
-  .chip-label{font-size:12.5px;font-weight:700;color:var(--muted);letter-spacing:0.02em;}
-  .chips{display:flex;flex-wrap:wrap;gap:8px;}
-  .chip{
-    background:var(--surface);border:0.7px solid var(--border);color:var(--faint);
-    padding:7px 14px;font-size:13.5px;font-weight:500;
-  }
-  .chip.has-data{color:var(--ink);}
-  .chip.active{background:var(--sage-soft);border-color:var(--sage);color:var(--sage-ink);font-weight:700;}
+/* Chips */
+.chip-label{font-size:12.5px;font-weight:700;color:var(--muted);letter-spacing:0.02em;}
+.chips{display:flex;flex-wrap:wrap;gap:8px;}
+.chip{
+background:var(--surface);border:0.7px solid var(--border);color:var(--faint);
+padding:7px 14px;font-size:13.5px;font-weight:500;
+}
+.chip.has-data{color:var(--ink);}
+.chip.active{background:var(--sage-soft);border-color:var(--sage);color:var(--sage-ink);font-weight:700;}
 
-  /* Feedback list */
-  .date-group{border-top:1px solid var(--border);}
-  .date-head{
-    display:flex;align-items:center;gap:8px;padding:14px 2px;cursor:pointer;
-    font-weight:700;color:var(--accent);
-  }
-  .date-head .count{color:var(--muted);font-weight:500;font-size:13px;}
-  .date-arrow{font-size:12px;width:14px;}
-  .entries{display:flex;flex-direction:column;gap:14px;padding:0 2px 16px;}
-  .entry{
-    background:var(--surface);border:1px solid var(--border);border-radius:14px;
-    padding:16px 18px;box-shadow:var(--shadow);
-  }
-  .entry-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px;}
-  .entry-name{font-weight:700;font-size:15px;}
-  .entry-actions{display:flex;gap:4px;}
-  .entry-actions button{padding:5px 10px;font-size:12.5px;font-weight:500;}
-  .entry-text{white-space:pre-wrap;line-height:1.65;font-size:14px;color:var(--ink);}
+/* Feedback list */
+.date-group{border-top:1px solid var(--border);}
+.date-head{
+display:flex;align-items:center;gap:8px;padding:14px 2px;cursor:pointer;
+font-weight:700;color:var(--accent);
+}
+.date-head .count{color:var(--muted);font-weight:500;font-size:13px;}
+.date-arrow{font-size:12px;width:14px;}
+.entries{display:flex;flex-direction:column;gap:14px;padding:0 2px 16px;}
+.entry{
+background:var(--surface);border:1px solid var(--border);border-radius:14px;
+padding:16px 18px;box-shadow:var(--shadow);
+}
+.entry-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px;}
+.entry-name{font-weight:700;font-size:15px;}
+.entry-actions{display:flex;gap:4px;}
+.entry-actions button{padding:5px 10px;font-size:12.5px;font-weight:500;}
+.entry-text{white-space:pre-wrap;line-height:1.65;font-size:14px;color:var(--ink);}
 
-  /* Add / edit form */
-  .form-card{
-    background:var(--surface);border:1px solid var(--border);border-radius:16px;
-    padding:20px;display:flex;flex-direction:column;gap:14px;box-shadow:var(--shadow);
-  }
-  .form-title{font-weight:700;color:var(--accent);font-size:14px;}
-  .field label{display:block;font-size:12.5px;font-weight:700;color:var(--muted);margin-bottom:6px;}
-  .field textarea{width:100%;min-height:120px;resize:vertical;border-radius:12px;}
-  .field input{width:100%;}
-  .form-row{display:flex;gap:12px;flex-wrap:wrap;}
-  .form-row .field{flex:1;min-width:140px;}
-  .form-actions{display:flex;justify-content:flex-end;gap:8px;}
+/* Add / edit form */
+.form-card{
+background:var(--surface);border:1px solid var(--border);border-radius:16px;
+padding:20px;display:flex;flex-direction:column;gap:14px;box-shadow:var(--shadow);
+}
+.form-title{font-weight:700;color:var(--accent);font-size:14px;}
+.field label{display:block;font-size:12.5px;font-weight:700;color:var(--muted);margin-bottom:6px;}
+.field textarea{width:100%;min-height:120px;resize:vertical;border-radius:12px;}
+.field input{width:100%;}
+.form-row{display:flex;gap:12px;flex-wrap:wrap;}
+.form-row .field{flex:1;min-width:140px;}
+.form-actions{display:flex;justify-content:flex-end;gap:8px;}
 
-  /* Calendar */
-  .cal-head{display:flex;align-items:center;justify-content:space-between;}
-  .cal-title{font-size:17px;font-weight:700;font-variant-numeric:tabular-nums;}
-  .cal-nav{display:flex;gap:6px;}
-  .cal-nav button{padding:6px 12px;}
-  .cal-grid{
-    display:grid;grid-template-columns:repeat(7,1fr);gap:6px;
-  }
-  .cal-dow{text-align:center;font-size:12px;font-weight:700;color:var(--muted);padding-bottom:4px;}
-  .cal-cell{
-    position:relative;
-    aspect-ratio:1/1;border-radius:12px;background:var(--surface);border:1px solid var(--border);
-    padding:6px;display:flex;flex-direction:column;gap:4px;cursor:pointer;min-height:56px;
-  }
-  .cal-cell.empty{background:transparent;border-color:transparent;cursor:default;}
-  .cal-cell.today{border-color:var(--accent);}
-  .cal-cell.selected{background:var(--sage-soft);border-color:var(--sage);}
-  .cal-daynum{font-size:12.5px;font-weight:600;font-variant-numeric:tabular-nums;color:var(--muted);}
-  .cal-cell.today .cal-daynum{color:var(--accent);}
-  .cal-dots{display:flex;gap:3px;flex-wrap:wrap;}
-  .cal-add-btn{
-    position:absolute;top:3px;right:3px;width:18px;height:18px;border-radius:50%;
-    background:var(--accent-soft);color:var(--accent);border:none;cursor:pointer;
-    font-size:13px;line-height:1;font-weight:700;padding:0;display:flex;align-items:center;justify-content:center;
-  }
-  .cal-add-btn:hover{background:var(--accent);color:var(--accent-ink);}
-  .dot{width:7px;height:7px;border-radius:50%;}
-  .dot.gwanli{background:var(--accent);}
-  .dot.gyeolseok{background:var(--absent);}
+/* Inline edit (within entry card) */
+.entry.editing{display:flex;flex-direction:column;gap:12px;}
+.entry.editing .field textarea{min-height:200px;}
 
-  .selected-date-title{font-size:15px;font-weight:700;}
-  .bogang-list{display:flex;flex-direction:column;gap:10px;}
-  .bogang-row{
-    display:flex;align-items:center;gap:12px;background:var(--surface);
-    border:1px solid var(--border);border-radius:12px;padding:12px 14px;box-shadow:var(--shadow);
-  }
-  .type-chip{
-    flex:none;font-size:11.5px;font-weight:700;border-radius:100px;padding:4px 10px;
-  }
-  .type-chip.gwanli{background:var(--accent-soft);color:var(--accent);}
-  .type-chip.gyeolseok{background:var(--absent-soft);color:var(--absent-ink);}
-  .bogang-body{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px;}
-  .bogang-name{font-weight:700;font-size:14.5px;}
-  .bogang-meta{font-size:12.5px;color:var(--muted);font-variant-numeric:tabular-nums;}
-  .bogang-memo{font-size:13px;color:var(--muted);}
-  .empty-note{color:var(--faint);font-size:13.5px;padding:18px 2px;}
+/* Calendar */
+.cal-head{display:flex;align-items:center;justify-content:space-between;}
+.cal-title{font-size:17px;font-weight:700;font-variant-numeric:tabular-nums;}
+.cal-nav{display:flex;gap:6px;}
+.cal-nav button{padding:6px 12px;}
+.cal-grid{
+display:grid;grid-template-columns:repeat(7,1fr);gap:6px;
+}
+.cal-dow{text-align:center;font-size:12px;font-weight:700;color:var(--muted);padding-bottom:4px;}
+.cal-cell{
+position:relative;
+aspect-ratio:1/1;border-radius:12px;background:var(--surface);border:1px solid var(--border);
+padding:6px;display:flex;flex-direction:column;gap:4px;cursor:pointer;min-height:56px;
+}
+.cal-cell.empty{background:transparent;border-color:transparent;cursor:default;}
+.cal-cell.today{border-color:var(--accent);}
+.cal-cell.selected{background:var(--sage-soft);border-color:var(--sage);}
+.cal-daynum{font-size:12.5px;font-weight:600;font-variant-numeric:tabular-nums;color:var(--muted);}
+.cal-cell.today .cal-daynum{color:var(--accent);}
+.cal-dots{display:flex;gap:3px;flex-wrap:wrap;}
+.cal-add-btn{
+position:absolute;top:3px;right:3px;width:18px;height:18px;border-radius:50%;
+background:var(--accent-soft);color:var(--accent);border:none;cursor:pointer;
+font-size:13px;line-height:1;font-weight:700;padding:0;display:flex;align-items:center;justify-content:center;
+}
+.cal-add-btn:hover{background:var(--accent);color:var(--accent-ink);}
+.dot{width:7px;height:7px;border-radius:50%;}
+.dot.gwanli{background:var(--accent);}
+.dot.gyeolseok{background:var(--absent);}
 
-  datalist{}
+.selected-date-title{font-size:15px;font-weight:700;}
+.bogang-list{display:flex;flex-direction:column;gap:10px;}
+.bogang-row{
+display:flex;align-items:center;gap:12px;background:var(--surface);
+border:1px solid var(--border);border-radius:12px;padding:12px 14px;box-shadow:var(--shadow);
+}
+.type-chip{
+flex:none;font-size:11.5px;font-weight:700;border-radius:100px;padding:4px 10px;
+}
+.type-chip.gwanli{background:var(--accent-soft);color:var(--accent);}
+.type-chip.gyeolseok{background:var(--absent-soft);color:var(--absent-ink);}
+.bogang-body{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px;}
+.bogang-name{font-weight:700;font-size:14.5px;}
+.bogang-meta{font-size:12.5px;color:var(--muted);font-variant-numeric:tabular-nums;}
+.bogang-memo{font-size:13px;color:var(--muted);}
+.empty-note{color:var(--faint);font-size:13.5px;padding:18px 2px;}
 
-  /* Confirm modal */
-  .modal-overlay{
-    position:fixed;inset:0;background:rgba(28,24,17,0.45);
-    display:flex;align-items:center;justify-content:center;padding:20px;z-index:50;
-  }
-  .modal-card{
-    background:var(--surface);border-radius:18px;border:1px solid var(--border);
-    padding:22px;max-width:420px;width:100%;box-shadow:var(--shadow);
-    display:flex;flex-direction:column;gap:14px;
-  }
-  .modal-title{font-weight:700;font-size:15.5px;}
-  .modal-hint{font-size:12.5px;color:var(--muted);line-height:1.6;background:var(--surface-2);border-radius:10px;padding:10px 12px;}
-  .modal-actions{display:flex;justify-content:flex-end;gap:8px;}
+datalist{}
 
-  @media (max-width:520px){
-    .cal-cell{min-height:44px;padding:4px;}
-    .cal-daynum{font-size:11px;}
-  }
+/* Confirm modal */
+.modal-overlay{
+position:fixed;inset:0;background:rgba(28,24,17,0.45);
+display:flex;align-items:center;justify-content:center;padding:20px;z-index:50;
+}
+.modal-card{
+background:var(--surface);border-radius:18px;border:1px solid var(--border);
+padding:22px;max-width:420px;width:100%;box-shadow:var(--shadow);
+display:flex;flex-direction:column;gap:14px;
+}
+.modal-title{font-weight:700;font-size:15.5px;}
+.modal-hint{font-size:12.5px;color:var(--muted);line-height:1.6;background:var(--surface-2);border-radius:10px;padding:10px 12px;}
+.modal-actions{display:flex;justify-content:flex-end;gap:8px;}
+
+@media (max-width:520px){
+.cal-cell{min-height:44px;padding:4px;}
+.cal-daynum{font-size:11px;}
+}
 </style>
 </head>
 <body>
 <div class="wrap">
 
-  <div>
-    <h1>학부모 피드백 모음</h1>
-    <p class="sub">박유경T · 그날그날 보낸 피드백을 모아둡니다<br>데이터는 이 브라우저에 저장됩니다.</p>
-  </div>
+<div>
+<h1>학부모 피드백 모음</h1>
+<p class="sub">박유경T · 그날그날 보낸 피드백을 모아둡니다<br>데이터는 이 브라우저에 저장됩니다.</p>
+</div>
 
-  <div class="tabs">
-    <button class="tab-btn active" data-tab="feedback">피드백</button>
-    <button class="tab-btn" data-tab="bogang">보강 관리</button>
-  </div>
+<div class="tabs">
+<button class="tab-btn active" data-tab="feedback">피드백</button>
+<button class="tab-btn" data-tab="bogang">보강 관리</button>
+</div>
 
-  <!-- ===== FEEDBACK PANEL ===== -->
-  <div class="panel active" id="panel-feedback">
-    <div class="toolbar">
-      <input type="text" id="fb-search" placeholder="학생 이름으로 검색">
-      <button class="primary" id="fb-add-open">+ 새 피드백</button>
-    </div>
+<!-- ===== FEEDBACK PANEL ===== -->
+<div class="panel active" id="panel-feedback">
+<div class="toolbar">
+<input type="text" id="fb-search" placeholder="학생 이름으로 검색">
+<button class="primary" id="fb-add-open">+ 새 피드백</button>
+</div>
 
-    <div id="fb-form-slot"></div>
+<div id="fb-form-slot"></div>
 
-    <div>
-      <div style="display:flex;align-items:center;justify-content:space-between;">
-        <div class="chip-label">학생 목록</div>
-        <button class="ghost" id="roster-manage-open" style="padding:3px 10px;font-size:12.5px;">명단 관리</button>
-      </div>
-      <div id="roster-panel-slot"></div>
-      <div class="chips" id="fb-chips" style="margin-top:8px;"></div>
-    </div>
+<div>
+<div style="display:flex;align-items:center;justify-content:space-between;">
+<div class="chip-label">학생 목록</div>
+<button class="ghost" id="roster-manage-open" style="padding:3px 10px;font-size:12.5px;">명단 관리</button>
+</div>
+<div id="roster-panel-slot"></div>
+<div class="chips" id="fb-chips" style="margin-top:8px;"></div>
+</div>
 
-    <div id="fb-list"></div>
-  </div>
+<div id="fb-list"></div>
+</div>
 
-  <!-- ===== BOGANG PANEL ===== -->
-  <div class="panel" id="panel-bogang">
-    <div class="toolbar">
-      <button class="ghost" id="bg-today">오늘로 이동</button>
-    </div>
+<!-- ===== BOGANG PANEL ===== -->
+<div class="panel" id="panel-bogang">
+<div class="toolbar">
+<button class="ghost" id="bg-today">오늘로 이동</button>
+</div>
 
-    <div id="bg-form-slot"></div>
+<div id="bg-form-slot"></div>
 
-    <div class="form-card" style="gap:16px;">
-      <div class="cal-head">
-        <div class="cal-nav"><button id="cal-prev">‹</button></div>
-        <div class="cal-title" id="cal-title"></div>
-        <div class="cal-nav"><button id="cal-next">›</button></div>
-      </div>
-      <div class="cal-grid" id="cal-dow"></div>
-      <div class="cal-grid" id="cal-grid"></div>
-    </div>
+<div class="form-card" style="gap:16px;">
+<div class="cal-head">
+<div class="cal-nav"><button id="cal-prev">‹</button></div>
+<div class="cal-title" id="cal-title"></div>
+<div class="cal-nav"><button id="cal-next">›</button></div>
+</div>
+<div class="cal-grid" id="cal-dow"></div>
+<div class="cal-grid" id="cal-grid"></div>
+</div>
 
-    <div>
-      <div class="selected-date-title" id="bg-selected-title"></div>
-      <div class="bogang-list" id="bg-list" style="margin-top:10px;"></div>
-    </div>
-  </div>
+<div>
+<div class="selected-date-title" id="bg-selected-title"></div>
+<div class="bogang-list" id="bg-list" style="margin-top:10px;"></div>
+</div>
+</div>
 
 </div>
 
 <script>
-  // 최초 배포 시점의 학생 명단(마이그레이션용 기본값). 이후로는 명단 관리 UI에서
-  // 추가/삭제한 내용이 ROSTER_KEY에 저장되어 이 값을 대체하므로, 신규생/퇴원생이
-  // 생겨도 이 파일을 다시 손댈 필요가 없다.
-  const DEFAULT_STUDENTS = ["김리사","김유주","김이준","박하윤","배경윤","배은빈","서민경","엄승유","여채율","유소율","유이재","유지아","이서현","이아영","이아진","이준철","이준현","이채원B","이환","장서은","전윤아","전재우","정지현","최준서","최태훈","홍제인","황유찬"];
-  const FEEDBACK_KEY = 'kladi_feedback_archive_v1';
-  const BOGANG_KEY = 'kladi_bogang_v1';
-  const ROSTER_KEY = 'kladi_roster_v1';
-  const DOW = ['일','월','화','수','목','금','토'];
+// 최초 배포 시점의 학생 명단(마이그레이션용 기본값). 이후로는 명단 관리 UI에서
+// 추가/삭제한 내용이 ROSTER_KEY에 저장되어 이 값을 대체하므로, 신규생/퇴원생이
+// 생겨도 이 파일을 다시 손댈 필요가 없다.
+const DEFAULT_STUDENTS = ["김리사","김유주","김이준","박하윤","배경윤","배은빈","서민경","엄승유","여채율","유소율","유이재","유지아","이서현","이아영","이아진","이준철","이준현","이채원B","이환","장서은","전윤아","전재우","정지현","최준서","최태훈","홍제인","황유찬"];
+const FEEDBACK_KEY = 'kladi_feedback_archive_v1';
+const BOGANG_KEY = 'kladi_bogang_v1';
+const ROSTER_KEY = 'kladi_roster_v1';
+const DOW = ['일','월','화','수','목','금','토'];
 
-  const loadObj = (key) => { try { return JSON.parse(localStorage.getItem(key)) || {}; } catch(e){ return {}; } };
-  const saveObj = (key, obj) => localStorage.setItem(key, JSON.stringify(obj));
-  const todayStr = () => new Date().toISOString().slice(0,10);
-  const uid = () => 'id_' + Date.now() + '_' + Math.random().toString(36).slice(2,8);
-  const fmtDate = (d) => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-  const dowLabel = (dateStr) => DOW[new Date(dateStr+'T00:00:00').getDay()];
+const loadObj = (key) => { try { return JSON.parse(localStorage.getItem(key)) || {}; } catch(e){ return {}; } };
+const saveObj = (key, obj) => localStorage.setItem(key, JSON.stringify(obj));
+const todayStr = () => new Date().toISOString().slice(0,10);
+const uid = () => 'id_' + Date.now() + '_' + Math.random().toString(36).slice(2,8);
+const fmtDate = (d) => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+const dowLabel = (dateStr) => DOW[new Date(dateStr+'T00:00:00').getDay()];
 
-  // ---------- 학생 명단(roster) ----------
-  // localStorage에 저장되어 브라우저에 남기 때문에, 신규생 추가·퇴원생 삭제는
-  // "명단 관리" 패널에서 바로 처리하고 GitHub 파일은 건드리지 않아도 된다.
-  function getRoster(){
-    try{
-      const raw = localStorage.getItem(ROSTER_KEY);
-      if(raw) return JSON.parse(raw);
-    }catch(e){}
-    // 최초 1회: 기본 명단으로 초기화
-    saveObj_roster(DEFAULT_STUDENTS.slice());
-    return DEFAULT_STUDENTS.slice();
-  }
-  function saveObj_roster(arr){
-    const sorted = Array.from(new Set(arr)).sort((a,b)=>a.localeCompare(b,'ko'));
-    localStorage.setItem(ROSTER_KEY, JSON.stringify(sorted));
-    return sorted;
-  }
-  function addStudent(name){
-    name = name.trim();
-    if(!name) return;
-    const roster = getRoster();
-    if(roster.includes(name)) return;
-    roster.push(name);
-    saveObj_roster(roster);
-    refreshDatalist();
-  }
-  function removeStudent(name){
-    const roster = getRoster().filter(n=>n!==name);
-    saveObj_roster(roster);
-    refreshDatalist();
-  }
+// ---------- 학생 명단(roster) ----------
+// localStorage에 저장되어 브라우저에 남기 때문에, 신규생 추가·퇴원생 삭제는
+// "명단 관리" 패널에서 바로 처리하고 GitHub 파일은 건드리지 않아도 된다.
+function getRoster(){
+try{
+const raw = localStorage.getItem(ROSTER_KEY);
+if(raw) return JSON.parse(raw);
+}catch(e){}
+// 최초 1회: 기본 명단으로 초기화
+saveObj_roster(DEFAULT_STUDENTS.slice());
+return DEFAULT_STUDENTS.slice();
+}
+function saveObj_roster(arr){
+const sorted = Array.from(new Set(arr)).sort((a,b)=>a.localeCompare(b,'ko'));
+localStorage.setItem(ROSTER_KEY, JSON.stringify(sorted));
+return sorted;
+}
+function addStudent(name){
+name = name.trim();
+if(!name) return;
+const roster = getRoster();
+if(roster.includes(name)) return;
+roster.push(name);
+saveObj_roster(roster);
+refreshDatalist();
+}
+function removeStudent(name){
+const roster = getRoster().filter(n=>n!==name);
+saveObj_roster(roster);
+refreshDatalist();
+}
 
-  // ---------- datalist for student names ----------
-  function refreshDatalist(){
-    let dl = document.getElementById('student-list');
-    if(!dl){
-      dl = document.createElement('datalist');
-      dl.id = 'student-list';
-      document.body.appendChild(dl);
-    }
-    dl.innerHTML = getRoster().map(s=>`<option value="${s}">`).join('');
-  }
-  refreshDatalist();
+// ---------- datalist for student names ----------
+function refreshDatalist(){
+let dl = document.getElementById('student-list');
+if(!dl){
+dl = document.createElement('datalist');
+dl.id = 'student-list';
+document.body.appendChild(dl);
+}
+dl.innerHTML = getRoster().map(s=>`<option value="${s}">`).join('');
+}
+refreshDatalist();
 
-  // ---------- 명단 관리 패널 ----------
-  function renderRosterPanel(){
-    const slot = document.getElementById('roster-panel-slot');
-    if(!slot.classList.contains('open')) return;
-    const roster = getRoster();
-    slot.innerHTML = `
-      <div class="form-card" style="margin:10px 0;">
-        <div class="form-title">학생 명단 관리</div>
-        <div class="modal-hint" style="margin:-4px 0 0;">여기서 추가·삭제한 내용은 이 브라우저에 바로 저장돼요. 삭제해도 그 학생의 예전 피드백·보강 기록은 사라지지 않고, "전체"에서 계속 볼 수 있어요.</div>
-        <div class="form-row">
-          <div class="field" style="flex:1;">
-            <input type="text" id="roster-add-input" placeholder="추가할 학생 이름">
-          </div>
-          <button class="primary" id="roster-add-btn">추가</button>
-        </div>
-        <div class="chips">
-          ${roster.map(name=>`
-            <span class="chip has-data" style="display:inline-flex;align-items:center;gap:6px;">
-              ${name}
-              <button class="roster-del-btn" data-name="${name}" title="명단에서 삭제" style="background:none;border:none;padding:0;margin:0;font-size:13px;line-height:1;color:var(--muted);cursor:pointer;border-radius:0;">×</button>
-            </span>`).join('')}
-        </div>
-        <div class="form-actions">
-          <button class="ghost" id="roster-manage-close">닫기</button>
-        </div>
-      </div>`;
+// ---------- 명단 관리 패널 ----------
+function renderRosterPanel(){
+const slot = document.getElementById('roster-panel-slot');
+if(!slot.classList.contains('open')) return;
+const roster = getRoster();
+slot.innerHTML = `
+<div class="form-card" style="margin:10px 0;">
+<div class="form-title">학생 명단 관리</div>
+<div class="modal-hint" style="margin:-4px 0 0;">여기서 추가·삭제한 내용은 이 브라우저에 바로 저장돼요. 삭제해도 그 학생의 예전 피드백·보강 기록은 사라지지 않고, "전체"에서 계속 볼 수 있어요.</div>
+<div class="form-row">
+<div class="field" style="flex:1;">
+<input type="text" id="roster-add-input" placeholder="추가할 학생 이름">
+</div>
+<button class="primary" id="roster-add-btn">추가</button>
+</div>
+<div class="chips">
+${roster.map(name=>`
+<span class="chip has-data" style="display:inline-flex;align-items:center;gap:6px;">
+${name}
+<button class="roster-del-btn" data-name="${name}" title="명단에서 삭제" style="background:none;border:none;padding:0;margin:0;font-size:13px;line-height:1;color:var(--muted);cursor:pointer;border-radius:0;">×</button>
+</span>`).join('')}
+</div>
+<div class="form-actions">
+<button class="ghost" id="roster-manage-close">닫기</button>
+</div>
+</div>`;
 
-    document.getElementById('roster-manage-close').onclick = () => {
-      slot.classList.remove('open');
-      slot.innerHTML = '';
-    };
-    document.getElementById('roster-add-btn').onclick = () => {
-      const input = document.getElementById('roster-add-input');
-      addStudent(input.value);
-      renderRosterPanel();
-      renderFeedbackChips();
-    };
-    document.getElementById('roster-add-input').addEventListener('keydown', (e) => {
-      if(e.key === 'Enter'){ e.preventDefault(); document.getElementById('roster-add-btn').click(); }
-    });
-    slot.querySelectorAll('.roster-del-btn').forEach(btn=>{
-      btn.onclick = () => {
-        const name = btn.dataset.name;
-        if(!confirm(`"${name}" 학생을 명단에서 삭제할까요? (이전 피드백·보강 기록은 유지됩니다)`)) return;
-        removeStudent(name);
-        renderRosterPanel();
-        renderFeedbackChips();
-      };
-    });
-  }
-  document.getElementById('roster-manage-open').onclick = () => {
-    const slot = document.getElementById('roster-panel-slot');
-    const willOpen = !slot.classList.contains('open');
-    slot.classList.toggle('open', willOpen);
-    if(willOpen) renderRosterPanel();
-    else slot.innerHTML = '';
-  };
+document.getElementById('roster-manage-close').onclick = () => {
+slot.classList.remove('open');
+slot.innerHTML = '';
+};
+document.getElementById('roster-add-btn').onclick = () => {
+const input = document.getElementById('roster-add-input');
+addStudent(input.value);
+renderRosterPanel();
+renderFeedbackChips();
+};
+document.getElementById('roster-add-input').addEventListener('keydown', (e) => {
+if(e.key === 'Enter'){ e.preventDefault(); document.getElementById('roster-add-btn').click(); }
+});
+slot.querySelectorAll('.roster-del-btn').forEach(btn=>{
+btn.onclick = () => {
+const name = btn.dataset.name;
+if(!confirm(`"${name}" 학생을 명단에서 삭제할까요? (이전 피드백·보강 기록은 유지됩니다)`)) return;
+removeStudent(name);
+renderRosterPanel();
+renderFeedbackChips();
+};
+});
+}
+document.getElementById('roster-manage-open').onclick = () => {
+const slot = document.getElementById('roster-panel-slot');
+const willOpen = !slot.classList.contains('open');
+slot.classList.toggle('open', willOpen);
+if(willOpen) renderRosterPanel();
+else slot.innerHTML = '';
+};
 
-  // ================= TABS =================
-  document.querySelectorAll('.tab-btn').forEach(btn=>{
-    btn.addEventListener('click', ()=>{
-      document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
-      document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
-      btn.classList.add('active');
-      document.getElementById('panel-'+btn.dataset.tab).classList.add('active');
-      if(btn.dataset.tab === 'bogang') renderBogang();
-    });
-  });
+// ================= TABS =================
+document.querySelectorAll('.tab-btn').forEach(btn=>{
+btn.addEventListener('click', ()=>{
+document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+btn.classList.add('active');
+document.getElementById('panel-'+btn.dataset.tab).classList.add('active');
+if(btn.dataset.tab === 'bogang') renderBogang();
+});
+});
 
-  // ================= FEEDBACK TAB =================
-  let fbFilter = null;
-  let fbSearch = '';
-  let fbOpenDates = new Set();
+// ================= FEEDBACK TAB =================
+let fbFilter = null;
+let fbSearch = '';
+let fbOpenDates = new Set();
+let fbEditingId = null;
 
-  function renderFeedbackChips(){
-    const data = loadObj(FEEDBACK_KEY);
-    const counts = {};
-    Object.values(data).forEach(e => counts[e.name] = (counts[e.name]||0) + 1);
-    const chips = document.getElementById('fb-chips');
-    chips.innerHTML = '';
-    const allChip = document.createElement('button');
-    allChip.className = 'chip has-data' + (fbFilter===null ? ' active' : '');
-    allChip.textContent = '전체';
-    allChip.onclick = () => { fbFilter = null; renderFeedbackChips(); renderFeedbackList(); };
-    chips.appendChild(allChip);
-    getRoster().forEach(name=>{
-      const c = document.createElement('button');
-      c.className = 'chip' + (counts[name] ? ' has-data' : '') + (fbFilter===name ? ' active' : '');
-      c.textContent = name;
-      c.onclick = () => { fbFilter = name; renderFeedbackChips(); renderFeedbackList(); };
-      chips.appendChild(c);
-    });
-  }
+function renderFeedbackChips(){
+const data = loadObj(FEEDBACK_KEY);
+const counts = {};
+Object.values(data).forEach(e => counts[e.name] = (counts[e.name]||0) + 1);
+const chips = document.getElementById('fb-chips');
+chips.innerHTML = '';
+const allChip = document.createElement('button');
+allChip.className = 'chip has-data' + (fbFilter===null ? ' active' : '');
+allChip.textContent = '전체';
+allChip.onclick = () => { fbFilter = null; renderFeedbackChips(); renderFeedbackList(); };
+chips.appendChild(allChip);
+getRoster().forEach(name=>{
+const c = document.createElement('button');
+c.className = 'chip' + (counts[name] ? ' has-data' : '') + (fbFilter===name ? ' active' : '');
+c.textContent = name;
+c.onclick = () => { fbFilter = name; renderFeedbackChips(); renderFeedbackList(); };
+chips.appendChild(c);
+});
+}
 
-  function renderFeedbackList(){
-    const data = loadObj(FEEDBACK_KEY);
-    const list = document.getElementById('fb-list');
-    let entries = Object.entries(data).map(([id,e])=>({id,...e}));
-    if(fbFilter) entries = entries.filter(e=>e.name===fbFilter);
-    if(fbSearch) entries = entries.filter(e=>e.name.includes(fbSearch));
-    const byDate = {};
-    entries.forEach(e=>{ (byDate[e.date] = byDate[e.date]||[]).push(e); });
-    const dates = Object.keys(byDate).sort((a,b)=>b.localeCompare(a));
-    list.innerHTML = '';
-    if(dates.length===0){ list.innerHTML = '<div class="empty-note">해당하는 피드백이 없어요.</div>'; return; }
-    dates.forEach(date=>{
-      const group = document.createElement('div');
-      group.className = 'date-group';
-      const open = fbOpenDates.has(date);
-      const head = document.createElement('div');
-      head.className = 'date-head';
-      head.innerHTML = `<span class="date-arrow">${open?'▾':'▸'}</span> ${date} <span class="count">${byDate[date].length}건</span>`;
-      head.onclick = () => { open ? fbOpenDates.delete(date) : fbOpenDates.add(date); renderFeedbackList(); };
-      group.appendChild(head);
-      if(open){
-        const wrap = document.createElement('div');
-        wrap.className = 'entries';
-        byDate[date].forEach(e=>{
-          wrap.appendChild(renderFeedbackEntry(e));
-        });
-        group.appendChild(wrap);
-      }
-      list.appendChild(group);
-    });
-  }
+function renderFeedbackList(){
+const data = loadObj(FEEDBACK_KEY);
+const list = document.getElementById('fb-list');
+let entries = Object.entries(data).map(([id,e])=>({id,...e}));
+if(fbFilter) entries = entries.filter(e=>e.name===fbFilter);
+if(fbSearch) entries = entries.filter(e=>e.name.includes(fbSearch));
+const byDate = {};
+entries.forEach(e=>{ (byDate[e.date] = byDate[e.date]||[]).push(e); });
+const dates = Object.keys(byDate).sort((a,b)=>b.localeCompare(a));
+list.innerHTML = '';
+if(dates.length===0){ list.innerHTML = '<div class="empty-note">해당하는 피드백이 없어요.</div>'; return; }
+dates.forEach(date=>{
+const group = document.createElement('div');
+group.className = 'date-group';
+const open = fbOpenDates.has(date);
+const head = document.createElement('div');
+head.className = 'date-head';
+head.innerHTML = `<span class="date-arrow">${open?'▾':'▸'}</span> ${date} <span class="count">${byDate[date].length}건</span>`;
+head.onclick = () => { open ? fbOpenDates.delete(date) : fbOpenDates.add(date); renderFeedbackList(); };
+group.appendChild(head);
+if(open){
+const wrap = document.createElement('div');
+wrap.className = 'entries';
+byDate[date].forEach(e=>{
+wrap.appendChild(renderFeedbackEntry(e));
+});
+group.appendChild(wrap);
+}
+list.appendChild(group);
+});
+}
 
-  function renderFeedbackEntry(e){
-    const card = document.createElement('div');
-    card.className = 'entry';
-    card.innerHTML = `
-      <div class="entry-head">
-        <span class="entry-name">${e.name}</span>
-        <span class="entry-actions">
-          <button class="ghost" data-act="copy">복사</button>
-          <button class="ghost" data-act="edit">수정</button>
-          <button class="ghost" data-act="delete">삭제</button>
-        </span>
-      </div>
-      <div class="entry-text"></div>
-    `;
-    card.querySelector('.entry-text').textContent = e.text;
-    card.querySelector('[data-act=copy]').onclick = () => navigator.clipboard && navigator.clipboard.writeText(e.text);
-    card.querySelector('[data-act=delete]').onclick = () => {
-      if(!confirm(`${e.name} 피드백을 삭제할까요?`)) return;
-      const data = loadObj(FEEDBACK_KEY); delete data[e.id]; saveObj(FEEDBACK_KEY, data);
-      renderFeedbackChips(); renderFeedbackList();
-    };
-    card.querySelector('[data-act=edit]').onclick = () => openFeedbackForm(e);
-    return card;
-  }
+function renderFeedbackEntry(e){
+const card = document.createElement('div');
+card.className = 'entry';
 
-  function openFeedbackForm(existing){
-    const slot = document.getElementById('fb-form-slot');
-    const isEdit = !!existing;
-    slot.innerHTML = `
-      <div class="form-card">
-        <div class="form-title">${isEdit ? '피드백 수정' : '새 피드백'}</div>
-        <div class="field">
-          <label>학생 이름</label>
-          <input type="text" id="fb-f-name" list="student-list" placeholder="예: 유지아" value="${isEdit?existing.name:''}">
-        </div>
-        <div class="field">
-          <label>날짜</label>
-          <input type="date" id="fb-f-date" value="${isEdit?existing.date:todayStr()}">
-        </div>
-        <div class="field">
-          <label>피드백 내용</label>
-          <textarea id="fb-f-text" placeholder="정리된 피드백 문구를 붙여넣으세요">${isEdit?existing.text:''}</textarea>
-        </div>
-        <div class="form-actions">
-          <button id="fb-f-cancel">취소</button>
-          <button class="primary" id="fb-f-save">저장</button>
-        </div>
-      </div>`;
-    document.getElementById('fb-f-cancel').onclick = () => { slot.innerHTML=''; };
-    document.getElementById('fb-f-save').onclick = () => {
-      const name = document.getElementById('fb-f-name').value.trim();
-      const date = document.getElementById('fb-f-date').value;
-      const text = document.getElementById('fb-f-text').value.trim();
-      if(!name || !date || !text) return;
-      const data = loadObj(FEEDBACK_KEY);
-      const id = isEdit ? existing.id : ('feedback:' + date + '-' + Date.now());
-      data[id] = { name, date, text };
-      saveObj(FEEDBACK_KEY, data);
-      slot.innerHTML = '';
-      fbOpenDates.add(date);
-      renderFeedbackChips(); renderFeedbackList();
-      const candidate = detectBogangCandidate(text, date);
-      if(candidate) showBogangConfirm(candidate, name);
-    };
-  }
+if(fbEditingId === e.id){
+card.classList.add('editing');
+card.innerHTML = `
+<div class="field">
+<label>학생 이름</label>
+<input type="text" id="inline-name-${e.id}" list="student-list" value="${e.name}">
+</div>
+<div class="field">
+<label>날짜</label>
+<input type="date" id="inline-date-${e.id}" value="${e.date}">
+</div>
+<div class="field">
+<label>피드백 내용</label>
+<textarea id="inline-text-${e.id}">${e.text}</textarea>
+</div>
+<div class="form-actions">
+<button id="inline-cancel-${e.id}">취소</button>
+<button class="primary" id="inline-save-${e.id}">저장</button>
+</div>
+`;
+card.querySelector(`#inline-cancel-${e.id}`).onclick = () => {
+fbEditingId = null;
+renderFeedbackList();
+};
+card.querySelector(`#inline-save-${e.id}`).onclick = () => {
+const name = card.querySelector(`#inline-name-${e.id}`).value.trim();
+const date = card.querySelector(`#inline-date-${e.id}`).value;
+const text = card.querySelector(`#inline-text-${e.id}`).value.trim();
+if(!name || !date || !text) return;
+const data = loadObj(FEEDBACK_KEY);
+data[e.id] = { name, date, text };
+saveObj(FEEDBACK_KEY, data);
+fbEditingId = null;
+fbOpenDates.add(date);
+renderFeedbackChips();
+renderFeedbackList();
+};
+return card;
+}
 
-  document.getElementById('fb-add-open').onclick = () => openFeedbackForm(null);
-  document.getElementById('fb-search').addEventListener('input', (e)=>{ fbSearch = e.target.value.trim(); renderFeedbackList(); });
+card.innerHTML = `
+<div class="entry-head">
+<span class="entry-name">${e.name}</span>
+<span class="entry-actions">
+<button class="ghost" data-act="copy">복사</button>
+<button class="ghost" data-act="edit">수정</button>
+<button class="ghost" data-act="delete">삭제</button>
+</span>
+</div>
+<div class="entry-text"></div>
+`;
+card.querySelector('.entry-text').textContent = e.text;
+card.querySelector('[data-act=copy]').onclick = (ev) => {
+if(!navigator.clipboard) return;
+navigator.clipboard.writeText(e.text).then(() => {
+const btn = ev.currentTarget;
+const original = btn.textContent;
+btn.textContent = '복사됨';
+btn.disabled = true;
+setTimeout(() => { btn.textContent = original; btn.disabled = false; }, 1500);
+});
+};
+card.querySelector('[data-act=delete]').onclick = () => {
+if(!confirm(`${e.name} 피드백을 삭제할까요?`)) return;
+const data = loadObj(FEEDBACK_KEY); delete data[e.id]; saveObj(FEEDBACK_KEY, data);
+renderFeedbackChips(); renderFeedbackList();
+};
+card.querySelector('[data-act=edit]').onclick = () => {
+fbEditingId = e.id;
+renderFeedbackList();
+};
+return card;
+}
 
-  // ---------- 보강 키워드 감지 (피드백 저장 시) ----------
-  // "관리보강" / "결석보강" 이라는 단어가 있으면 후보로 인식한다.
-  // 글 안에 "N월 N일" 형식의 날짜가 있으면 그 날짜를, 없으면(예: "최태훈 결석보강"처럼 짧게만 쓴 경우)
-  // 그 피드백 항목 자체의 날짜(refDateStr)를 그대로 사용한다.
-  function detectBogangCandidate(text, refDateStr){
-    let type = null;
-    if(text.includes('결석보강')) type = '결석보강';
-    else if(text.includes('관리보강')) type = '관리보강';
-    if(!type) return null;
+function openFeedbackForm(existing){
+const slot = document.getElementById('fb-form-slot');
+const isEdit = !!existing;
+slot.innerHTML = `
+<div class="form-card">
+<div class="form-title">${isEdit ? '피드백 수정' : '새 피드백'}</div>
+<div class="field">
+<label>학생 이름</label>
+<input type="text" id="fb-f-name" list="student-list" placeholder="예: 유지아" value="${isEdit?existing.name:''}">
+</div>
+<div class="field">
+<label>날짜</label>
+<input type="date" id="fb-f-date" value="${isEdit?existing.date:todayStr()}">
+</div>
+<div class="field">
+<label>피드백 내용</label>
+<textarea id="fb-f-text" placeholder="정리된 피드백 문구를 붙여넣으세요">${isEdit?existing.text:''}</textarea>
+</div>
+<div class="form-actions">
+<button id="fb-f-cancel">취소</button>
+<button class="primary" id="fb-f-save">저장</button>
+</div>
+</div>`;
+document.getElementById('fb-f-cancel').onclick = () => { slot.innerHTML=''; };
+document.getElementById('fb-f-save').onclick = () => {
+const name = document.getElementById('fb-f-name').value.trim();
+const date = document.getElementById('fb-f-date').value;
+const text = document.getElementById('fb-f-text').value.trim();
+if(!name || !date || !text) return;
+const data = loadObj(FEEDBACK_KEY);
+const id = isEdit ? existing.id : ('feedback:' + date + '-' + Date.now());
+data[id] = { name, date, text };
+saveObj(FEEDBACK_KEY, data);
+slot.innerHTML = '';
+fbOpenDates.add(date);
+renderFeedbackChips(); renderFeedbackList();
+const candidate = detectBogangCandidate(text, date);
+if(candidate) showBogangConfirm(candidate, name);
+};
+}
 
-    const dateMatch = text.match(/(\d{1,2})\s*월\s*(\d{1,2})\s*일/);
-    let date;
-    if(dateMatch){
-      const month = String(dateMatch[1]).padStart(2,'0');
-      const day = String(dateMatch[2]).padStart(2,'0');
-      const year = (refDateStr || todayStr()).slice(0,4);
-      date = `${year}-${month}-${day}`;
-    } else {
-      date = refDateStr || todayStr();
-    }
+document.getElementById('fb-add-open').onclick = () => openFeedbackForm(null);
+document.getElementById('fb-search').addEventListener('input', (e)=>{ fbSearch = e.target.value.trim(); renderFeedbackList(); });
 
-    let time = '';
-    const halfMatch = text.match(/(\d{1,2})\s*시\s*반/);
-    const hmMatch = text.match(/(\d{1,2})\s*시\s*(\d{1,2})\s*분/);
-    const hOnlyMatch = !hmMatch && !halfMatch ? text.match(/(\d{1,2})\s*시(?!간)/) : null;
-    let hour = null, minute = 0;
-    if(halfMatch){ hour = parseInt(halfMatch[1],10); minute = 30; }
-    else if(hmMatch){ hour = parseInt(hmMatch[1],10); minute = parseInt(hmMatch[2],10); }
-    else if(hOnlyMatch){ hour = parseInt(hOnlyMatch[1],10); minute = 0; }
-    if(hour !== null){
-      if(hour >= 1 && hour <= 7 && !text.includes('오전')) hour += 12; // 학원 특성상 오후로 간주
-      time = `${String(hour).padStart(2,'0')}:${String(minute).padStart(2,'0')}`;
-    }
+// ---------- 보강 키워드 감지 (피드백 저장 시) ----------
+// "관리보강" / "결석보강" 이라는 단어가 있으면 후보로 인식한다.
+// 글 안에 "N월 N일" 형식의 날짜가 있으면 그 날짜를, 없으면(예: "최태훈 결석보강"처럼 짧게만 쓴 경우)
+// 그 피드백 항목 자체의 날짜(refDateStr)를 그대로 사용한다.
+function detectBogangCandidate(text, refDateStr){
+let type = null;
+if(text.includes('결석보강')) type = '결석보강';
+else if(text.includes('관리보강')) type = '관리보강';
+if(!type) return null;
 
-    return { type, date, time };
-  }
+const dateMatch = text.match(/(\d{1,2})\s*월\s*(\d{1,2})\s*일/);
+let date;
+if(dateMatch){
+const month = String(dateMatch[1]).padStart(2,'0');
+const day = String(dateMatch[2]).padStart(2,'0');
+const year = (refDateStr || todayStr()).slice(0,4);
+date = `${year}-${month}-${day}`;
+} else {
+date = refDateStr || todayStr();
+}
 
-  function showBogangConfirm(candidate, studentName){
-    const overlay = document.createElement('div');
-    overlay.className = 'modal-overlay';
-    overlay.innerHTML = `
-      <div class="modal-card">
-        <div class="modal-title">보강 일정을 발견했어요</div>
-        <div class="modal-hint">피드백 내용에서 "${candidate.type}"와 날짜가 감지됐어요. 캘린더에 추가하기 전에 내용을 확인·수정해주세요.</div>
-        <div class="form-row">
-          <div class="field">
-            <label>학생 이름</label>
-            <input type="text" id="bc-name" list="student-list" value="${studentName}">
-          </div>
-          <div class="field">
-            <label>유형</label>
-            <select id="bc-type">
-              <option value="관리보강" ${candidate.type==='관리보강'?'selected':''}>관리보강</option>
-              <option value="결석보강" ${candidate.type==='결석보강'?'selected':''}>결석보강</option>
-            </select>
-          </div>
-        </div>
-        <div class="form-row">
-          <div class="field">
-            <label>날짜</label>
-            <input type="date" id="bc-date" value="${candidate.date}">
-          </div>
-          <div class="field">
-            <label>시간 (선택)</label>
-            <input type="time" id="bc-time" value="${candidate.time || ''}">
-          </div>
-        </div>
-        <div class="modal-actions">
-          <button id="bc-skip">추가 안 함</button>
-          <button class="primary" id="bc-confirm">캘린더에 추가</button>
-        </div>
-      </div>`;
-    document.body.appendChild(overlay);
-    document.getElementById('bc-skip').onclick = () => overlay.remove();
-    document.getElementById('bc-confirm').onclick = () => {
-      const name = document.getElementById('bc-name').value.trim();
-      const type = document.getElementById('bc-type').value;
-      const date = document.getElementById('bc-date').value;
-      const time = document.getElementById('bc-time').value;
-      if(!name || !date){ overlay.remove(); return; }
-      const data = loadObj(BOGANG_KEY);
-      data[uid()] = { name, type, date, time, memo: '' };
-      saveObj(BOGANG_KEY, data);
-      overlay.remove();
-    };
-  }
+let time = '';
+const halfMatch = text.match(/(\d{1,2})\s*시\s*반/);
+const hmMatch = text.match(/(\d{1,2})\s*시\s*(\d{1,2})\s*분/);
+const hOnlyMatch = !hmMatch && !halfMatch ? text.match(/(\d{1,2})\s*시(?!간)/) : null;
+let hour = null, minute = 0;
+if(halfMatch){ hour = parseInt(halfMatch[1],10); minute = 30; }
+else if(hmMatch){ hour = parseInt(hmMatch[1],10); minute = parseInt(hmMatch[2],10); }
+else if(hOnlyMatch){ hour = parseInt(hOnlyMatch[1],10); minute = 0; }
+if(hour !== null){
+if(hour >= 1 && hour <= 7 && !text.includes('오전')) hour += 12; // 학원 특성상 오후로 간주
+time = `${String(hour).padStart(2,'0')}:${String(minute).padStart(2,'0')}`;
+}
 
-  // ================= BOGANG TAB =================
-  let calCursor = new Date(); calCursor.setDate(1);
-  let selectedDate = todayStr();
+return { type, date, time };
+}
 
-  function renderCalDow(){
-    const el = document.getElementById('cal-dow');
-    el.innerHTML = DOW.map(d=>`<div class="cal-dow">${d}</div>`).join('');
-  }
+function showBogangConfirm(candidate, studentName){
+const overlay = document.createElement('div');
+overlay.className = 'modal-overlay';
+overlay.innerHTML = `
+<div class="modal-card">
+<div class="modal-title">보강 일정을 발견했어요</div>
+<div class="modal-hint">피드백 내용에서 "${candidate.type}"와 날짜가 감지됐어요. 캘린더에 추가하기 전에 내용을 확인·수정해주세요.</div>
+<div class="form-row">
+<div class="field">
+<label>학생 이름</label>
+<input type="text" id="bc-name" list="student-list" value="${studentName}">
+</div>
+<div class="field">
+<label>유형</label>
+<select id="bc-type">
+<option value="관리보강" ${candidate.type==='관리보강'?'selected':''}>관리보강</option>
+<option value="결석보강" ${candidate.type==='결석보강'?'selected':''}>결석보강</option>
+</select>
+</div>
+</div>
+<div class="form-row">
+<div class="field">
+<label>날짜</label>
+<input type="date" id="bc-date" value="${candidate.date}">
+</div>
+<div class="field">
+<label>시간 (선택)</label>
+<input type="time" id="bc-time" value="${candidate.time || ''}">
+</div>
+</div>
+<div class="modal-actions">
+<button id="bc-skip">추가 안 함</button>
+<button class="primary" id="bc-confirm">캘린더에 추가</button>
+</div>
+</div>`;
+document.body.appendChild(overlay);
+document.getElementById('bc-skip').onclick = () => overlay.remove();
+document.getElementById('bc-confirm').onclick = () => {
+const name = document.getElementById('bc-name').value.trim();
+const type = document.getElementById('bc-type').value;
+const date = document.getElementById('bc-date').value;
+const time = document.getElementById('bc-time').value;
+if(!name || !date){ overlay.remove(); return; }
+const data = loadObj(BOGANG_KEY);
+data[uid()] = { name, type, date, time, memo: '' };
+saveObj(BOGANG_KEY, data);
+overlay.remove();
+};
+}
 
-  function renderCalendar(){
-    document.getElementById('cal-title').textContent = `${calCursor.getFullYear()}년 ${calCursor.getMonth()+1}월`;
-    const bogang = loadObj(BOGANG_KEY);
-    const byDate = {};
-    Object.values(bogang).forEach(b => { (byDate[b.date] = byDate[b.date]||[]).push(b); });
+// ================= BOGANG TAB =================
+let calCursor = new Date(); calCursor.setDate(1);
+let selectedDate = todayStr();
 
-    const grid = document.getElementById('cal-grid');
-    grid.innerHTML = '';
-    const firstDow = calCursor.getDay();
-    const daysInMonth = new Date(calCursor.getFullYear(), calCursor.getMonth()+1, 0).getDate();
-    for(let i=0;i<firstDow;i++){
-      const blank = document.createElement('div');
-      blank.className = 'cal-cell empty';
-      grid.appendChild(blank);
-    }
-    for(let d=1; d<=daysInMonth; d++){
-      const dateObj = new Date(calCursor.getFullYear(), calCursor.getMonth(), d);
-      const dateStr = fmtDate(dateObj);
-      const cell = document.createElement('div');
-      cell.className = 'cal-cell';
-      if(dateStr === todayStr()) cell.classList.add('today');
-      if(dateStr === selectedDate) cell.classList.add('selected');
-      const items = byDate[dateStr] || [];
-      const gwanli = items.filter(b=>b.type==='관리보강').length;
-      const gyeolseok = items.filter(b=>b.type==='결석보강').length;
-      cell.innerHTML = `
-        <button class="cal-add-btn" title="이 날짜에 보강 등록">+</button>
-        <div class="cal-daynum">${d}</div>
-        <div class="cal-dots">${gwanli?`<span class="dot gwanli"></span>`:''}${gyeolseok?`<span class="dot gyeolseok"></span>`:''}</div>`;
-      cell.onclick = () => { selectedDate = dateStr; renderCalendar(); renderBogangList(); };
-      cell.querySelector('.cal-add-btn').onclick = (ev) => {
-        ev.stopPropagation();
-        selectedDate = dateStr;
-        renderCalendar(); renderBogangList();
-        openBogangForm(null);
-      };
-      grid.appendChild(cell);
-    }
-  }
+function renderCalDow(){
+const el = document.getElementById('cal-dow');
+el.innerHTML = DOW.map(d=>`<div class="cal-dow">${d}</div>`).join('');
+}
 
-  function renderBogangList(){
-    const bogang = loadObj(BOGANG_KEY);
-    const entries = Object.entries(bogang).map(([id,b])=>({id,...b})).filter(b=>b.date===selectedDate);
-    entries.sort((a,b)=> (a.time||'').localeCompare(b.time||''));
-    document.getElementById('bg-selected-title').textContent = `${selectedDate} (${dowLabel(selectedDate)}) 보강 — ${entries.length}건`;
-    const list = document.getElementById('bg-list');
-    list.innerHTML = '';
-    if(entries.length===0){ list.innerHTML = '<div class="empty-note">이 날짜에 등록된 보강이 없어요.</div>'; return; }
-    entries.forEach(b=>{
-      const row = document.createElement('div');
-      row.className = 'bogang-row';
-      row.innerHTML = `
-        <span class="type-chip ${b.type==='결석보강'?'gyeolseok':'gwanli'}">${b.type}</span>
-        <div class="bogang-body">
-          <div class="bogang-name">${b.name}</div>
-          <div class="bogang-meta">${b.time ? b.time+' · ' : ''}${selectedDate}</div>
-          ${b.memo ? `<div class="bogang-memo">${b.memo}</div>` : ''}
-        </div>
-        <span class="entry-actions">
-          <button class="ghost" data-act="edit">수정</button>
-          <button class="ghost" data-act="delete">삭제</button>
-        </span>`;
-      row.querySelector('[data-act=delete]').onclick = () => {
-        if(!confirm(`${b.name} ${b.type} 항목을 삭제할까요?`)) return;
-        const data = loadObj(BOGANG_KEY); delete data[b.id]; saveObj(BOGANG_KEY, data);
-        renderCalendar(); renderBogangList();
-      };
-      row.querySelector('[data-act=edit]').onclick = () => openBogangForm(b);
-      list.appendChild(row);
-    });
-  }
+function renderCalendar(){
+document.getElementById('cal-title').textContent = `${calCursor.getFullYear()}년 ${calCursor.getMonth()+1}월`;
+const bogang = loadObj(BOGANG_KEY);
+const byDate = {};
+Object.values(bogang).forEach(b => { (byDate[b.date] = byDate[b.date]||[]).push(b); });
 
-  function openBogangForm(existing){
-    const slot = document.getElementById('bg-form-slot');
-    const isEdit = !!existing;
-    slot.innerHTML = `
-      <div class="form-card">
-        <div class="form-title">${isEdit ? '보강 수정' : '보강 등록'}</div>
-        <div class="form-row">
-          <div class="field">
-            <label>학생 이름</label>
-            <input type="text" id="bg-f-name" list="student-list" placeholder="예: 유지아" value="${isEdit?existing.name:''}">
-          </div>
-          <div class="field">
-            <label>유형</label>
-            <select id="bg-f-type">
-              <option value="관리보강" ${isEdit && existing.type==='관리보강' ? 'selected':''}>관리보강</option>
-              <option value="결석보강" ${isEdit && existing.type==='결석보강' ? 'selected':''}>결석보강</option>
-            </select>
-          </div>
-        </div>
-        <div class="form-row">
-          <div class="field">
-            <label>날짜</label>
-            <input type="date" id="bg-f-date" value="${isEdit?existing.date:selectedDate}">
-          </div>
-          <div class="field">
-            <label>시간 (선택)</label>
-            <input type="time" id="bg-f-time" value="${isEdit&&existing.time?existing.time:''}">
-          </div>
-        </div>
-        <div class="field">
-          <label>메모 (선택)</label>
-          <input type="text" id="bg-f-memo" placeholder="예: 수만프 4회 오답 마무리" value="${isEdit&&existing.memo?existing.memo:''}">
-        </div>
-        <div class="form-actions">
-          <button id="bg-f-cancel">취소</button>
-          <button class="primary" id="bg-f-save">저장</button>
-        </div>
-      </div>`;
-    slot.scrollIntoView({behavior:'smooth', block:'center'});
-    document.getElementById('bg-f-cancel').onclick = () => { slot.innerHTML=''; };
-    document.getElementById('bg-f-save').onclick = () => {
-      const name = document.getElementById('bg-f-name').value.trim();
-      const type = document.getElementById('bg-f-type').value;
-      const date = document.getElementById('bg-f-date').value;
-      const time = document.getElementById('bg-f-time').value;
-      const memo = document.getElementById('bg-f-memo').value.trim();
-      if(!name || !date) return;
-      const data = loadObj(BOGANG_KEY);
-      const id = isEdit ? existing.id : uid();
-      data[id] = { name, type, date, time, memo };
-      saveObj(BOGANG_KEY, data);
-      slot.innerHTML = '';
-      selectedDate = date;
-      calCursor = new Date(date+'T00:00:00'); calCursor.setDate(1);
-      renderCalendar(); renderBogangList();
-    };
-  }
+const grid = document.getElementById('cal-grid');
+grid.innerHTML = '';
+const firstDow = calCursor.getDay();
+const daysInMonth = new Date(calCursor.getFullYear(), calCursor.getMonth()+1, 0).getDate();
+for(let i=0;i<firstDow;i++){
+const blank = document.createElement('div');
+blank.className = 'cal-cell empty';
+grid.appendChild(blank);
+}
+for(let d=1; d<=daysInMonth; d++){
+const dateObj = new Date(calCursor.getFullYear(), calCursor.getMonth(), d);
+const dateStr = fmtDate(dateObj);
+const cell = document.createElement('div');
+cell.className = 'cal-cell';
+if(dateStr === todayStr()) cell.classList.add('today');
+if(dateStr === selectedDate) cell.classList.add('selected');
+const items = byDate[dateStr] || [];
+const gwanli = items.filter(b=>b.type==='관리보강').length;
+const gyeolseok = items.filter(b=>b.type==='결석보강').length;
+cell.innerHTML = `
+<button class="cal-add-btn" title="이 날짜에 보강 등록">+</button>
+<div class="cal-daynum">${d}</div>
+<div class="cal-dots">${gwanli?`<span class="dot gwanli"></span>`:''}${gyeolseok?`<span class="dot gyeolseok"></span>`:''}</div>`;
+cell.onclick = () => { selectedDate = dateStr; renderCalendar(); renderBogangList(); };
+cell.querySelector('.cal-add-btn').onclick = (ev) => {
+ev.stopPropagation();
+selectedDate = dateStr;
+renderCalendar(); renderBogangList();
+openBogangForm(null);
+};
+grid.appendChild(cell);
+}
+}
 
-  document.getElementById('bg-today').onclick = () => {
-    selectedDate = todayStr();
-    calCursor = new Date(); calCursor.setDate(1);
-    renderCalendar(); renderBogangList();
-  };
-  document.getElementById('cal-prev').onclick = () => { calCursor.setMonth(calCursor.getMonth()-1); renderCalendar(); };
-  document.getElementById('cal-next').onclick = () => { calCursor.setMonth(calCursor.getMonth()+1); renderCalendar(); };
+function renderBogangList(){
+const bogang = loadObj(BOGANG_KEY);
+const entries = Object.entries(bogang).map(([id,b])=>({id,...b})).filter(b=>b.date===selectedDate);
+entries.sort((a,b)=> (a.time||'').localeCompare(b.time||''));
+document.getElementById('bg-selected-title').textContent = `${selectedDate} (${dowLabel(selectedDate)}) 보강 — ${entries.length}건`;
+const list = document.getElementById('bg-list');
+list.innerHTML = '';
+if(entries.length===0){ list.innerHTML = '<div class="empty-note">이 날짜에 등록된 보강이 없어요.</div>'; return; }
+entries.forEach(b=>{
+const row = document.createElement('div');
+row.className = 'bogang-row';
+row.innerHTML = `
+<span class="type-chip ${b.type==='결석보강'?'gyeolseok':'gwanli'}">${b.type}</span>
+<div class="bogang-body">
+<div class="bogang-name">${b.name}</div>
+<div class="bogang-meta">${b.time ? b.time+' · ' : ''}${selectedDate}</div>
+${b.memo ? `<div class="bogang-memo">${b.memo}</div>` : ''}
+</div>
+<span class="entry-actions">
+<button class="ghost" data-act="edit">수정</button>
+<button class="ghost" data-act="delete">삭제</button>
+</span>`;
+row.querySelector('[data-act=delete]').onclick = () => {
+if(!confirm(`${b.name} ${b.type} 항목을 삭제할까요?`)) return;
+const data = loadObj(BOGANG_KEY); delete data[b.id]; saveObj(BOGANG_KEY, data);
+renderCalendar(); renderBogangList();
+};
+row.querySelector('[data-act=edit]').onclick = () => openBogangForm(b);
+list.appendChild(row);
+});
+}
 
-  function renderBogang(){
-    renderCalDow();
-    renderCalendar();
-    renderBogangList();
-  }
+function openBogangForm(existing){
+const slot = document.getElementById('bg-form-slot');
+const isEdit = !!existing;
+slot.innerHTML = `
+<div class="form-card">
+<div class="form-title">${isEdit ? '보강 수정' : '보강 등록'}</div>
+<div class="form-row">
+<div class="field">
+<label>학생 이름</label>
+<input type="text" id="bg-f-name" list="student-list" placeholder="예: 유지아" value="${isEdit?existing.name:''}">
+</div>
+<div class="field">
+<label>유형</label>
+<select id="bg-f-type">
+<option value="관리보강" ${isEdit && existing.type==='관리보강' ? 'selected':''}>관리보강</option>
+<option value="결석보강" ${isEdit && existing.type==='결석보강' ? 'selected':''}>결석보강</option>
+</select>
+</div>
+</div>
+<div class="form-row">
+<div class="field">
+<label>날짜</label>
+<input type="date" id="bg-f-date" value="${isEdit?existing.date:selectedDate}">
+</div>
+<div class="field">
+<label>시간 (선택)</label>
+<input type="time" id="bg-f-time" value="${isEdit&&existing.time?existing.time:''}">
+</div>
+</div>
+<div class="field">
+<label>메모 (선택)</label>
+<input type="text" id="bg-f-memo" placeholder="예: 수만프 4회 오답 마무리" value="${isEdit&&existing.memo?existing.memo:''}">
+</div>
+<div class="form-actions">
+<button id="bg-f-cancel">취소</button>
+<button class="primary" id="bg-f-save">저장</button>
+</div>
+</div>`;
+slot.scrollIntoView({behavior:'smooth', block:'center'});
+document.getElementById('bg-f-cancel').onclick = () => { slot.innerHTML=''; };
+document.getElementById('bg-f-save').onclick = () => {
+const name = document.getElementById('bg-f-name').value.trim();
+const type = document.getElementById('bg-f-type').value;
+const date = document.getElementById('bg-f-date').value;
+const time = document.getElementById('bg-f-time').value;
+const memo = document.getElementById('bg-f-memo').value.trim();
+if(!name || !date) return;
+const data = loadObj(BOGANG_KEY);
+const id = isEdit ? existing.id : uid();
+data[id] = { name, type, date, time, memo };
+saveObj(BOGANG_KEY, data);
+slot.innerHTML = '';
+selectedDate = date;
+calCursor = new Date(date+'T00:00:00'); calCursor.setDate(1);
+renderCalendar(); renderBogangList();
+};
+}
 
-  // ================= INIT =================
-  renderFeedbackChips();
-  renderFeedbackList();
+document.getElementById('bg-today').onclick = () => {
+selectedDate = todayStr();
+calCursor = new Date(); calCursor.setDate(1);
+renderCalendar(); renderBogangList();
+};
+document.getElementById('cal-prev').onclick = () => { calCursor.setMonth(calCursor.getMonth()-1); renderCalendar(); };
+document.getElementById('cal-next').onclick = () => { calCursor.setMonth(calCursor.getMonth()+1); renderCalendar(); };
+
+function renderBogang(){
+renderCalDow();
+renderCalendar();
+renderBogangList();
+}
+
+// ================= INIT =================
+renderFeedbackChips();
+renderFeedbackList();
 </script>
 </body>
 </html>
