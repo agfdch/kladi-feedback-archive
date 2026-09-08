@@ -478,29 +478,29 @@ card.classList.add('editing');
 card.innerHTML = `
 <div class="field">
 <label>학생 이름</label>
-<input type="text" id="inline-name-${e.id}" list="student-list" value="${e.name}">
+<input type="text" class="inline-name" list="student-list" value="${e.name}">
 </div>
 <div class="field">
 <label>날짜</label>
-<input type="date" id="inline-date-${e.id}" value="${e.date}">
+<input type="date" class="inline-date" value="${e.date}">
 </div>
 <div class="field">
 <label>피드백 내용</label>
-<textarea id="inline-text-${e.id}">${e.text}</textarea>
+<textarea class="inline-text">${e.text}</textarea>
 </div>
 <div class="form-actions">
-<button id="inline-cancel-${e.id}">취소</button>
-<button class="primary" id="inline-save-${e.id}">저장</button>
+<button class="inline-cancel">취소</button>
+<button class="primary inline-save">저장</button>
 </div>
 `;
-card.querySelector(`#inline-cancel-${e.id}`).onclick = () => {
+card.querySelector('.inline-cancel').onclick = () => {
 fbEditingId = null;
 renderFeedbackList();
 };
-card.querySelector(`#inline-save-${e.id}`).onclick = () => {
-const name = card.querySelector(`#inline-name-${e.id}`).value.trim();
-const date = card.querySelector(`#inline-date-${e.id}`).value;
-const text = card.querySelector(`#inline-text-${e.id}`).value.trim();
+card.querySelector('.inline-save').onclick = () => {
+const name = card.querySelector('.inline-name').value.trim();
+const date = card.querySelector('.inline-date').value;
+const text = card.querySelector('.inline-text').value.trim();
 if(!name || !date || !text) return;
 const data = loadObj(FEEDBACK_KEY);
 data[e.id] = { name, date, text };
