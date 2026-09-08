@@ -526,14 +526,34 @@ card.innerHTML = `
 `;
 card.querySelector('.entry-text').textContent = e.text;
 card.querySelector('[data-act=copy]').onclick = (ev) => {
-if(!navigator.clipboard) return;
-navigator.clipboard.writeText(e.text).then(() => {
 const btn = ev.currentTarget;
+const showResult = (ok) => {
 const original = btn.textContent;
-btn.textContent = '복사됨';
+btn.textContent = ok ? '복사됨' : '복사 실패';
 btn.disabled = true;
 setTimeout(() => { btn.textContent = original; btn.disabled = false; }, 1500);
-});
+};
+const fallbackCopy = () => {
+try {
+const ta = document.createElement('textarea');
+ta.value = e.text;
+ta.style.position = 'fixed';
+ta.style.opacity = '0';
+document.body.appendChild(ta);
+ta.focus();
+ta.select();
+const ok = document.execCommand('copy');
+document.body.removeChild(ta);
+showResult(ok);
+} catch (err) {
+showResult(false);
+}
+};
+if(navigator.clipboard && navigator.clipboard.writeText){
+navigator.clipboard.writeText(e.text).then(() => showResult(true)).catch(fallbackCopy);
+} else {
+fallbackCopy();
+}
 };
 card.querySelector('[data-act=delete]').onclick = () => {
 if(!confirm(`${e.name} 피드백을 삭제할까요?`)) return;
