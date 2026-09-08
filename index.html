@@ -20,6 +20,9 @@
     --sage:#74805F;
     --sage-soft:#EEF0E6;
     --sage-ink:#4E5740;
+    --absent:#4A6FA5;
+    --absent-soft:#E4EAF3;
+    --absent-ink:#33507A;
     --shadow: 0 1px 2px rgba(44,36,22,0.04), 0 8px 24px -14px rgba(44,36,22,0.28);
   }
   @media (prefers-color-scheme: dark){
@@ -37,6 +40,9 @@
       --sage:#9BAA84;
       --sage-soft:#2B301F;
       --sage-ink:#D8E2C6;
+      --absent:#7FA3D6;
+      --absent-soft:#22304A;
+      --absent-ink:#BFD4F0;
       --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 8px 24px -14px rgba(0,0,0,0.6);
     }
   }
@@ -45,6 +51,7 @@
     --muted:#A79C84; --faint:#6E6653; --border:#3A3325;
     --accent:#E8934F; --accent-ink:#211505; --accent-soft:#3A2A17;
     --sage:#9BAA84; --sage-soft:#2B301F; --sage-ink:#D8E2C6;
+    --absent:#7FA3D6; --absent-soft:#22304A; --absent-ink:#BFD4F0;
     --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 8px 24px -14px rgba(0,0,0,0.6);
   }
   *{box-sizing:border-box;}
@@ -150,6 +157,7 @@
   }
   .cal-dow{text-align:center;font-size:12px;font-weight:700;color:var(--muted);padding-bottom:4px;}
   .cal-cell{
+    position:relative;
     aspect-ratio:1/1;border-radius:12px;background:var(--surface);border:1px solid var(--border);
     padding:6px;display:flex;flex-direction:column;gap:4px;cursor:pointer;min-height:56px;
   }
@@ -159,9 +167,15 @@
   .cal-daynum{font-size:12.5px;font-weight:600;font-variant-numeric:tabular-nums;color:var(--muted);}
   .cal-cell.today .cal-daynum{color:var(--accent);}
   .cal-dots{display:flex;gap:3px;flex-wrap:wrap;}
+  .cal-add-btn{
+    position:absolute;top:3px;right:3px;width:18px;height:18px;border-radius:50%;
+    background:var(--accent-soft);color:var(--accent);border:none;cursor:pointer;
+    font-size:13px;line-height:1;font-weight:700;padding:0;display:flex;align-items:center;justify-content:center;
+  }
+  .cal-add-btn:hover{background:var(--accent);color:var(--accent-ink);}
   .dot{width:7px;height:7px;border-radius:50%;}
   .dot.gwanli{background:var(--accent);}
-  .dot.gyeolseok{background:var(--sage);}
+  .dot.gyeolseok{background:var(--absent);}
 
   .selected-date-title{font-size:15px;font-weight:700;}
   .bogang-list{display:flex;flex-direction:column;gap:10px;}
@@ -173,7 +187,7 @@
     flex:none;font-size:11.5px;font-weight:700;border-radius:100px;padding:4px 10px;
   }
   .type-chip.gwanli{background:var(--accent-soft);color:var(--accent);}
-  .type-chip.gyeolseok{background:var(--sage-soft);color:var(--sage-ink);}
+  .type-chip.gyeolseok{background:var(--absent-soft);color:var(--absent-ink);}
   .bogang-body{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px;}
   .bogang-name{font-weight:700;font-size:14.5px;}
   .bogang-meta{font-size:12.5px;color:var(--muted);font-variant-numeric:tabular-nums;}
@@ -225,7 +239,11 @@
     <div id="fb-form-slot"></div>
 
     <div>
-      <div class="chip-label">학생 목록</div>
+      <div style="display:flex;align-items:center;justify-content:space-between;">
+        <div class="chip-label">학생 목록</div>
+        <button class="ghost" id="roster-manage-open" style="padding:3px 10px;font-size:12.5px;">명단 관리</button>
+      </div>
+      <div id="roster-panel-slot"></div>
       <div class="chips" id="fb-chips" style="margin-top:8px;"></div>
     </div>
 
@@ -236,8 +254,6 @@
   <div class="panel" id="panel-bogang">
     <div class="toolbar">
       <button class="ghost" id="bg-today">오늘로 이동</button>
-      <div style="flex:1;"></div>
-      <button class="primary" id="bg-add-open">+ 보강 등록</button>
     </div>
 
     <div id="bg-form-slot"></div>
@@ -261,9 +277,13 @@
 </div>
 
 <script>
-  const STUDENTS = ["김리사","김유주","김이준","박하윤","배경윤","배은빈","서민경","엄승유","여채율","유소율","유이재","유지아","이서현","이아영","이아진","이준철","이준현","이채원B","이환","장서은","전윤아","전재우","정지현","최준서","최태훈","홍제인","황유찬"];
+  // 최초 배포 시점의 학생 명단(마이그레이션용 기본값). 이후로는 명단 관리 UI에서
+  // 추가/삭제한 내용이 ROSTER_KEY에 저장되어 이 값을 대체하므로, 신규생/퇴원생이
+  // 생겨도 이 파일을 다시 손댈 필요가 없다.
+  const DEFAULT_STUDENTS = ["김리사","김유주","김이준","박하윤","배경윤","배은빈","서민경","엄승유","여채율","유소율","유이재","유지아","이서현","이아영","이아진","이준철","이준현","이채원B","이환","장서은","전윤아","전재우","정지현","최준서","최태훈","홍제인","황유찬"];
   const FEEDBACK_KEY = 'kladi_feedback_archive_v1';
   const BOGANG_KEY = 'kladi_bogang_v1';
+  const ROSTER_KEY = 'kladi_roster_v1';
   const DOW = ['일','월','화','수','목','금','토'];
 
   const loadObj = (key) => { try { return JSON.parse(localStorage.getItem(key)) || {}; } catch(e){ return {}; } };
@@ -273,15 +293,107 @@
   const fmtDate = (d) => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
   const dowLabel = (dateStr) => DOW[new Date(dateStr+'T00:00:00').getDay()];
 
-  // ---------- datalist for student names ----------
-  function ensureDatalist(){
-    if(document.getElementById('student-list')) return;
-    const dl = document.createElement('datalist');
-    dl.id = 'student-list';
-    dl.innerHTML = STUDENTS.map(s=>`<option value="${s}">`).join('');
-    document.body.appendChild(dl);
+  // ---------- 학생 명단(roster) ----------
+  // localStorage에 저장되어 브라우저에 남기 때문에, 신규생 추가·퇴원생 삭제는
+  // "명단 관리" 패널에서 바로 처리하고 GitHub 파일은 건드리지 않아도 된다.
+  function getRoster(){
+    try{
+      const raw = localStorage.getItem(ROSTER_KEY);
+      if(raw) return JSON.parse(raw);
+    }catch(e){}
+    // 최초 1회: 기본 명단으로 초기화
+    saveObj_roster(DEFAULT_STUDENTS.slice());
+    return DEFAULT_STUDENTS.slice();
   }
-  ensureDatalist();
+  function saveObj_roster(arr){
+    const sorted = Array.from(new Set(arr)).sort((a,b)=>a.localeCompare(b,'ko'));
+    localStorage.setItem(ROSTER_KEY, JSON.stringify(sorted));
+    return sorted;
+  }
+  function addStudent(name){
+    name = name.trim();
+    if(!name) return;
+    const roster = getRoster();
+    if(roster.includes(name)) return;
+    roster.push(name);
+    saveObj_roster(roster);
+    refreshDatalist();
+  }
+  function removeStudent(name){
+    const roster = getRoster().filter(n=>n!==name);
+    saveObj_roster(roster);
+    refreshDatalist();
+  }
+
+  // ---------- datalist for student names ----------
+  function refreshDatalist(){
+    let dl = document.getElementById('student-list');
+    if(!dl){
+      dl = document.createElement('datalist');
+      dl.id = 'student-list';
+      document.body.appendChild(dl);
+    }
+    dl.innerHTML = getRoster().map(s=>`<option value="${s}">`).join('');
+  }
+  refreshDatalist();
+
+  // ---------- 명단 관리 패널 ----------
+  function renderRosterPanel(){
+    const slot = document.getElementById('roster-panel-slot');
+    if(!slot.classList.contains('open')) return;
+    const roster = getRoster();
+    slot.innerHTML = `
+      <div class="form-card" style="margin:10px 0;">
+        <div class="form-title">학생 명단 관리</div>
+        <div class="modal-hint" style="margin:-4px 0 0;">여기서 추가·삭제한 내용은 이 브라우저에 바로 저장돼요. 삭제해도 그 학생의 예전 피드백·보강 기록은 사라지지 않고, "전체"에서 계속 볼 수 있어요.</div>
+        <div class="form-row">
+          <div class="field" style="flex:1;">
+            <input type="text" id="roster-add-input" placeholder="추가할 학생 이름">
+          </div>
+          <button class="primary" id="roster-add-btn">추가</button>
+        </div>
+        <div class="chips">
+          ${roster.map(name=>`
+            <span class="chip has-data" style="display:inline-flex;align-items:center;gap:6px;">
+              ${name}
+              <button class="roster-del-btn" data-name="${name}" title="명단에서 삭제" style="background:none;border:none;padding:0;margin:0;font-size:13px;line-height:1;color:var(--muted);cursor:pointer;border-radius:0;">×</button>
+            </span>`).join('')}
+        </div>
+        <div class="form-actions">
+          <button class="ghost" id="roster-manage-close">닫기</button>
+        </div>
+      </div>`;
+
+    document.getElementById('roster-manage-close').onclick = () => {
+      slot.classList.remove('open');
+      slot.innerHTML = '';
+    };
+    document.getElementById('roster-add-btn').onclick = () => {
+      const input = document.getElementById('roster-add-input');
+      addStudent(input.value);
+      renderRosterPanel();
+      renderFeedbackChips();
+    };
+    document.getElementById('roster-add-input').addEventListener('keydown', (e) => {
+      if(e.key === 'Enter'){ e.preventDefault(); document.getElementById('roster-add-btn').click(); }
+    });
+    slot.querySelectorAll('.roster-del-btn').forEach(btn=>{
+      btn.onclick = () => {
+        const name = btn.dataset.name;
+        if(!confirm(`"${name}" 학생을 명단에서 삭제할까요? (이전 피드백·보강 기록은 유지됩니다)`)) return;
+        removeStudent(name);
+        renderRosterPanel();
+        renderFeedbackChips();
+      };
+    });
+  }
+  document.getElementById('roster-manage-open').onclick = () => {
+    const slot = document.getElementById('roster-panel-slot');
+    const willOpen = !slot.classList.contains('open');
+    slot.classList.toggle('open', willOpen);
+    if(willOpen) renderRosterPanel();
+    else slot.innerHTML = '';
+  };
 
   // ================= TABS =================
   document.querySelectorAll('.tab-btn').forEach(btn=>{
@@ -310,7 +422,7 @@
     allChip.textContent = '전체';
     allChip.onclick = () => { fbFilter = null; renderFeedbackChips(); renderFeedbackList(); };
     chips.appendChild(allChip);
-    STUDENTS.forEach(name=>{
+    getRoster().forEach(name=>{
       const c = document.createElement('button');
       c.className = 'chip' + (counts[name] ? ' has-data' : '') + (fbFilter===name ? ' active' : '');
       c.textContent = name;
@@ -421,8 +533,9 @@
   document.getElementById('fb-search').addEventListener('input', (e)=>{ fbSearch = e.target.value.trim(); renderFeedbackList(); });
 
   // ---------- 보강 키워드 감지 (피드백 저장 시) ----------
-  // "관리보강" / "결석보강" 이라는 단어가 있고, "N월 N일" 형식의 명확한 날짜가 같이 있을 때만 후보로 인식한다.
-  // 날짜가 없으면(스케줄 설명 등 단순 언급) 조용히 무시한다.
+  // "관리보강" / "결석보강" 이라는 단어가 있으면 후보로 인식한다.
+  // 글 안에 "N월 N일" 형식의 날짜가 있으면 그 날짜를, 없으면(예: "최태훈 결석보강"처럼 짧게만 쓴 경우)
+  // 그 피드백 항목 자체의 날짜(refDateStr)를 그대로 사용한다.
   function detectBogangCandidate(text, refDateStr){
     let type = null;
     if(text.includes('결석보강')) type = '결석보강';
@@ -430,11 +543,15 @@
     if(!type) return null;
 
     const dateMatch = text.match(/(\d{1,2})\s*월\s*(\d{1,2})\s*일/);
-    if(!dateMatch) return null;
-    const month = String(dateMatch[1]).padStart(2,'0');
-    const day = String(dateMatch[2]).padStart(2,'0');
-    const year = (refDateStr || todayStr()).slice(0,4);
-    const date = `${year}-${month}-${day}`;
+    let date;
+    if(dateMatch){
+      const month = String(dateMatch[1]).padStart(2,'0');
+      const day = String(dateMatch[2]).padStart(2,'0');
+      const year = (refDateStr || todayStr()).slice(0,4);
+      date = `${year}-${month}-${day}`;
+    } else {
+      date = refDateStr || todayStr();
+    }
 
     let time = '';
     const halfMatch = text.match(/(\d{1,2})\s*시\s*반/);
@@ -536,8 +653,17 @@
       const items = byDate[dateStr] || [];
       const gwanli = items.filter(b=>b.type==='관리보강').length;
       const gyeolseok = items.filter(b=>b.type==='결석보강').length;
-      cell.innerHTML = `<div class="cal-daynum">${d}</div><div class="cal-dots">${gwanli?`<span class="dot gwanli"></span>`:''}${gyeolseok?`<span class="dot gyeolseok"></span>`:''}</div>`;
+      cell.innerHTML = `
+        <button class="cal-add-btn" title="이 날짜에 보강 등록">+</button>
+        <div class="cal-daynum">${d}</div>
+        <div class="cal-dots">${gwanli?`<span class="dot gwanli"></span>`:''}${gyeolseok?`<span class="dot gyeolseok"></span>`:''}</div>`;
       cell.onclick = () => { selectedDate = dateStr; renderCalendar(); renderBogangList(); };
+      cell.querySelector('.cal-add-btn').onclick = (ev) => {
+        ev.stopPropagation();
+        selectedDate = dateStr;
+        renderCalendar(); renderBogangList();
+        openBogangForm(null);
+      };
       grid.appendChild(cell);
     }
   }
@@ -612,6 +738,7 @@
           <button class="primary" id="bg-f-save">저장</button>
         </div>
       </div>`;
+    slot.scrollIntoView({behavior:'smooth', block:'center'});
     document.getElementById('bg-f-cancel').onclick = () => { slot.innerHTML=''; };
     document.getElementById('bg-f-save').onclick = () => {
       const name = document.getElementById('bg-f-name').value.trim();
@@ -631,7 +758,6 @@
     };
   }
 
-  document.getElementById('bg-add-open').onclick = () => openBogangForm(null);
   document.getElementById('bg-today').onclick = () => {
     selectedDate = todayStr();
     calCursor = new Date(); calCursor.setDate(1);
