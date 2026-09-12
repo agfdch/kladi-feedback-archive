@@ -24,6 +24,9 @@
 --absent:#4A6FA5;
 --absent-soft:#E4EAF3;
 --absent-ink:#33507A;
+--jikjeon:#8A6FB0;
+--jikjeon-soft:#EAE3F3;
+--jikjeon-ink:#5C4577;
 --shadow: 0 1px 2px rgba(44,36,22,0.04), 0 8px 24px -14px rgba(44,36,22,0.28);
 }
 @media (prefers-color-scheme: dark){
@@ -44,6 +47,9 @@
 --absent:#7FA3D6;
 --absent-soft:#22304A;
 --absent-ink:#BFD4F0;
+--jikjeon:#B79BDB;
+--jikjeon-soft:#332B44;
+--jikjeon-ink:#DCC9F0;
 --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 8px 24px -14px rgba(0,0,0,0.6);
 }
 }
@@ -53,6 +59,7 @@
 --accent:#E8934F; --accent-ink:#211505; --accent-soft:#3A2A17;
 --sage:#9BAA84; --sage-soft:#2B301F; --sage-ink:#D8E2C6;
 --absent:#7FA3D6; --absent-soft:#22304A; --absent-ink:#BFD4F0;
+--jikjeon:#B79BDB; --jikjeon-soft:#332B44; --jikjeon-ink:#DCC9F0;
 --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 8px 24px -14px rgba(0,0,0,0.6);
 }
 }
@@ -132,8 +139,8 @@ padding:16px 18px;box-shadow:var(--shadow);
 }
 .entry-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px;}
 .entry-name{font-weight:700;font-size:15px;}
-.entry-actions{display:flex;gap:4px;}
-.entry-actions button{padding:5px 10px;font-size:12.5px;font-weight:500;}
+.entry-actions{display:flex;gap:4px;flex:none;}
+.entry-actions button{padding:5px 10px;font-size:12.5px;font-weight:500;white-space:nowrap;}
 .entry-text{white-space:pre-wrap;line-height:1.65;font-size:14px;color:var(--ink);}
 
 /* Add / edit form */
@@ -159,13 +166,14 @@ padding:20px;display:flex;flex-direction:column;gap:14px;box-shadow:var(--shadow
 .cal-nav{display:flex;gap:6px;}
 .cal-nav button{padding:6px 12px;}
 .cal-grid{
-display:grid;grid-template-columns:repeat(7,1fr);gap:6px;
+display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px;
 }
 .cal-dow{text-align:center;font-size:12px;font-weight:700;color:var(--muted);padding-bottom:4px;}
 .cal-cell{
 position:relative;
-aspect-ratio:1/1;border-radius:12px;background:var(--surface);border:1px solid var(--border);
+border-radius:12px;background:var(--surface);border:1px solid var(--border);
 padding:6px;display:flex;flex-direction:column;gap:4px;cursor:pointer;min-height:56px;
+min-width:0;
 }
 .cal-cell.empty{background:transparent;border-color:transparent;cursor:default;}
 .cal-cell.today{border-color:var(--accent);}
@@ -182,18 +190,31 @@ font-size:13px;line-height:1;font-weight:700;padding:0;display:flex;align-items:
 .dot{width:7px;height:7px;border-radius:50%;}
 .dot.gwanli{background:var(--accent);}
 .dot.gyeolseok{background:var(--absent);}
+.dot.jikjeon{background:var(--jikjeon);}
+
+.bg-layout{display:flex;align-items:flex-start;gap:16px;}
+.bg-cal-col{flex:1 1 auto;min-width:0;}
+.bg-side-col{flex:none;width:230px;}
+.bg-side-panel{max-height:520px;overflow-y:auto;}
+@media (max-width:680px){
+.bg-layout{flex-direction:column;}
+.bg-side-col{width:100%;}
+.bg-side-panel{max-height:none;overflow-y:visible;}
+}
 
 .selected-date-title{font-size:15px;font-weight:700;}
 .bogang-list{display:flex;flex-direction:column;gap:10px;}
 .bogang-row{
-display:flex;align-items:center;gap:12px;background:var(--surface);
+display:flex;flex-direction:column;gap:8px;background:var(--surface);
 border:1px solid var(--border);border-radius:12px;padding:12px 14px;box-shadow:var(--shadow);
 }
+.bogang-row-top{display:flex;align-items:center;justify-content:space-between;gap:8px;}
 .type-chip{
 flex:none;font-size:11.5px;font-weight:700;border-radius:100px;padding:4px 10px;
 }
 .type-chip.gwanli{background:var(--accent-soft);color:var(--accent);}
 .type-chip.gyeolseok{background:var(--absent-soft);color:var(--absent-ink);}
+.type-chip.jikjeon{background:var(--jikjeon-soft);color:var(--jikjeon-ink);}
 .bogang-body{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px;}
 .bogang-name{font-weight:700;font-size:14.5px;}
 .bogang-meta{font-size:12.5px;color:var(--muted);font-variant-numeric:tabular-nums;}
@@ -258,12 +279,37 @@ display:flex;flex-direction:column;gap:14px;
 
 <!-- ===== BOGANG PANEL ===== -->
 <div class="panel" id="panel-bogang">
-<div class="toolbar">
+<div class="toolbar" style="flex-wrap:wrap;">
+<input type="text" id="bg-search" placeholder="학생 이름으로 검색">
+<select id="bg-type-select">
+<option value="all">전체 유형</option>
+<option value="관리보강">관리보강</option>
+<option value="결석보강">결석보강</option>
+<option value="직전보강">직전보강</option>
+</select>
+<select id="bg-range-select">
+<option value="all">전체 기간</option>
+<option value="month">이번 달</option>
+<option value="custom">기간 지정</option>
+</select>
+<button class="ghost" id="bg-filter-reset" style="display:none;">초기화</button>
 <button class="ghost" id="bg-today">오늘로 이동</button>
+</div>
+<div class="form-row" id="bg-range-custom" style="display:none;">
+<div class="field">
+<label>시작일</label>
+<input type="date" id="bg-range-start">
+</div>
+<div class="field">
+<label>종료일</label>
+<input type="date" id="bg-range-end">
+</div>
 </div>
 
 <div id="bg-form-slot"></div>
 
+<div class="bg-layout">
+<div class="bg-cal-col">
 <div class="form-card" style="gap:16px;">
 <div class="cal-head">
 <div class="cal-nav"><button id="cal-prev">‹</button></div>
@@ -273,10 +319,13 @@ display:flex;flex-direction:column;gap:14px;
 <div class="cal-grid" id="cal-dow"></div>
 <div class="cal-grid" id="cal-grid"></div>
 </div>
+</div>
 
-<div>
+<div class="bg-side-col">
+<div class="form-card bg-side-panel" style="gap:12px;">
 <div class="selected-date-title" id="bg-selected-title"></div>
-<div class="bogang-list" id="bg-list" style="margin-top:10px;"></div>
+<div class="bogang-list" id="bg-list"></div>
+</div>
 </div>
 </div>
 
@@ -613,12 +662,13 @@ document.getElementById('fb-add-open').onclick = () => openFeedbackForm(null);
 document.getElementById('fb-search').addEventListener('input', (e)=>{ fbSearch = e.target.value.trim(); renderFeedbackList(); });
 
 // ---------- 보강 키워드 감지 (피드백 저장 시) ----------
-// "관리보강" / "결석보강" 이라는 단어가 있으면 후보로 인식한다.
+// "관리보강" / "결석보강" / "직전보강"(또는 "직보") 이라는 단어가 있으면 후보로 인식한다.
 // 글 안에 "N월 N일" 형식의 날짜가 있으면 그 날짜를, 없으면(예: "최태훈 결석보강"처럼 짧게만 쓴 경우)
 // 그 피드백 항목 자체의 날짜(refDateStr)를 그대로 사용한다.
 function detectBogangCandidate(text, refDateStr){
 let type = null;
-if(text.includes('결석보강')) type = '결석보강';
+if(text.includes('직전보강') || text.includes('직보')) type = '직전보강';
+else if(text.includes('결석보강')) type = '결석보강';
 else if(text.includes('관리보강')) type = '관리보강';
 if(!type) return null;
 
@@ -666,6 +716,7 @@ overlay.innerHTML = `
 <select id="bc-type">
 <option value="관리보강" ${candidate.type==='관리보강'?'selected':''}>관리보강</option>
 <option value="결석보강" ${candidate.type==='결석보강'?'selected':''}>결석보강</option>
+<option value="직전보강" ${candidate.type==='직전보강'?'selected':''}>직전보강</option>
 </select>
 </div>
 </div>
@@ -702,6 +753,34 @@ overlay.remove();
 // ================= BOGANG TAB =================
 let calCursor = new Date(); calCursor.setDate(1);
 let selectedDate = todayStr();
+let bgSearch = '';
+let bgRangeMode = 'all'; // 'all' | 'month' | 'custom'
+let bgRangeStart = '';
+let bgRangeEnd = '';
+let bgTypeFilter = 'all'; // 'all' | '관리보강' | '결석보강' | '직전보강'
+
+function bgFilterActive(){
+return !!bgSearch || bgRangeMode !== 'all' || bgTypeFilter !== 'all';
+}
+
+function bogangTypeClass(type){
+if(type === '결석보강') return 'gyeolseok';
+if(type === '직전보강') return 'jikjeon';
+return 'gwanli';
+}
+
+function getBogangRangeBounds(){
+if(bgRangeMode === 'month'){
+const now = new Date();
+const start = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-01`;
+const end = fmtDate(new Date(now.getFullYear(), now.getMonth()+1, 0));
+return { start, end };
+}
+if(bgRangeMode === 'custom'){
+return { start: bgRangeStart || null, end: bgRangeEnd || null };
+}
+return { start: null, end: null };
+}
 
 function renderCalDow(){
 const el = document.getElementById('cal-dow');
@@ -733,10 +812,11 @@ if(dateStr === selectedDate) cell.classList.add('selected');
 const items = byDate[dateStr] || [];
 const gwanli = items.filter(b=>b.type==='관리보강').length;
 const gyeolseok = items.filter(b=>b.type==='결석보강').length;
+const jikjeon = items.filter(b=>b.type==='직전보강').length;
 cell.innerHTML = `
 <button class="cal-add-btn" title="이 날짜에 보강 등록">+</button>
 <div class="cal-daynum">${d}</div>
-<div class="cal-dots">${gwanli?`<span class="dot gwanli"></span>`:''}${gyeolseok?`<span class="dot gyeolseok"></span>`:''}</div>`;
+<div class="cal-dots">${gwanli?`<span class="dot gwanli"></span>`:''}${gyeolseok?`<span class="dot gyeolseok"></span>`:''}${jikjeon?`<span class="dot jikjeon"></span>`:''}</div>`;
 cell.onclick = () => { selectedDate = dateStr; renderCalendar(); renderBogangList(); };
 cell.querySelector('.cal-add-btn').onclick = (ev) => {
 ev.stopPropagation();
@@ -748,7 +828,32 @@ grid.appendChild(cell);
 }
 }
 
-function renderBogangList(){
+function buildBogangRow(b){
+const row = document.createElement('div');
+row.className = 'bogang-row';
+row.innerHTML = `
+<div class="bogang-row-top">
+<span class="type-chip ${bogangTypeClass(b.type)}">${b.type}</span>
+<span class="entry-actions">
+<button class="ghost" data-act="edit">수정</button>
+<button class="ghost" data-act="delete">삭제</button>
+</span>
+</div>
+<div class="bogang-body">
+<div class="bogang-name">${b.name}</div>
+${b.time ? `<div class="bogang-meta">${b.time}</div>` : ''}
+${b.memo ? `<div class="bogang-memo">${b.memo}</div>` : ''}
+</div>`;
+row.querySelector('[data-act=delete]').onclick = () => {
+if(!confirm(`${b.name} ${b.type} 항목을 삭제할까요?`)) return;
+const data = loadObj(BOGANG_KEY); delete data[b.id]; saveObj(BOGANG_KEY, data);
+renderCalendar(); renderBogangList();
+};
+row.querySelector('[data-act=edit]').onclick = () => openBogangForm(b);
+return row;
+}
+
+function renderBogangDateList(){
 const bogang = loadObj(BOGANG_KEY);
 const entries = Object.entries(bogang).map(([id,b])=>({id,...b})).filter(b=>b.date===selectedDate);
 entries.sort((a,b)=> (a.time||'').localeCompare(b.time||''));
@@ -756,28 +861,39 @@ document.getElementById('bg-selected-title').textContent = `${selectedDate} (${d
 const list = document.getElementById('bg-list');
 list.innerHTML = '';
 if(entries.length===0){ list.innerHTML = '<div class="empty-note">이 날짜에 등록된 보강이 없어요.</div>'; return; }
-entries.forEach(b=>{
-const row = document.createElement('div');
-row.className = 'bogang-row';
-row.innerHTML = `
-<span class="type-chip ${b.type==='결석보강'?'gyeolseok':'gwanli'}">${b.type}</span>
-<div class="bogang-body">
-<div class="bogang-name">${b.name}</div>
-<div class="bogang-meta">${b.time ? b.time+' · ' : ''}${selectedDate}</div>
-${b.memo ? `<div class="bogang-memo">${b.memo}</div>` : ''}
-</div>
-<span class="entry-actions">
-<button class="ghost" data-act="edit">수정</button>
-<button class="ghost" data-act="delete">삭제</button>
-</span>`;
-row.querySelector('[data-act=delete]').onclick = () => {
-if(!confirm(`${b.name} ${b.type} 항목을 삭제할까요?`)) return;
-const data = loadObj(BOGANG_KEY); delete data[b.id]; saveObj(BOGANG_KEY, data);
-renderCalendar(); renderBogangList();
-};
-row.querySelector('[data-act=edit]').onclick = () => openBogangForm(b);
-list.appendChild(row);
+entries.forEach(b=> list.appendChild(buildBogangRow(b)));
+}
+
+function renderBogangFilteredList(){
+const bogang = loadObj(BOGANG_KEY);
+let entries = Object.entries(bogang).map(([id,b])=>({id,...b}));
+if(bgSearch) entries = entries.filter(b=>b.name.includes(bgSearch));
+if(bgTypeFilter !== 'all') entries = entries.filter(b=>b.type===bgTypeFilter);
+const { start, end } = getBogangRangeBounds();
+if(start) entries = entries.filter(b=>b.date >= start);
+if(end) entries = entries.filter(b=>b.date <= end);
+entries.sort((a,b)=> a.date===b.date ? (a.time||'').localeCompare(b.time||'') : b.date.localeCompare(a.date));
+
+document.getElementById('bg-selected-title').textContent = `검색 결과 — ${entries.length}건`;
+const list = document.getElementById('bg-list');
+list.innerHTML = '';
+if(entries.length===0){ list.innerHTML = '<div class="empty-note">조건에 맞는 보강이 없어요.</div>'; return; }
+
+const byDate = {};
+entries.forEach(b=>{ (byDate[b.date] = byDate[b.date]||[]).push(b); });
+Object.keys(byDate).sort((a,b)=>b.localeCompare(a)).forEach(date=>{
+const label = document.createElement('div');
+label.className = 'chip-label';
+label.style.margin = '14px 0 2px';
+label.textContent = `${date} (${dowLabel(date)})`;
+list.appendChild(label);
+byDate[date].forEach(b=> list.appendChild(buildBogangRow(b)));
 });
+}
+
+function renderBogangList(){
+if(bgFilterActive()) renderBogangFilteredList();
+else renderBogangDateList();
 }
 
 function openBogangForm(existing){
@@ -796,6 +912,7 @@ slot.innerHTML = `
 <select id="bg-f-type">
 <option value="관리보강" ${isEdit && existing.type==='관리보강' ? 'selected':''}>관리보강</option>
 <option value="결석보강" ${isEdit && existing.type==='결석보강' ? 'selected':''}>결석보강</option>
+<option value="직전보강" ${isEdit && existing.type==='직전보강' ? 'selected':''}>직전보강</option>
 </select>
 </div>
 </div>
@@ -846,10 +963,51 @@ renderCalendar(); renderBogangList();
 document.getElementById('cal-prev').onclick = () => { calCursor.setMonth(calCursor.getMonth()-1); renderCalendar(); };
 document.getElementById('cal-next').onclick = () => { calCursor.setMonth(calCursor.getMonth()+1); renderCalendar(); };
 
+function updateBgFilterUI(){
+document.getElementById('bg-filter-reset').style.display = bgFilterActive() ? 'inline-flex' : 'none';
+}
+
+document.getElementById('bg-search').addEventListener('input', (e)=>{
+bgSearch = e.target.value.trim();
+renderBogangList();
+updateBgFilterUI();
+});
+document.getElementById('bg-type-select').addEventListener('change', (e)=>{
+bgTypeFilter = e.target.value;
+renderBogangList();
+updateBgFilterUI();
+});
+document.getElementById('bg-range-select').addEventListener('change', (e)=>{
+bgRangeMode = e.target.value;
+document.getElementById('bg-range-custom').style.display = bgRangeMode === 'custom' ? 'flex' : 'none';
+renderBogangList();
+updateBgFilterUI();
+});
+document.getElementById('bg-range-start').addEventListener('change', (e)=>{
+bgRangeStart = e.target.value;
+renderBogangList();
+});
+document.getElementById('bg-range-end').addEventListener('change', (e)=>{
+bgRangeEnd = e.target.value;
+renderBogangList();
+});
+document.getElementById('bg-filter-reset').onclick = () => {
+bgSearch = ''; bgRangeMode = 'all'; bgRangeStart = ''; bgRangeEnd = ''; bgTypeFilter = 'all';
+document.getElementById('bg-search').value = '';
+document.getElementById('bg-type-select').value = 'all';
+document.getElementById('bg-range-select').value = 'all';
+document.getElementById('bg-range-start').value = '';
+document.getElementById('bg-range-end').value = '';
+document.getElementById('bg-range-custom').style.display = 'none';
+renderBogangList();
+updateBgFilterUI();
+};
+
 function renderBogang(){
 renderCalDow();
 renderCalendar();
 renderBogangList();
+updateBgFilterUI();
 }
 
 // ================= INIT =================
