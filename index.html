@@ -221,6 +221,18 @@ flex:none;font-size:11.5px;font-weight:700;border-radius:100px;padding:4px 10px;
 .bogang-memo{font-size:13px;color:var(--muted);}
 .empty-note{color:var(--faint);font-size:13.5px;padding:18px 2px;}
 
+/* Student management */
+.type-chip.done{background:var(--sage-soft);color:var(--sage-ink);}
+.type-chip.late{background:var(--absent-soft);color:var(--absent-ink);}
+.st-section{display:flex;flex-direction:column;gap:12px;}
+.st-section-head{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;}
+.st-row-actions{display:flex;gap:2px;flex:none;}
+.st-row-actions button{padding:4px 9px;font-size:12.5px;font-weight:500;white-space:nowrap;}
+.st-kakao-text{box-sizing:border-box;width:100%;max-width:100%;min-width:0;display:block;min-height:220px;resize:vertical;border-radius:12px;line-height:1.65;font-size:14px;}
+.st-details summary{cursor:pointer;font-weight:600;font-size:13.5px;padding:4px 0;}
+.st-details .entry-text{padding:6px 0 4px;}
+.st-pick{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+
 datalist{}
 
 /* Confirm modal */
@@ -254,6 +266,7 @@ display:flex;flex-direction:column;gap:14px;
 <div class="tabs">
 <button class="tab-btn active" data-tab="feedback">피드백</button>
 <button class="tab-btn" data-tab="bogang">보강 관리</button>
+<button class="tab-btn" data-tab="student">학생 관리</button>
 </div>
 
 <!-- ===== FEEDBACK PANEL ===== -->
@@ -329,6 +342,15 @@ display:flex;flex-direction:column;gap:14px;
 </div>
 </div>
 
+</div>
+
+<!-- ===== STUDENT PANEL ===== -->
+<div class="panel" id="panel-student">
+<div>
+<div class="chip-label">학생 선택</div>
+<div class="chips" id="st-chips" style="margin-top:8px;"></div>
+</div>
+<div id="st-body"></div>
 </div>
 
 <script>
@@ -458,6 +480,7 @@ document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
 btn.classList.add('active');
 document.getElementById('panel-'+btn.dataset.tab).classList.add('active');
 if(btn.dataset.tab === 'bogang') renderBogang();
+if(btn.dataset.tab === 'student') renderStudent();
 });
 });
 
@@ -1009,6 +1032,345 @@ renderCalendar();
 renderBogangList();
 updateBgFilterUI();
 }
+
+// ================= STUDENT TAB =================
+// 저장 구조: { [학생이름]: { books:[{id,title}], plans:[{id,date,book,content,memo,done}] } }
+// 나중에 클라우드 DB(Supabase 등)로 옮기기 쉽도록 학생 이름 단위로만 묶어 둔다.
+const STUDENT_KEY = 'kladi_students_v1';
+const BACKUP_KEYS = [FEEDBACK_KEY, BOGANG_KEY, ROSTER_KEY, STUDENT_KEY];
+
+let stName = null;
+let stShowPast = false;
+let stEditingPlanId = null; // null | 'new' | 계획 id
+let stKakaoRange = '14';    // '7' | '14' | '28' | 'all'
+let stKakaoText = '';
+
+const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const localToday = () => fmtDate(new Date()); // todayStr()은 UTC 기준이라 한국 오전에 하루 어긋날 수 있어 별도로 사용
+const shortDate = (s) => { const p = s.split('-'); return `${+p[1]}/${+p[2]}(${dowLabel(s)})`; };
+
+function getStudentData(name){
+const d = loadObj(STUDENT_KEY)[name] || {};
+return { books: d.books || [], plans: d.plans || [] };
+}
+function saveStudentData(name, d){
+const all = loadObj(STUDENT_KEY);
+all[name] = d;
+saveObj(STUDENT_KEY, all);
+}
+
+function copyToClipboard(text, btn){
+const showResult = (ok) => {
+const original = btn.textContent;
+btn.textContent = ok ? '복사됨' : '복사 실패';
+btn.disabled = true;
+setTimeout(() => { btn.textContent = original; btn.disabled = false; }, 1500);
+};
+const fallback = () => {
+try{
+const ta = document.createElement('textarea');
+ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+document.body.appendChild(ta); ta.focus(); ta.select();
+const ok = document.execCommand('copy');
+document.body.removeChild(ta);
+showResult(ok);
+}catch(err){ showResult(false); }
+};
+if(navigator.clipboard && navigator.clipboard.writeText){
+navigator.clipboard.writeText(text).then(() => showResult(true)).catch(fallback);
+}else{ fallback(); }
+}
+
+function renderStudentChips(){
+const all = loadObj(STUDENT_KEY);
+const today = localToday();
+const chips = document.getElementById('st-chips');
+chips.innerHTML = '';
+getRoster().forEach(name => {
+const plans = (all[name] && all[name].plans) || [];
+const hasUpcoming = plans.some(p => !p.done && p.date >= today);
+const c = document.createElement('button');
+c.className = 'chip' + (hasUpcoming ? ' has-data' : '') + (stName === name ? ' active' : '');
+c.textContent = name;
+c.onclick = () => { stName = name; stEditingPlanId = null; stKakaoText = ''; renderStudent(); };
+chips.appendChild(c);
+});
+}
+
+function buildKakaoText(name, rangeKey){
+const d = getStudentData(name);
+const today = localToday();
+let plans = d.plans.filter(p => !p.done && p.date >= today);
+if(rangeKey !== 'all'){
+const limit = new Date(); limit.setDate(limit.getDate() + parseInt(rangeKey, 10));
+const limitStr = fmtDate(limit);
+plans = plans.filter(p => p.date <= limitStr);
+}
+plans.sort((a,b) => a.date.localeCompare(b.date));
+if(plans.length === 0) return '';
+const lines = [];
+// 카톡 피드백과 같은 형식: "안녕하세요, 어머님~"으로 시작해 도입 문구 없이 바로 본문, 학생 이름은 넣지 않고, "감사합니다."로 마무리
+lines.push('안녕하세요, 어머님~');
+if(d.books.length){
+lines.push('■ 진행 교재');
+d.books.forEach(b => lines.push(`- ${b.title}`));
+lines.push('');
+}
+lines.push('■ 진도 계획');
+plans.forEach(p => {
+const head = shortDate(p.date);
+const body = [p.book, p.content].filter(Boolean).join(' ');
+lines.push(`${head} ${body}`.trim());
+if(p.memo) lines.push(`  ※ ${p.memo}`);
+});
+lines.push('');
+lines.push('감사합니다.');
+return lines.join('\n');
+}
+
+function renderStudent(){
+renderStudentChips();
+const body = document.getElementById('st-body');
+if(!stName){
+body.innerHTML = '<div class="empty-note">위에서 학생을 선택하면 교재·진도 계획·피드백·보강을 한 화면에서 볼 수 있어요.</div>' + backupCardHtml();
+bindBackup();
+return;
+}
+const d = getStudentData(stName);
+const today = localToday();
+
+// ----- 교재 -----
+const booksHtml = `
+<div class="form-card st-section">
+<div class="form-title">교재</div>
+<div class="chips">
+${d.books.length ? d.books.map(b => `
+<span class="chip has-data" style="display:inline-flex;align-items:center;gap:6px;">${esc(b.title)}
+<button data-act="book-del" data-id="${esc(b.id)}" title="교재 삭제" style="background:none;border:none;padding:0;margin:0;font-size:13px;line-height:1;color:var(--muted);cursor:pointer;border-radius:0;">×</button></span>`).join('')
+: '<span class="empty-note" style="padding:4px 2px;">등록된 교재가 없어요.</span>'}
+</div>
+<div class="form-row">
+<div class="field" style="flex:1;"><input type="text" id="st-book-input" placeholder="교재명 (예: 개념원리 중2-1)"></div>
+<button class="primary" data-act="book-add">추가</button>
+</div>
+</div>`;
+
+// ----- 진도 계획표 -----
+let plans = d.plans.slice().sort((a,b) => a.date.localeCompare(b.date));
+const hiddenCount = plans.filter(p => p.done && p.date < today).length;
+if(!stShowPast) plans = plans.filter(p => !(p.done && p.date < today));
+const editing = stEditingPlanId && stEditingPlanId !== 'new' ? d.plans.find(p => p.id === stEditingPlanId) : null;
+const formHtml = stEditingPlanId ? `
+<div class="form-card" style="box-shadow:none;background:var(--surface-2);">
+<div class="form-title">${editing ? '계획 수정' : '계획 추가'}</div>
+<div class="form-row">
+<div class="field"><label>날짜</label><input type="date" id="st-p-date" value="${esc(editing ? editing.date : today)}"></div>
+<div class="field" style="flex:2;"><label>교재</label><input type="text" id="st-p-book" list="st-book-list" placeholder="교재 선택 또는 직접 입력" value="${esc(editing ? editing.book : (d.books[0] ? d.books[0].title : ''))}"></div>
+</div>
+<datalist id="st-book-list">${d.books.map(b => `<option value="${esc(b.title)}">`).join('')}</datalist>
+<div class="field"><label>진도 내용</label><input type="text" id="st-p-content" placeholder="예: 3단원 p.45~52" value="${esc(editing ? editing.content : '')}"></div>
+<div class="field"><label>메모 (선택, 카톡 문구에도 들어가요)</label><input type="text" id="st-p-memo" placeholder="예: 시험 대비로 오답 정리" value="${esc(editing ? editing.memo : '')}"></div>
+<div class="form-actions"><button data-act="plan-cancel">취소</button><button class="primary" data-act="plan-save">저장</button></div>
+</div>` : '';
+
+const planRows = plans.map(p => {
+const past = !p.done && p.date < today;
+const chipCls = p.done ? 'done' : (past ? 'late' : 'gwanli');
+return `
+<div class="bogang-row">
+<div class="bogang-row-top">
+<span class="type-chip ${chipCls}">${shortDate(p.date)}${p.done ? ' · 완료' : (past ? ' · 밀림' : '')}</span>
+<span class="st-row-actions">
+<button class="ghost" data-act="plan-toggle" data-id="${esc(p.id)}">${p.done ? '완료 취소' : '완료'}</button>
+<button class="ghost" data-act="plan-edit" data-id="${esc(p.id)}">수정</button>
+<button class="ghost" data-act="plan-del" data-id="${esc(p.id)}">삭제</button>
+</span>
+</div>
+<div class="bogang-body">
+<div class="bogang-name">${esc(p.book || '(교재 미지정)')}</div>
+${p.content ? `<div class="bogang-meta">${esc(p.content)}</div>` : ''}
+${p.memo ? `<div class="bogang-memo">${esc(p.memo)}</div>` : ''}
+</div>
+</div>`;
+}).join('');
+
+const plansHtml = `
+<div class="form-card st-section">
+<div class="st-section-head">
+<div class="form-title">진도 계획표</div>
+<span>
+${hiddenCount || stShowPast ? `<button class="ghost" data-act="plan-past">${stShowPast ? '지난 완료 숨기기' : `지난 완료 ${hiddenCount}건 보기`}</button>` : ''}
+<button class="primary" data-act="plan-new" style="padding:7px 14px;">+ 계획 추가</button>
+</span>
+</div>
+${formHtml}
+<div class="bogang-list">${planRows || '<div class="empty-note">등록된 진도 계획이 없어요.</div>'}</div>
+</div>`;
+
+// ----- 카톡 문구 -----
+const rangeOpt = (v, label) => `<option value="${v}" ${stKakaoRange === v ? 'selected' : ''}>${label}</option>`;
+const kakaoHtml = `
+<div class="form-card st-section">
+<div class="form-title">학부모 카톡 문구</div>
+<div class="st-pick">
+<select id="st-kakao-range">
+${rangeOpt('7','앞으로 1주')}${rangeOpt('14','앞으로 2주')}${rangeOpt('28','앞으로 4주')}${rangeOpt('all','예정 전체')}
+</select>
+<button class="primary" data-act="kakao-make">문구 만들기</button>
+</div>
+<textarea id="st-kakao-text" class="st-kakao-text" placeholder="기간을 고르고 '문구 만들기'를 누르면 아직 완료하지 않은 예정 계획으로 문구가 만들어져요. 만든 뒤에 직접 고쳐도 돼요.">${esc(stKakaoText)}</textarea>
+<div class="form-actions"><button class="primary" data-act="kakao-copy">복사</button></div>
+</div>`;
+
+// ----- 최근 피드백 -----
+const fbAll = Object.entries(loadObj(FEEDBACK_KEY)).map(([id,e]) => ({id, ...e}))
+.filter(e => e.name === stName).sort((a,b) => b.date.localeCompare(a.date));
+const fbHtml = `
+<div class="form-card st-section">
+<div class="st-section-head"><div class="form-title">최근 피드백</div><span class="bogang-meta">총 ${fbAll.length}건</span></div>
+${fbAll.length ? fbAll.slice(0,5).map((e,i) => `
+<details class="st-details" ${i === 0 ? 'open' : ''}>
+<summary>${esc(e.date)} (${dowLabel(e.date)})</summary>
+<div class="entry-text">${esc(e.text)}</div>
+</details>`).join('') : '<div class="empty-note">저장된 피드백이 없어요.</div>'}
+</div>`;
+
+// ----- 보강 -----
+const bgAll = Object.entries(loadObj(BOGANG_KEY)).map(([id,b]) => ({id, ...b}))
+.filter(b => b.name === stName).sort((a,b) => b.date.localeCompare(a.date));
+const bgUpcoming = bgAll.filter(b => b.date >= today).reverse();
+const bgPast = bgAll.filter(b => b.date < today).slice(0,5);
+const bgRow = (b) => `
+<div class="bogang-row">
+<div class="bogang-row-top"><span class="type-chip ${bogangTypeClass(b.type)}">${esc(b.type)}</span>
+<span class="bogang-meta">${shortDate(b.date)}${b.time ? ' ' + esc(b.time) : ''}</span></div>
+${b.memo ? `<div class="bogang-memo">${esc(b.memo)}</div>` : ''}
+</div>`;
+const bgHtml = `
+<div class="form-card st-section">
+<div class="form-title">보강</div>
+${bgAll.length ? `
+${bgUpcoming.length ? `<div class="chip-label">예정</div><div class="bogang-list">${bgUpcoming.map(bgRow).join('')}</div>` : ''}
+${bgPast.length ? `<div class="chip-label">최근 지난 보강</div><div class="bogang-list">${bgPast.map(bgRow).join('')}</div>` : ''}`
+: '<div class="empty-note">등록된 보강이 없어요.</div>'}
+</div>`;
+
+body.innerHTML = booksHtml + plansHtml + kakaoHtml + fbHtml + bgHtml + backupCardHtml();
+bindBackup();
+}
+
+function backupCardHtml(){
+return `
+<div class="form-card st-section">
+<div class="form-title">데이터 백업</div>
+<div class="modal-hint">데이터는 이 컴퓨터의 브라우저에만 저장돼요. 집·학원 컴퓨터 사이에 옮기려면 한쪽에서 '내보내기'로 파일을 만들고, 다른 쪽에서 '불러오기'로 가져오세요. 불러오면 그 브라우저의 기존 데이터는 파일 내용으로 바뀝니다.</div>
+<div class="form-actions">
+<button id="st-export">내보내기</button>
+<button id="st-import">불러오기</button>
+<input type="file" id="st-import-file" accept="application/json,.json" style="display:none;">
+</div>
+</div>`;
+}
+
+function bindBackup(){
+document.getElementById('st-export').onclick = () => {
+const out = {};
+BACKUP_KEYS.forEach(k => { const v = localStorage.getItem(k); if(v) out[k] = JSON.parse(v); });
+const blob = new Blob([JSON.stringify({ app: 'kladi-feedback-archive', savedAt: new Date().toISOString(), data: out }, null, 2)], {type:'application/json'});
+const a = document.createElement('a');
+a.href = URL.createObjectURL(blob);
+a.download = `kladi-backup-${localToday()}.json`;
+document.body.appendChild(a); a.click(); a.remove();
+setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+};
+const fileInput = document.getElementById('st-import-file');
+document.getElementById('st-import').onclick = () => fileInput.click();
+fileInput.onchange = () => {
+const f = fileInput.files[0];
+if(!f) return;
+const reader = new FileReader();
+reader.onload = () => {
+try{
+const parsed = JSON.parse(reader.result);
+if(!parsed || parsed.app !== 'kladi-feedback-archive' || typeof parsed.data !== 'object') throw new Error('형식 오류');
+if(!confirm('이 브라우저의 기존 데이터가 파일 내용으로 바뀝니다. 계속할까요?')) return;
+BACKUP_KEYS.forEach(k => {
+if(parsed.data[k] !== undefined) localStorage.setItem(k, JSON.stringify(parsed.data[k]));
+});
+location.reload();
+}catch(err){ alert('백업 파일을 읽지 못했어요. 이 사이트에서 내보낸 파일이 맞는지 확인해주세요.'); }
+};
+reader.readAsText(f);
+fileInput.value = '';
+};
+}
+
+document.getElementById('st-body').addEventListener('click', (ev) => {
+const el = ev.target.closest('[data-act]');
+if(!el || !stName) return;
+const act = el.dataset.act, id = el.dataset.id;
+const d = getStudentData(stName);
+
+if(act === 'book-add'){
+const input = document.getElementById('st-book-input');
+const title = input.value.trim();
+if(!title || d.books.some(b => b.title === title)) return;
+d.books.push({ id: uid(), title });
+saveStudentData(stName, d); renderStudent();
+}else if(act === 'book-del'){
+const b = d.books.find(x => x.id === id);
+if(!b || !confirm(`"${b.title}" 교재를 목록에서 삭제할까요? (이미 입력한 진도 계획은 그대로 남아요)`)) return;
+d.books = d.books.filter(x => x.id !== id);
+saveStudentData(stName, d); renderStudent();
+}else if(act === 'plan-new'){
+stEditingPlanId = 'new'; renderStudent();
+}else if(act === 'plan-edit'){
+stEditingPlanId = id; renderStudent();
+}else if(act === 'plan-cancel'){
+stEditingPlanId = null; renderStudent();
+}else if(act === 'plan-save'){
+const date = document.getElementById('st-p-date').value;
+const book = document.getElementById('st-p-book').value.trim();
+const content = document.getElementById('st-p-content').value.trim();
+const memo = document.getElementById('st-p-memo').value.trim();
+if(!date || (!book && !content)) return;
+if(stEditingPlanId === 'new'){
+d.plans.push({ id: uid(), date, book, content, memo, done: false });
+}else{
+const p = d.plans.find(x => x.id === stEditingPlanId);
+if(p) Object.assign(p, { date, book, content, memo });
+}
+stEditingPlanId = null;
+saveStudentData(stName, d); renderStudent();
+}else if(act === 'plan-toggle'){
+const p = d.plans.find(x => x.id === id);
+if(p){ p.done = !p.done; saveStudentData(stName, d); renderStudent(); }
+}else if(act === 'plan-del'){
+const p = d.plans.find(x => x.id === id);
+if(!p || !confirm(`${shortDate(p.date)} 진도 계획을 삭제할까요?`)) return;
+d.plans = d.plans.filter(x => x.id !== id);
+saveStudentData(stName, d); renderStudent();
+}else if(act === 'plan-past'){
+stShowPast = !stShowPast; renderStudent();
+}else if(act === 'kakao-make'){
+stKakaoRange = document.getElementById('st-kakao-range').value;
+stKakaoText = buildKakaoText(stName, stKakaoRange);
+if(!stKakaoText) stKakaoText = '선택한 기간에 예정된 진도 계획이 없어요. 위에서 계획을 먼저 추가해주세요.';
+renderStudent();
+}else if(act === 'kakao-copy'){
+const text = document.getElementById('st-kakao-text').value;
+if(text) copyToClipboard(text, el);
+}
+});
+document.getElementById('st-body').addEventListener('input', (ev) => {
+if(ev.target.id === 'st-kakao-text') stKakaoText = ev.target.value;
+});
+document.getElementById('st-body').addEventListener('keydown', (ev) => {
+if(ev.key === 'Enter' && ev.target.id === 'st-book-input'){
+ev.preventDefault();
+document.querySelector('#st-body [data-act="book-add"]').click();
+}
+});
 
 // ================= INIT =================
 renderFeedbackChips();
