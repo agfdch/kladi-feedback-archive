@@ -254,6 +254,19 @@ white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
 .tt-name{font-size:13.5px;display:flex;align-items:center;gap:4px;flex-wrap:wrap;padding:2px 0;}
 .tt-tag{font-size:10px !important;padding:1px 6px !important;}
 .tt-legend{display:flex;align-items:center;gap:6px;flex-wrap:wrap;font-size:12px;color:var(--muted);}
+.tt-name.editable{cursor:pointer;border-radius:6px;margin:0 -4px;padding:2px 4px;}
+.tt-name.editable:hover{background:var(--surface-2);}
+.tt-name.absent .tt-n{text-decoration:line-through;color:var(--faint);}
+.tt-day{display:flex;align-items:center;gap:4px;}
+.tt-add{
+margin-left:auto;width:20px;height:20px;border-radius:50%;padding:0;
+background:var(--surface-2);color:var(--ink);font-size:14px;line-height:1;display:flex;align-items:center;justify-content:center;
+}
+.tt-add:hover{background:var(--ink);color:var(--surface);}
+.tt-userbar{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;font-size:13px;color:var(--muted);}
+.tt-actions{display:flex;flex-direction:column;gap:8px;}
+.tt-actions button{width:100%;}
+.tt-log{display:flex;flex-direction:column;gap:6px;font-size:13.5px;line-height:1.5;}
 .exam-chip{
 display:inline-block;font-size:11.5px;font-weight:700;border-radius:100px;padding:3px 9px;
 background:var(--exam-bg);color:var(--exam-ink);white-space:nowrap;
@@ -295,6 +308,7 @@ flex:none;font-size:11.5px;font-weight:700;border-radius:100px;padding:4px 10px;
 /* Student management */
 .type-chip.done{background:var(--sage-soft);color:var(--sage-ink);}
 .type-chip.late{background:var(--absent-soft);color:var(--absent-ink);}
+.type-chip.off{background:var(--surface-2);color:var(--sun);}
 .st-section{display:flex;flex-direction:column;gap:12px;}
 .st-section-head{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;}
 .st-row-actions{display:flex;gap:2px;flex:none;}
@@ -1562,6 +1576,8 @@ const DEFAULT_EXAMS = [
 { school:'신반포중', grades:[1,2], name:'2학기 기말고사', start:'2026-12-21', end:'2026-12-23', memo:'' },
 ];
 function getExams(){
+// 공유 시간표(로그인) 상태에서 클라우드에 시험기간이 있으면 그것을 쓴다
+if(cloudOn() && cloudData.exams && Object.keys(cloudData.exams).length) return cloudData.exams;
 try{ const raw = localStorage.getItem(EXAM_KEY); if(raw) return JSON.parse(raw); }catch(e){}
 const obj = {};
 DEFAULT_EXAMS.forEach((x,i) => { obj['exam_' + i] = { ...x }; });
@@ -1630,6 +1646,10 @@ ${list.map(x => `
 slot.querySelectorAll('[data-exam-del]').forEach(btn => btn.onclick = () => {
 const all = getExams(); const x = all[btn.dataset.examDel];
 if(!x || !confirm(`${examLabel(x)} 일정을 삭제할까요?`)) return;
+if(cloudOn() && cloudData.exams && cloudData.exams[btn.dataset.examDel]){
+cloudWrite(() => cloud.remove('exams', btn.dataset.examDel), `시험기간 삭제: ${examLabel(x)}`);
+return;
+}
 delete all[btn.dataset.examDel]; saveObj(EXAM_KEY, all);
 renderExamPanel(); renderCalendar(); renderBogangList();
 });
@@ -1640,8 +1660,13 @@ const start = document.getElementById('ex-start').value;
 const end = document.getElementById('ex-end').value || start;
 if(!school || !start) return;
 const grades = document.getElementById('ex-grades').value.split(/[,·\s]+/).map(n => parseInt(n,10)).filter(n => n >= 1 && n <= 3);
+const exam = { school, grades, name: document.getElementById('ex-name').value.trim() || '시험', start, end: end < start ? start : end, memo: document.getElementById('ex-memo').value.trim() };
+if(cloudOn()){
+cloudWrite(() => cloud.add('exams', exam), `시험기간 추가: ${examLabel(exam)}`);
+return;
+}
 const all = getExams();
-all[uid()] = { school, grades, name: document.getElementById('ex-name').value.trim() || '시험', start, end: end < start ? start : end, memo: document.getElementById('ex-memo').value.trim() };
+all[uid()] = exam;
 saveObj(EXAM_KEY, all);
 renderExamPanel(); renderCalendar(); renderBogangList();
 };
@@ -1653,11 +1678,31 @@ renderExamPanel();
 };
 
 // ================= 시간표 =================
-// 시간표 엑셀을 정리한 파일을 "불러오기"로 넣는다(학생 개인 정보라 공개 저장소 코드에는 넣지 않음).
-// 구조: { students: { 이름: { label, school, grade, slots:[{day(1=월..6=토), time, from?, until?}], wait } },
-//         extras: [{date, time, name, note}]  ← 시간표 아래쪽에 날짜와 함께 적힌 보강 자리 }
+// 두 가지 방식으로 동작한다.
+// 1) 로그인 전(이 컴퓨터만): 정리된 시간표 파일을 "불러오기"로 넣고 보기만 한다.
+// 2) 로그인 후(공유 시간표, Firebase): 박유경T·데스크가 같은 시간표를 보고 고친다. 바뀐 내용은 바로 서로의 화면에 반영된다.
+//    - students/{이름}: 정규 시간표 { label, school, grade, slots:[{day(1=월..6=토), time, from?, until?}], wait }
+//    - changes/{id}:   날짜별 변경 { date, time, name, kind('결석'|'관리보강'|'결석보강'|'직전보강'|'보강'), note, absentDate?, by, at }
+//    - exams/{id}:     시험기간,  log/{id}: 변경 기록 { at, by, text },  staff/{이메일}: 데스크 계정 { name }
 const TIMETABLE_KEY = 'kladi_timetable_v1';
-const getTimetable = () => loadObj(TIMETABLE_KEY);
+const TEACHER_EMAIL = 'yuuuukk77@gmail.com';
+const TEACHER_NAME = '박유경T';
+const MAKEUP_KINDS = ['관리보강', '결석보강', '직전보강'];
+const COMMON_TIMES = ['10:30', '13:30', '16:00', '17:30', '19:00'];
+
+let cloud = null;          // Firebase 연결 (index.html 맨 아래 module 스크립트가 넣어 준다)
+let cloudError = '';
+let cloudUser = null;      // { email }
+let cloudRole = null;      // 'teacher' | 'desk'
+let cloudData = { students: null, changes: {}, exams: null, log: {}, staff: {} };
+let cloudUnsubs = [];
+let cloudDenied = false;
+
+const cloudOn = () => !!(cloud && cloudUser && cloudData.students);
+const myName = () => cloudRole === 'teacher' ? TEACHER_NAME : ((cloudData.staff[cloudUser && cloudUser.email] || {}).name || '데스크');
+const getTimetable = () => cloudOn()
+? { students: cloudData.students, extras: [], source: '공유 시간표', updatedAt: '' }
+: loadObj(TIMETABLE_KEY);
 const ttStudents = () => getTimetable().students || {};
 const fmtT = (t) => {
 if(!t) return '';
@@ -1672,6 +1717,72 @@ Object.entries(ttStudents()).forEach(([n,s]) => { if(s.slots && s.slots.length) 
 return Array.from(names).sort((a,b) => a.localeCompare(b,'ko'));
 }
 
+// ---------- Firebase 연결 ----------
+window.kladiCloudInit = (api, err) => {
+cloud = api || null;
+cloudError = err ? String(err) : '';
+if(!cloud){ renderTimetableIfOpen(); return; }
+cloud.onAuth(user => {
+cloudUnsubs.forEach(u => { try{ u(); }catch(e){} });
+cloudUnsubs = [];
+cloudData = { students: null, changes: {}, exams: null, log: {}, staff: {} };
+cloudDenied = false;
+cloudUser = user ? { email: (user.email || '').toLowerCase() } : null;
+cloudRole = cloudUser ? (cloudUser.email === TEACHER_EMAIL ? 'teacher' : 'desk') : null;
+applyRoleUI();
+if(cloudUser){
+const onErr = (e) => { cloudDenied = true; console.warn(e); renderTimetableIfOpen(); };
+const watch = (col, key) => cloudUnsubs.push(cloud.watch(col, (data) => {
+cloudData[key] = data;
+renderTimetableIfOpen();
+if(key === 'exams' || key === 'students') refreshOtherViews();
+}, onErr));
+watch('students', 'students');
+watch('changes', 'changes');
+watch('exams', 'exams');
+watch('log', 'log');
+watch('staff', 'staff');
+}
+renderTimetableIfOpen();
+});
+};
+
+// 데스크 계정은 시간표 탭만 보이게 한다(피드백·진도·학부모 문구는 박유경T 전용)
+function applyRoleUI(){
+const desk = cloudRole === 'desk';
+document.querySelectorAll('.tab-btn').forEach(b => { b.style.display = (desk && b.dataset.tab !== 'timetable') ? 'none' : ''; });
+const sub = document.querySelector('.brand-hero .sub');
+if(sub){
+if(!sub.dataset.orig) sub.dataset.orig = sub.innerHTML;
+sub.innerHTML = desk ? '클라디 · 박유경T 시간표 (데스크 공유)' : sub.dataset.orig;
+}
+if(desk){
+const btn = document.querySelector('.tab-btn[data-tab="timetable"]');
+if(btn && !btn.classList.contains('active')) btn.click();
+}
+}
+function renderTimetableIfOpen(){
+const panel = document.getElementById('panel-timetable');
+if(panel && panel.classList.contains('active')) renderTimetable();
+}
+function refreshOtherViews(){
+const active = document.querySelector('.panel.active');
+if(!active) return;
+if(active.id === 'panel-bogang') renderBogang();
+if(active.id === 'panel-student') renderStudent();
+}
+
+// 쓰기 + 변경 기록을 한 번에. 실패하면(권한 없음·인터넷 끊김) 알려 준다.
+async function cloudWrite(op, logText){
+try{
+await op();
+if(logText) await cloud.add('log', { at: new Date().toISOString(), by: myName(), text: logText });
+}catch(e){
+console.warn(e);
+alert('저장하지 못했어요. 인터넷 연결이나 로그인 상태를 확인해 주세요.');
+}
+}
+
 function classInfoHtml(name){
 const tt = getTimetable();
 if(!tt.students) return '';
@@ -1682,79 +1793,184 @@ const slotChips = s.slots.map(x => {
 const range = x.from ? ` (${mdLabel(x.from)}부터)` : (x.until ? ` (${mdLabel(x.until)}까지)` : '');
 return `<span class="chip has-data" style="cursor:default;">${DOW[x.day]} ${fmtT(x.time)}${range}</span>`;
 }).join('');
-const extras = (tt.extras || []).filter(e => e.name === name && e.date >= today);
+const upcoming = cloudOn()
+? Object.values(cloudData.changes).filter(c => c.name === name && c.date >= today).sort((a,b) => (a.date + a.time).localeCompare(b.date + b.time))
+: (tt.extras || []).filter(e => e.name === name && e.date >= today).map(e => ({ ...e, kind: '보강' }));
 const exams = examList().filter(x => examMatches(x, s) && (x.end || x.start) >= today);
 const dday = (d) => { const n = Math.round((new Date(d+'T00:00:00') - new Date(today+'T00:00:00')) / 86400000); return n > 0 ? `D-${n}` : '진행 중'; };
 return `
 <div class="form-card st-section">
 <div class="st-section-head"><div class="form-title">수업 시간</div><span class="bogang-meta">${esc(s.label)}</span></div>
 <div class="chips">${slotChips}</div>
-${extras.length ? `<div class="chip-label">시간표에 적힌 보강</div><div class="chips">${extras.map(e => `<span class="type-chip gwanli">${mdLabel(e.date)} ${fmtT(e.time)}${e.note ? ' · ' + esc(e.note) : ''}</span>`).join('')}</div>` : ''}
+${upcoming.length ? `<div class="chip-label">다가오는 결석·보강</div><div class="chips">${upcoming.map(e => `<span class="type-chip ${kindCls(e.kind)}">${esc(kindShort(e.kind))} ${mdLabel(e.date)} ${fmtT(e.time)}${e.note ? ' · ' + esc(e.note) : ''}</span>`).join('')}</div>` : ''}
 ${exams.length ? `<div class="chip-label">다가오는 시험</div>${exams.map(x => `<div class="bogang-meta"><span class="exam-chip">${dday(x.start)}</span> ${esc(x.name)} ${mdLabel(x.start)}${x.end && x.end !== x.start ? ' ~ ' + mdLabel(x.end) : ''}${x.memo ? ' · ' + esc(x.memo) : ''}</div>`).join('')}` : ''}
 ${s.wait ? `<div class="modal-hint">대기·희망: ${esc(s.wait)}</div>` : ''}
 </div>`;
 }
 
-// ----- 시간표 탭: 한 주 단위로 정규 수업 + 보강을 합쳐서 보여준다 -----
+const kindCls = (k) => k === '결석' ? 'off' : (k === '결석보강' ? 'gyeolseok' : (k === '직전보강' ? 'jikjeon' : 'gwanli'));
+const kindShort = (k) => ({ '관리보강': '관리', '결석보강': '결석보강', '직전보강': '직전', '보강': '보강', '결석': '결석' }[k] || k);
+
+// ----- 시간표 탭: 한 주 단위로 정규 수업 + 결석·보강을 합쳐서 보여준다 -----
 let ttWeekStart = (() => { const d = new Date(); d.setHours(0,0,0,0); d.setDate(d.getDate() - ((d.getDay() + 6) % 7)); return d; })();
+let ttEditOpen = false;
+let ttEditStudent = '';
 
 function dayEntries(dateStr, dow){
 const tt = getTimetable();
+const students = tt.students || {};
 const out = [];
-Object.entries(tt.students || {}).forEach(([name, s]) => {
+if(cloudOn()){
+const changes = Object.entries(cloudData.changes).map(([id,c]) => ({ id, ...c })).filter(c => c.date === dateStr);
+Object.entries(students).forEach(([name, s]) => {
+s.slots.forEach(x => {
+if(x.day !== dow || !slotActive(x, dateStr)) return;
+const absent = changes.find(c => c.kind === '결석' && c.name === name && (!c.time || c.time === x.time));
+out.push({ name, time: x.time, kind: '정규', absent: absent || null });
+});
+});
+changes.filter(c => c.kind !== '결석').forEach(c => out.push({ name: c.name, time: c.time || '', kind: c.kind, memo: c.note, change: c }));
+// 정규 수업이 없는 날에 잡힌 결석 기록도 보이게
+changes.filter(c => c.kind === '결석' && !out.some(o => o.absent && o.absent.id === c.id))
+.forEach(c => out.push({ name: c.name, time: c.time || '', kind: '정규', absent: c }));
+}else{
+Object.entries(students).forEach(([name, s]) => {
 s.slots.forEach(x => { if(x.day === dow && slotActive(x, dateStr)) out.push({ name, time: x.time, kind: '정규' }); });
 });
 const bogang = Object.values(loadObj(BOGANG_KEY)).filter(b => b.date === dateStr);
 bogang.forEach(b => out.push({ name: b.name, time: b.time || '', kind: b.type, memo: b.memo }));
 (tt.extras || []).filter(e => e.date === dateStr).forEach(e => {
-// 보강 관리에 이미 같은 날 같은 학생이 있으면 중복으로 넣지 않는다
 if(!bogang.some(b => b.name === e.name)) out.push({ name: e.name, time: e.time, kind: '보강', memo: e.note ? e.note + '보강' : '' });
 });
+}
 const exams = examsOn(dateStr);
-out.forEach(o => { o.exam = exams.some(x => examMatches(x, (tt.students || {})[o.name])); });
+out.forEach(o => { o.exam = exams.some(x => examMatches(x, students[o.name])); });
 return out;
+}
+
+function loginCardHtml(){
+if(!cloud) return `
+<div class="form-card st-section">
+<div class="form-title">공유 시간표 로그인</div>
+<div class="modal-hint">${cloudError ? '공유 시간표 서버에 연결하지 못했어요. 인터넷 연결을 확인하고 새로고침해 주세요.' : '공유 시간표를 준비하는 중이에요…'}</div>
+</div>`;
+return `
+<div class="form-card st-section">
+<div class="form-title">공유 시간표 로그인</div>
+<div class="modal-hint">박유경T와 데스크가 같은 시간표를 보고 고칠 수 있어요. 결석·보강을 입력하면 바로 서로의 화면에 반영돼요.</div>
+<div class="form-row">
+<div class="field"><label>이메일</label><input type="text" id="lg-email" autocomplete="username" placeholder="이메일"></div>
+<div class="field"><label>비밀번호</label><input type="password" id="lg-pw" autocomplete="current-password" placeholder="비밀번호" style="width:100%;font:inherit;font-size:14px;color:var(--ink);background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:10px 14px;"></div>
+</div>
+<div class="bogang-memo" id="lg-msg"></div>
+<div class="form-actions"><button class="ghost" id="lg-reset">비밀번호를 잊었어요</button><button class="primary" id="lg-go">로그인</button></div>
+</div>`;
+}
+function bindLogin(){
+const go = document.getElementById('lg-go');
+if(!go) return;
+const msg = document.getElementById('lg-msg');
+const submit = async () => {
+const email = document.getElementById('lg-email').value.trim();
+const pw = document.getElementById('lg-pw').value;
+if(!email || !pw){ msg.textContent = '이메일과 비밀번호를 입력해 주세요.'; return; }
+go.disabled = true; msg.textContent = '로그인 중…';
+try{ await cloud.signIn(email, pw); }
+catch(e){ msg.textContent = '로그인하지 못했어요. 이메일과 비밀번호를 다시 확인해 주세요.'; go.disabled = false; }
+};
+go.onclick = submit;
+document.getElementById('lg-pw').addEventListener('keydown', (e) => { if(e.key === 'Enter') submit(); });
+document.getElementById('lg-reset').onclick = async () => {
+const email = document.getElementById('lg-email').value.trim();
+if(!email){ msg.textContent = '이메일을 먼저 입력해 주세요.'; return; }
+try{ await cloud.resetPassword(email); msg.textContent = '비밀번호 재설정 메일을 보냈어요.'; }
+catch(e){ msg.textContent = '메일을 보내지 못했어요. 이메일을 확인해 주세요.'; }
+};
 }
 
 function renderTimetable(){
 const body = document.getElementById('tt-body');
-const tt = getTimetable();
-const importCard = (title, hint) => `
+const localTT = loadObj(TIMETABLE_KEY);
+const loggedIn = !!(cloud && cloudUser);
+
+// 로그인했지만 등록되지 않은 데스크 계정
+if(loggedIn && cloudDenied){
+body.innerHTML = `
 <div class="form-card st-section">
-<div class="form-title">${title}</div>
-<div class="modal-hint">${hint}</div>
-<div class="form-actions">
-<button class="primary" id="tt-import">시간표 파일 불러오기</button>
-<input type="file" id="tt-import-file" accept="application/json,.json" style="display:none;">
-</div>
+<div class="form-title">아직 등록되지 않은 계정이에요</div>
+<div class="modal-hint">${esc(cloudUser.email)} 계정은 공유 시간표 권한이 없어요. 박유경T에게 데스크 계정 등록을 요청해 주세요.</div>
+<div class="form-actions"><button id="lg-out">로그아웃</button></div>
 </div>`;
-if(!tt.students){
-body.innerHTML = importCard('시간표가 아직 없어요', '정리된 시간표 파일(kladi-timetable.json)을 불러오면 요일별 시간표와 학생별 수업 시간이 보여요. 피드백·보강 기록은 바뀌지 않아요.');
-bindTtImport();
+document.getElementById('lg-out').onclick = () => cloud.signOut();
 return;
 }
+if(loggedIn && !cloudData.students){
+body.innerHTML = `<div class="form-card st-section"><div class="empty-note">공유 시간표를 불러오는 중이에요…</div></div>`;
+return;
+}
+
+const userBar = loggedIn ? `
+<div class="tt-userbar">
+<span><span class="exam-chip">${cloudRole === 'teacher' ? '선생님' : '데스크'}</span> ${esc(myName())} 로그인 · 공유 시간표 (바뀌면 바로 반영돼요)</span>
+<button class="ghost" id="lg-out">로그아웃</button>
+</div>` : '';
+
+// 공유 시간표가 비어 있으면: 박유경T가 이 컴퓨터의 시간표를 올린다
+if(loggedIn && !Object.keys(cloudData.students).length){
+body.innerHTML = userBar + `
+<div class="form-card st-section">
+<div class="form-title">공유 시간표가 아직 비어 있어요</div>
+${cloudRole === 'teacher'
+? (localTT.students
+? `<div class="modal-hint">이 컴퓨터에 불러온 시간표(${esc(localTT.source || '')})를 공유 시간표로 올릴게요. 학생 ${Object.keys(localTT.students).length}명의 정규 수업, 시간표에 적힌 보강 ${(localTT.extras || []).length}건, 시험기간이 함께 올라가요.</div>
+<div class="form-actions"><button class="primary" id="tt-upload">공유 시간표로 올리기</button></div>`
+: `<div class="modal-hint">먼저 로그아웃한 상태에서 시간표 파일을 불러온 뒤, 다시 로그인해서 올려 주세요.</div>`)
+: `<div class="modal-hint">박유경T가 시간표를 올리면 여기에 보여요.</div>`}
+</div>`;
+bindUserBar();
+const up = document.getElementById('tt-upload');
+if(up) up.onclick = () => uploadLocalTimetable(up);
+return;
+}
+
+const tt = getTimetable();
+if(!loggedIn && !tt.students){
+body.innerHTML = loginCardHtml() + importCardHtml('이 컴퓨터에서만 보기', '로그인하지 않고 이 컴퓨터에서만 보려면 정리된 시간표 파일(kladi-timetable.json)을 불러오세요. 피드백·보강 기록은 바뀌지 않아요.');
+bindLogin(); bindTtImport();
+return;
+}
+
+const editable = cloudOn();
 const days = [1,2,3,4,5,6].map(i => { const d = new Date(ttWeekStart); d.setDate(d.getDate() + i - 1); return { dow: i, date: fmtDate(d) }; });
 const today = localToday();
-const kindCls = (k) => k === '정규' ? '' : (k === '결석보강' ? 'gyeolseok' : (k === '직전보강' ? 'jikjeon' : 'gwanli'));
 const cols = days.map(({dow, date}) => {
 const entries = dayEntries(date, dow);
 const byTime = {};
 entries.forEach(e => { (byTime[e.time || '시간 미정'] = byTime[e.time || '시간 미정'] || []).push(e); });
 const exams = examsOn(date);
 const times = Object.keys(byTime).sort();
+const present = entries.filter(e => !e.absent).length;
 return `
 <div class="tt-col${date === today ? ' today' : ''}">
-<div class="tt-day">${DOW[dow]} <span>${+date.slice(5,7)}/${+date.slice(8)}</span></div>
+<div class="tt-day">${DOW[dow]} <span>${+date.slice(5,7)}/${+date.slice(8)}</span>${editable ? `<button class="tt-add" data-tt-add="${date}" title="이 날 결석·보강 추가">+</button>` : ''}</div>
 ${exams.length ? `<div class="tt-exams">${exams.map(x => `<span class="cal-exam" title="${esc(examLabel(x))}">${esc(shortSchool(x.school))}${x.grades && x.grades.length ? x.grades.join('·') : ''} 시험</span>`).join('')}</div>` : ''}
 ${times.length ? times.map(t => `
-<div class="tt-time">${t === '시간 미정' ? t : fmtT(t)} <span>${byTime[t].length}명</span></div>
-${byTime[t].sort((a,b) => (a.kind === '정규' ? 0 : 1) - (b.kind === '정규' ? 0 : 1) || a.name.localeCompare(b.name,'ko')).map(e => `
-<div class="tt-name">${esc(e.name)}${e.kind !== '정규' ? `<span class="type-chip ${kindCls(e.kind)} tt-tag" title="${esc(e.memo || '')}">${esc(e.kind === '보강' ? '보강' : e.kind.replace('보강',''))}</span>` : ''}${e.exam ? '<span class="exam-chip tt-tag">시험</span>' : ''}</div>`).join('')}
+<div class="tt-time">${t === '시간 미정' ? t : fmtT(t)} <span>${byTime[t].filter(e => !e.absent).length}명</span></div>
+${byTime[t].sort((a,b) => (a.kind === '정규' ? 0 : 1) - (b.kind === '정규' ? 0 : 1) || a.name.localeCompare(b.name,'ko')).map(e => {
+const tag = e.absent ? `<span class="type-chip off tt-tag">결석</span>` : (e.kind !== '정규' ? `<span class="type-chip ${kindCls(e.kind)} tt-tag" title="${esc(e.memo || '')}">${esc(kindShort(e.kind))}</span>` : '');
+const attrs = editable ? ` data-tt-name="${esc(e.name)}" data-tt-date="${date}" data-tt-time="${esc(e.time)}" data-tt-kind="${esc(e.kind)}" data-tt-change="${esc(e.change ? e.change.id : (e.absent ? e.absent.id : ''))}" role="button" tabindex="0"` : '';
+return `<div class="tt-name${e.absent ? ' absent' : ''}${editable ? ' editable' : ''}"${attrs}><span class="tt-n">${esc(e.name)}</span>${tag}${e.exam ? '<span class="exam-chip tt-tag">시험</span>' : ''}</div>`;
+}).join('')}
 `).join('') : '<div class="empty-note" style="padding:8px 0;">수업 없음</div>'}
 </div>`;
 }).join('');
+
 const waits = Object.entries(tt.students).filter(([n,s]) => s.wait);
 const last = days[5].date;
-body.innerHTML = `
+const logs = editable ? Object.values(cloudData.log).sort((a,b) => (b.at || '').localeCompare(a.at || '')).slice(0, 15) : [];
+const fmtAt = (iso) => { const d = new Date(iso); return `${d.getMonth()+1}/${d.getDate()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`; };
+
+body.innerHTML = userBar + `
 <div class="form-card st-section">
 <div class="cal-head">
 <div class="cal-nav"><button id="tt-prev">‹</button></div>
@@ -1762,27 +1978,304 @@ body.innerHTML = `
 <div class="cal-nav"><button id="tt-next">›</button></div>
 </div>
 <div class="st-pick" style="justify-content:space-between;">
-<span class="bogang-meta">정규 수업에 이번 주 보강(보강 관리 + 시간표에 적힌 보강)과 시험기간을 함께 표시해요.</span>
+<span class="bogang-meta">${editable ? '학생 이름을 누르면 결석·보강을 처리하고, 날짜 옆 +로 보강을 추가해요.' : '정규 수업에 이번 주 보강(보강 관리 + 시간표에 적힌 보강)과 시험기간을 함께 표시해요.'}</span>
 <button class="ghost" id="tt-this-week">이번 주</button>
 </div>
 <div class="tt-scroll"><div class="tt-grid">${cols}</div></div>
-<div class="tt-legend"><span class="type-chip gwanli tt-tag">관리</span><span class="type-chip gyeolseok tt-tag">결석</span><span class="type-chip jikjeon tt-tag">직전</span><span class="type-chip gwanli tt-tag">보강</span> 시간표에 적힌 보강 <span class="exam-chip tt-tag">시험</span> 그 학생 학교가 시험기간</div>
+<div class="tt-legend"><span class="type-chip off tt-tag">결석</span><span class="type-chip gwanli tt-tag">관리</span><span class="type-chip gyeolseok tt-tag">결석보강</span><span class="type-chip jikjeon tt-tag">직전</span><span class="type-chip gwanli tt-tag">보강</span> 시간표에 적힌 보강 <span class="exam-chip tt-tag">시험</span> 그 학생 학교가 시험기간</div>
 </div>
+${editable ? `
+<div class="form-card st-section">
+<div class="st-section-head"><div class="form-title">최근 변경</div><span class="bogang-meta">누가 언제 고쳤는지 남아요</span></div>
+${logs.length ? `<div class="tt-log">${logs.map(l => `<div><span class="bogang-meta">${fmtAt(l.at)} · ${esc(l.by || '')}</span> ${esc(l.text || '')}</div>`).join('')}</div>` : '<div class="empty-note" style="padding:4px 2px;">아직 변경 기록이 없어요.</div>'}
+</div>
+${regularEditHtml()}
+${cloudRole === 'teacher' ? staffCardHtml() : ''}` : ''}
 ${waits.length ? `
 <div class="form-card st-section">
 <div class="form-title">대기 · 시간 변경 희망</div>
 <div class="bogang-list">${waits.map(([n,s]) => `<div class="bogang-row"><div class="bogang-name" style="font-size:14px;">${esc(n)} <span class="bogang-meta">${esc(s.label || '')}</span></div><div class="bogang-memo">${esc(s.wait)}</div></div>`).join('')}</div>
 </div>` : ''}
-${importCard('시간표 바꾸기', `지금 시간표: ${esc(tt.source || '')} · ${esc(tt.updatedAt || '')} 기준. 시간표가 바뀌면 새로 정리한 파일을 불러오세요.`)}`;
+${!loggedIn ? loginCardHtml() + importCardHtml('시간표 바꾸기', `지금 시간표: ${esc(tt.source || '')} · ${esc(tt.updatedAt || '')} 기준. 시간표가 바뀌면 새로 정리한 파일을 불러오세요.`) : ''}`;
+
 document.getElementById('tt-prev').onclick = () => { ttWeekStart.setDate(ttWeekStart.getDate() - 7); renderTimetable(); };
 document.getElementById('tt-next').onclick = () => { ttWeekStart.setDate(ttWeekStart.getDate() + 7); renderTimetable(); };
 document.getElementById('tt-this-week').onclick = () => { const d = new Date(); d.setHours(0,0,0,0); d.setDate(d.getDate() - ((d.getDay() + 6) % 7)); ttWeekStart = d; renderTimetable(); };
-bindTtImport();
+if(!loggedIn){ bindLogin(); bindTtImport(); }
+bindUserBar();
+if(editable){ bindRegularEdit(); if(cloudRole === 'teacher') bindStaffCard(); }
+}
+
+function importCardHtml(title, hint){
+return `
+<div class="form-card st-section">
+<div class="form-title">${title}</div>
+<div class="modal-hint">${hint}</div>
+<div class="form-actions">
+<button id="tt-import">시간표 파일 불러오기</button>
+<input type="file" id="tt-import-file" accept="application/json,.json" style="display:none;">
+</div>
+</div>`;
 }
 function bindTtImport(){
 const input = document.getElementById('tt-import-file');
-document.getElementById('tt-import').onclick = () => input.click();
+const btn = document.getElementById('tt-import');
+if(!input || !btn) return;
+btn.onclick = () => input.click();
 input.onchange = () => { if(input.files[0]) importBackupFile(input.files[0]); input.value = ''; };
+}
+function bindUserBar(){
+const out = document.getElementById('lg-out');
+if(out) out.onclick = () => { if(confirm('로그아웃할까요?')) cloud.signOut(); };
+}
+
+async function uploadLocalTimetable(btn){
+const local = loadObj(TIMETABLE_KEY);
+if(!local.students) return;
+btn.disabled = true; btn.textContent = '올리는 중…';
+try{
+const at = new Date().toISOString();
+for(const [name, s] of Object.entries(local.students)){
+await cloud.set('students', name, { label: s.label || '', school: s.school || '', grade: s.grade || null, slots: s.slots || [], wait: s.wait || '', updatedAt: at, updatedBy: myName() });
+}
+for(const e of (local.extras || [])){
+await cloud.add('changes', { date: e.date, time: e.time, name: e.name, kind: e.note === '관리' ? '관리보강' : '보강', note: e.note === '관리' ? '' : (e.note || ''), by: '엑셀 시간표', at });
+}
+for(const x of examList()){
+const { id, ...rest } = x;
+await cloud.add('exams', rest);
+}
+await cloud.add('log', { at, by: myName(), text: `시간표 처음 올림 (학생 ${Object.keys(local.students).length}명)` });
+}catch(e){
+console.warn(e);
+alert('올리지 못했어요. 인터넷 연결과 로그인 상태를 확인해 주세요.');
+btn.disabled = false; btn.textContent = '공유 시간표로 올리기';
+}
+}
+
+// ---------- 결석·보강 처리 (학생 이름 클릭 / 날짜 옆 +) ----------
+function openTtModal(html, bind){
+const overlay = document.createElement('div');
+overlay.className = 'modal-overlay';
+overlay.innerHTML = `<div class="modal-card">${html}</div>`;
+document.body.appendChild(overlay);
+overlay.addEventListener('click', (e) => { if(e.target === overlay) overlay.remove(); });
+bind(overlay, () => overlay.remove());
+}
+const timeOptions = (sel) => {
+const list = Array.from(new Set([...COMMON_TIMES, ...(sel ? [sel] : [])])).sort();
+return list.map(t => `<option value="${t}" ${t === sel ? 'selected' : ''}>${fmtT(t)}</option>`).join('');
+};
+const studentDatalist = () => `<datalist id="tt-student-list">${Object.keys(ttStudents()).sort((a,b)=>a.localeCompare(b,'ko')).map(n => `<option value="${esc(n)}">`).join('')}</datalist>`;
+
+function openAddChange(prefill){
+const p = prefill || {};
+openTtModal(`
+<div class="modal-title">${p.absentDate ? `${esc(p.name)} 결석보강 잡기` : '결석·보강 추가'}</div>
+${p.absentDate ? `<div class="modal-hint">${mdLabel(p.absentDate)} ${fmtT(p.absentTime)} 수업은 결석으로 표시했어요. 보강 날짜와 시간을 골라 주세요.</div>` : ''}
+${studentDatalist()}
+<div class="form-row">
+<div class="field"><label>학생</label><input type="text" id="tc-name" list="tt-student-list" value="${esc(p.name || '')}" placeholder="학생 이름"></div>
+<div class="field"><label>종류</label>
+<select id="tc-kind">${['관리보강','결석보강','직전보강','결석'].map(k => `<option value="${k}" ${k === (p.kind || '관리보강') ? 'selected' : ''}>${k}</option>`).join('')}</select></div>
+</div>
+<div class="form-row">
+<div class="field"><label>날짜</label><input type="date" id="tc-date" value="${esc(p.date || localToday())}"></div>
+<div class="field"><label>시간</label><select id="tc-time">${timeOptions(p.time || '16:00')}<option value="__custom">직접 입력</option></select>
+<input type="time" id="tc-time-custom" style="display:none;margin-top:6px;width:100%;"></div>
+</div>
+<div class="field" id="tc-absent-wrap" style="${(p.kind || '관리보강') === '결석보강' && !p.absentDate ? '' : 'display:none;'}"><label>빠진 수업 날짜 (선택, 넣으면 그날은 결석으로 표시)</label><input type="date" id="tc-absent" style="width:100%;"></div>
+<div class="field"><label>메모 (선택)</label><input type="text" id="tc-note" placeholder="예: 수만프 오답 마무리"></div>
+<div class="modal-actions"><button id="tc-cancel">취소</button><button class="primary" id="tc-save">저장</button></div>`,
+(ov, close) => {
+const kindSel = ov.querySelector('#tc-kind');
+const timeSel = ov.querySelector('#tc-time');
+kindSel.onchange = () => { ov.querySelector('#tc-absent-wrap').style.display = (kindSel.value === '결석보강' && !p.absentDate) ? '' : 'none'; };
+timeSel.onchange = () => { ov.querySelector('#tc-time-custom').style.display = timeSel.value === '__custom' ? '' : 'none'; };
+ov.querySelector('#tc-cancel').onclick = close;
+ov.querySelector('#tc-save').onclick = async () => {
+const name = ov.querySelector('#tc-name').value.trim();
+const kind = kindSel.value;
+const date = ov.querySelector('#tc-date').value;
+const time = timeSel.value === '__custom' ? ov.querySelector('#tc-time-custom').value : timeSel.value;
+const note = ov.querySelector('#tc-note').value.trim();
+const absentDate = p.absentDate || (kind === '결석보강' ? ov.querySelector('#tc-absent').value : '');
+if(!name || !date){ alert('학생과 날짜를 입력해 주세요.'); return; }
+const at = new Date().toISOString();
+close();
+// 빠진 수업 날짜를 적었고 아직 결석 기록이 없으면 결석도 함께 남긴다
+if(absentDate && !p.absentDate && !Object.values(cloudData.changes).some(c => c.kind === '결석' && c.name === name && c.date === absentDate)){
+const s = ttStudents()[name];
+const dow = new Date(absentDate + 'T00:00:00').getDay();
+const slot = s && s.slots.find(x => x.day === dow && slotActive(x, absentDate));
+await cloudWrite(() => cloud.add('changes', { date: absentDate, time: slot ? slot.time : '', name, kind: '결석', note: '', by: myName(), at }), `${name} ${mdLabel(absentDate)} 결석`);
+}
+const doc = { date, time, name, kind, note, by: myName(), at };
+if(absentDate) doc.absentDate = absentDate;
+await cloudWrite(() => cloud.add('changes', doc), `${name} ${kind} ${mdLabel(date)} ${fmtT(time)}${absentDate ? ` (${mdLabel(absentDate)} 결석분)` : ''}${note ? ' · ' + note : ''}`);
+};
+});
+}
+
+function openEntryActions(el){
+const name = el.dataset.ttName, date = el.dataset.ttDate, time = el.dataset.ttTime, kind = el.dataset.ttKind, changeId = el.dataset.ttChange;
+const change = changeId ? Object.assign({ id: changeId }, cloudData.changes[changeId]) : null;
+const isAbsent = change && change.kind === '결석';
+let body;
+if(kind === '정규' && !isAbsent){
+body = `
+<div class="modal-title">${esc(name)} · ${mdLabel(date)} ${fmtT(time)}</div>
+<div class="modal-hint">정규 수업이에요. 결석이면 결석 처리하고, 보강까지 바로 잡을 수 있어요.</div>
+<div class="tt-actions">
+<button id="ea-absent-makeup" class="primary">결석 + 결석보강 잡기</button>
+<button id="ea-absent">결석만 표시</button>
+<button id="ea-close" class="ghost">닫기</button>
+</div>`;
+}else if(isAbsent){
+const linked = Object.values(cloudData.changes).filter(c => c.kind === '결석보강' && c.name === name && c.absentDate === date);
+body = `
+<div class="modal-title">${esc(name)} · ${mdLabel(date)} 결석</div>
+<div class="modal-hint">${linked.length ? `결석보강: ${linked.map(c => `${mdLabel(c.date)} ${fmtT(c.time)}`).join(', ')}` : '아직 결석보강이 잡히지 않았어요.'}${change.by ? `<br>입력: ${esc(change.by)}` : ''}</div>
+<div class="tt-actions">
+${linked.length ? '' : '<button id="ea-makeup" class="primary">결석보강 잡기</button>'}
+<button id="ea-undo">결석 취소</button>
+<button id="ea-close" class="ghost">닫기</button>
+</div>`;
+}else{
+body = `
+<div class="modal-title">${esc(name)} · ${esc(kind)}</div>
+<div class="modal-hint">${mdLabel(date)} ${fmtT(time)}${change && change.absentDate ? ` · ${mdLabel(change.absentDate)} 결석분` : ''}${change && change.note ? ` · ${esc(change.note)}` : ''}${change && change.by ? `<br>입력: ${esc(change.by)}` : ''}</div>
+<div class="tt-actions">
+<button id="ea-delete">이 ${esc(kindShort(kind))} 삭제</button>
+<button id="ea-close" class="ghost">닫기</button>
+</div>`;
+}
+openTtModal(body, (ov, close) => {
+const on = (id, fn) => { const b = ov.querySelector('#' + id); if(b) b.onclick = fn; };
+on('ea-close', close);
+const markAbsent = () => cloudWrite(() => cloud.add('changes', { date, time, name, kind: '결석', note: '', by: myName(), at: new Date().toISOString() }), `${name} ${mdLabel(date)} ${fmtT(time)} 결석`);
+on('ea-absent', async () => { close(); await markAbsent(); });
+on('ea-absent-makeup', async () => { close(); await markAbsent(); openAddChange({ name, kind: '결석보강', absentDate: date, absentTime: time, date }); });
+on('ea-makeup', () => { close(); openAddChange({ name, kind: '결석보강', absentDate: date, absentTime: time, date }); });
+on('ea-undo', async () => { close(); await cloudWrite(() => cloud.remove('changes', change.id), `${name} ${mdLabel(date)} 결석 취소`); });
+on('ea-delete', async () => {
+if(!confirm(`${name} ${mdLabel(date)} ${kind}를 삭제할까요?`)) return;
+close();
+await cloudWrite(() => cloud.remove('changes', change.id), `${name} ${mdLabel(date)} ${kind} 삭제`);
+});
+});
+}
+
+document.getElementById('tt-body').addEventListener('click', (ev) => {
+const add = ev.target.closest('[data-tt-add]');
+if(add && cloudOn()){ openAddChange({ date: add.dataset.ttAdd }); return; }
+const el = ev.target.closest('[data-tt-name]');
+if(el && cloudOn()) openEntryActions(el);
+});
+
+// ---------- 정규 시간표 수정 ----------
+function regularEditHtml(){
+const students = ttStudents();
+const names = Object.keys(students).sort((a,b) => a.localeCompare(b,'ko'));
+const s = ttEditStudent ? students[ttEditStudent] : null;
+return `
+<div class="form-card st-section">
+<div class="st-section-head"><div class="form-title">정규 시간표 수정</div><button class="ghost" id="re-toggle">${ttEditOpen ? '접기' : '열기'}</button></div>
+${ttEditOpen ? `
+<div class="st-pick">
+<select id="re-student"><option value="">학생 선택</option>${names.map(n => `<option value="${esc(n)}" ${n === ttEditStudent ? 'selected' : ''}>${esc(n)} ${esc(students[n].label || '')}</option>`).join('')}<option value="__new">+ 새 학생</option></select>
+</div>
+${ttEditStudent === '__new' ? `
+<div class="form-row">
+<div class="field"><label>이름</label><input type="text" id="re-new-name" placeholder="예: 홍길동"></div>
+<div class="field"><label>학교·학년</label><input type="text" id="re-new-label" placeholder="예: 서일중2"></div>
+</div>
+<div class="form-actions"><button class="primary" id="re-new-save">학생 추가</button></div>` : ''}
+${s ? `
+<div class="chip-label">수업 시간</div>
+<div class="chips">${s.slots.length ? s.slots.map((x,i) => `<span class="chip has-data" style="display:inline-flex;align-items:center;gap:6px;cursor:default;">${DOW[x.day]} ${fmtT(x.time)}${x.from ? ` (${mdLabel(x.from)}부터)` : ''}${x.until ? ` (${mdLabel(x.until)}까지)` : ''}<button data-re-del="${i}" title="이 수업 빼기" style="background:none;border:none;padding:0;font-size:13px;color:var(--muted);cursor:pointer;border-radius:0;">×</button></span>`).join('') : '<span class="empty-note" style="padding:2px;">수업 없음</span>'}</div>
+<div class="form-row">
+<div class="field"><label>요일</label><select id="re-day">${[1,2,3,4,5,6].map(d => `<option value="${d}">${DOW[d]}</option>`).join('')}</select></div>
+<div class="field"><label>시간</label><select id="re-time">${timeOptions('16:00')}</select></div>
+<div class="field"><label>시작일 (선택)</label><input type="date" id="re-from"></div>
+<div class="field"><label>종료일 (선택)</label><input type="date" id="re-until"></div>
+</div>
+<div class="form-actions"><button class="primary" id="re-add">수업 추가</button></div>
+<div class="field"><label>대기·희망 메모</label><input type="text" id="re-wait" value="${esc(s.wait || '')}" placeholder="예: 월 4시 대기(기말고사 이후)" style="width:100%;"></div>
+<div class="form-actions"><button class="ghost" id="re-remove">시간표에서 빼기(휴원·퇴원)</button><button id="re-wait-save">메모 저장</button></div>` : ''}
+` : '<div class="bogang-meta">요일·시간 변경, 신규생 추가, 휴원생 정리를 여기서 해요. 바꾸면 기록에 남아요.</div>'}
+</div>`;
+}
+function bindRegularEdit(){
+const tog = document.getElementById('re-toggle');
+if(!tog) return;
+tog.onclick = () => { ttEditOpen = !ttEditOpen; renderTimetable(); };
+const sel = document.getElementById('re-student');
+if(sel) sel.onchange = () => { ttEditStudent = sel.value; renderTimetable(); };
+const students = ttStudents();
+const s = students[ttEditStudent];
+const save = (name, data, text) => cloudWrite(() => cloud.set('students', name, { ...data, updatedAt: new Date().toISOString(), updatedBy: myName() }), text);
+const newSave = document.getElementById('re-new-save');
+if(newSave) newSave.onclick = async () => {
+const name = document.getElementById('re-new-name').value.trim();
+const label = document.getElementById('re-new-label').value.trim();
+if(!name) return;
+if(students[name]){ alert('이미 있는 학생이에요.'); return; }
+const m = label.match(/^(.+?)(\d)$/);
+ttEditStudent = name;
+await save(name, { label, school: m ? m[1] : label, grade: m ? +m[2] : null, slots: [], wait: '' }, `신규 학생 추가: ${name} ${label}`);
+};
+if(!s) return;
+document.querySelectorAll('[data-re-del]').forEach(b => b.onclick = async () => {
+const i = +b.dataset.reDel; const x = s.slots[i];
+if(!confirm(`${ttEditStudent} ${DOW[x.day]} ${fmtT(x.time)} 수업을 정규 시간표에서 뺄까요?`)) return;
+await save(ttEditStudent, { ...s, slots: s.slots.filter((_,j) => j !== i) }, `${ttEditStudent} 정규 수업 빼기: ${DOW[x.day]} ${fmtT(x.time)}`);
+});
+document.getElementById('re-add').onclick = async () => {
+const day = +document.getElementById('re-day').value;
+const time = document.getElementById('re-time').value;
+const from = document.getElementById('re-from').value, until = document.getElementById('re-until').value;
+const slot = { day, time }; if(from) slot.from = from; if(until) slot.until = until;
+const slots = [...s.slots, slot].sort((a,b) => a.day - b.day || a.time.localeCompare(b.time));
+await save(ttEditStudent, { ...s, slots }, `${ttEditStudent} 정규 수업 추가: ${DOW[day]} ${fmtT(time)}${from ? ` (${mdLabel(from)}부터)` : ''}${until ? ` (${mdLabel(until)}까지)` : ''}`);
+};
+document.getElementById('re-wait-save').onclick = async () => {
+await save(ttEditStudent, { ...s, wait: document.getElementById('re-wait').value.trim() }, `${ttEditStudent} 대기·희망 메모 수정`);
+};
+document.getElementById('re-remove').onclick = async () => {
+if(!confirm(`${ttEditStudent} 학생을 시간표에서 뺄까요? (지난 결석·보강 기록은 남아요)`)) return;
+const name = ttEditStudent; ttEditStudent = '';
+await cloudWrite(() => cloud.remove('students', name), `${name} 시간표에서 뺌(휴원·퇴원)`);
+};
+}
+
+// ---------- 데스크 계정 등록 (박유경T만) ----------
+function staffCardHtml(){
+const staff = Object.entries(cloudData.staff);
+return `
+<div class="form-card st-section">
+<div class="st-section-head"><div class="form-title">데스크 계정</div><span class="bogang-meta">Firebase에서 만든 계정을 여기 등록해야 시간표를 볼 수 있어요</span></div>
+${staff.length ? `<div class="bogang-list">${staff.map(([email, x]) => `<div class="bogang-row"><div class="bogang-row-top"><span><b>${esc(x.name || '데스크')}</b> <span class="bogang-meta">${esc(email)}</span></span><button class="ghost" data-staff-del="${esc(email)}" style="padding:4px 9px;font-size:12.5px;">삭제</button></div></div>`).join('')}</div>` : '<div class="empty-note" style="padding:4px 2px;">등록된 데스크 계정이 없어요.</div>'}
+<div class="form-row">
+<div class="field"><label>이메일</label><input type="text" id="sf-email" placeholder="데스크 로그인 이메일"></div>
+<div class="field"><label>표시 이름</label><input type="text" id="sf-name" placeholder="예: 데스크 김OO"></div>
+</div>
+<div class="form-actions"><button class="primary" id="sf-add">등록</button></div>
+</div>`;
+}
+function bindStaffCard(){
+const add = document.getElementById('sf-add');
+if(!add) return;
+add.onclick = async () => {
+const email = document.getElementById('sf-email').value.trim().toLowerCase();
+const name = document.getElementById('sf-name').value.trim() || '데스크';
+if(!email || !email.includes('@')){ alert('이메일을 확인해 주세요.'); return; }
+await cloudWrite(() => cloud.set('staff', email, { name }), `데스크 계정 등록: ${name}`);
+};
+document.querySelectorAll('[data-staff-del]').forEach(b => b.onclick = async () => {
+if(!confirm(`${b.dataset.staffDel} 계정의 시간표 권한을 없앨까요?`)) return;
+await cloudWrite(() => cloud.remove('staff', b.dataset.staffDel), `데스크 계정 삭제: ${b.dataset.staffDel}`);
+});
 }
 
 // ================= INIT =================
@@ -1794,6 +2287,45 @@ const tab = (location.hash || '').replace('#','');
 const btn = tab && document.querySelector(`.tab-btn[data-tab="${tab}"]`);
 if(btn) btn.click();
 })();
+</script>
+<!-- 공유 시간표(Firebase) 연결: 위 스크립트의 kladiCloudInit 으로 연결 객체를 넘긴다 -->
+<script type="module">
+const firebaseConfig = {
+apiKey: "AIzaSyA9Hp2SSus8wmxTLxAjymRsy0ToPH6LNes",
+authDomain: "kladi-timetable.firebaseapp.com",
+projectId: "kladi-timetable",
+storageBucket: "kladi-timetable.firebasestorage.app",
+messagingSenderId: "1074813927710",
+appId: "1:1074813927710:web:b4d83f8b50972bef03090f"
+};
+const V = '10.12.2';
+try{
+if(window.__kladiFakeCloud){
+window.kladiCloudInit(window.__kladiFakeCloud);   // 테스트용
+}else{
+const [appMod, authMod, fs] = await Promise.all([
+import(`https://www.gstatic.com/firebasejs/${V}/firebase-app.js`),
+import(`https://www.gstatic.com/firebasejs/${V}/firebase-auth.js`),
+import(`https://www.gstatic.com/firebasejs/${V}/firebase-firestore.js`),
+]);
+const app = appMod.initializeApp(firebaseConfig);
+const auth = authMod.getAuth(app);
+const db = fs.getFirestore(app);
+window.kladiCloudInit({
+onAuth: (cb) => authMod.onAuthStateChanged(auth, (u) => cb(u ? { email: u.email } : null)),
+signIn: (email, pw) => authMod.signInWithEmailAndPassword(auth, email, pw),
+signOut: () => authMod.signOut(auth),
+resetPassword: (email) => authMod.sendPasswordResetEmail(auth, email),
+watch: (col, cb, onErr) => fs.onSnapshot(fs.collection(db, col), (snap) => { const out = {}; snap.forEach(d => { out[d.id] = d.data(); }); cb(out); }, onErr),
+set: (col, id, data) => fs.setDoc(fs.doc(db, col, id), data),
+add: (col, data) => fs.addDoc(fs.collection(db, col), data).then(r => r.id),
+remove: (col, id) => fs.deleteDoc(fs.doc(db, col, id)),
+});
+}
+}catch(e){
+console.warn('공유 시간표 연결 실패', e);
+window.kladiCloudInit(null, e);
+}
 </script>
 </body>
 </html>
