@@ -187,6 +187,13 @@ padding:16px 18px;box-shadow:var(--shadow);
 .entry-actions{display:flex;gap:4px;flex:none;}
 .entry-actions button{padding:5px 10px;font-size:12.5px;font-weight:500;white-space:nowrap;}
 .entry-text{white-space:pre-wrap;line-height:1.65;font-size:14px;color:var(--ink);}
+.reply-box{margin-top:12px;display:flex;flex-direction:column;gap:8px;}
+.reply{background:var(--surface-2);border-left:3px solid var(--brand-lavender);border-radius:10px;padding:9px 12px;margin-top:6px;}
+.reply-head{display:flex;align-items:center;gap:8px;}
+.reply-tag{font-size:11.5px;font-weight:700;color:var(--sage-ink);background:var(--sage-soft);border-radius:100px;padding:2px 9px;}
+.reply-copy{margin-left:auto;padding:2px 8px !important;font-size:12px !important;font-weight:500 !important;}
+.reply-del{padding:0 6px !important;font-size:14px !important;}
+.reply-text{white-space:pre-wrap;font-size:13.5px;line-height:1.6;margin-top:5px;}
 
 /* Add / edit form */
 .form-card{
@@ -232,6 +239,52 @@ background:var(--surface-2);color:var(--ink);border:none;cursor:pointer;
 font-size:13px;line-height:1;font-weight:700;padding:0;display:flex;align-items:center;justify-content:center;
 }
 .cal-add-btn:hover{background:var(--ink);color:var(--surface);}
+/* 달력: 한 주씩 그리드 (날짜 / 시험기간 띠 / 보강 목록) */
+#cal-grid{display:flex;flex-direction:column;gap:6px;}
+.cal-week{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));column-gap:6px;min-height:122px;}
+.cal-week .cal-cell{min-height:0;padding:0;z-index:0;}
+.cal-cell.other{background:transparent;}
+.cal-week .cal-daynum{z-index:1;padding:6px 8px 3px;pointer-events:none;}
+.cal-daynum.today{color:var(--accent);}
+.cal-daynum.sun{color:var(--sun);}
+.cal-daynum.other{opacity:.45;}
+.cal-band{
+z-index:1;margin:1px 3px;padding:0 7px;font-size:11px;font-weight:700;line-height:17px;border-radius:6px;
+white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer;
+}
+/* 시험 띠: 학교별 색 + 왼쪽 네이비 표시(시험 색)로 결석·보강 꼬리표와 구분 */
+.cal-band{border-left:5px solid #2B2A4C;}
+.cal-band.cont-l{border-top-left-radius:0;border-bottom-left-radius:0;margin-left:0;border-left:none;}
+.cal-band.cont-r{border-top-right-radius:0;border-bottom-right-radius:0;margin-right:0;}
+.cal-evs{z-index:1;pointer-events:none;padding:4px 5px 6px;display:flex;flex-direction:column;gap:2px;min-width:0;}
+.cal-ev{font-size:11.5px;font-weight:600;border-radius:5px;padding:1px 5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.cal-ev-t{font-weight:500;opacity:.75;}
+.cal-ev.gwanli{background:var(--accent-soft);color:var(--accent);}
+.cal-ev.gyeolseok{background:var(--absent-soft);color:var(--absent-ink);}
+.cal-ev.jikjeon{background:var(--jikjeon-soft);color:var(--jikjeon-ink);}
+.cal-ev.off{background:var(--surface-2);color:var(--sun);text-decoration:line-through;}
+.cal-ev.more{background:transparent;color:var(--muted);font-weight:500;}
+body.wide .wrap{max-width:1180px;}
+@media (min-width:681px){ body.wide .bg-side-col{width:300px;} }
+@media (max-width:520px){
+.cal-week{min-height:74px;column-gap:3px;}
+.cal-week .cal-daynum{padding:4px 4px 2px;font-size:11px;}
+.cal-ev{font-size:9.5px;padding:0 3px;}
+.cal-ev-t{display:none;}
+.cal-band{font-size:9.5px;padding:0 3px;margin:1px;}
+.cal-week .cal-add-btn{width:14px;height:14px;font-size:10px;top:2px;right:2px;opacity:.7;}
+.cal-week .cal-daynum{padding-right:16px;}
+}
+/* 결석·보강 종류별 색 — 데스크 시간표 색 체계: 보강 파랑, 예약 노랑, 반이동 보라, 첫수업 초록 / 결석 빨강, 관리 핑크, 직보 주황, 시험 네이비 */
+.k-absent{background:#FBE1E1 !important;color:#B3261E !important;}
+.k-gwanli{background:#FFE0EC !important;color:#B8406E !important;}
+.k-jikbo{background:#FDE3CC !important;color:#A44A0E !important;}
+.k-bogang{background:#DCE7F8 !important;color:#2B4F8C !important;}
+.k-yeyak{background:#FFF0B3 !important;color:#735300 !important;}
+.k-move{background:#E7DBF7 !important;color:#5A3A8E !important;}
+.k-first{background:#D6F0DC !important;color:#2A6A3B !important;}
+.k-exam{background:#2B2A4C !important;color:#FFD9E8 !important;}
+.cal-ev.k-absent{text-decoration:line-through;}
 /* 일요일 빨간색 */
 .cal-dow.sun, .cal-cell.sun .cal-daynum{color:var(--sun);}
 /* 시험기간 표시 */
@@ -267,6 +320,11 @@ background:var(--surface-2);color:var(--ink);font-size:14px;line-height:1;displa
 .tt-actions{display:flex;flex-direction:column;gap:8px;}
 .tt-actions button{width:100%;}
 .tt-log{display:flex;flex-direction:column;gap:6px;font-size:13.5px;line-height:1.5;}
+.wait-head{display:inline-flex;align-items:center;gap:8px;font-size:14px;}
+.wait-no{display:inline-flex;align-items:center;justify-content:center;min-width:22px;height:22px;border-radius:50%;background:var(--ink);color:var(--surface);font-size:12px;font-weight:700;}
+.wait-actions{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;}
+.wait-actions input[type=date]{padding:4px 8px;font-size:12.5px;border-radius:8px;}
+.wait-actions button{padding:4px 10px;font-size:12.5px;}
 .exam-chip{
 display:inline-block;font-size:11.5px;font-weight:700;border-radius:100px;padding:3px 9px;
 background:var(--exam-bg);color:var(--exam-ink);white-space:nowrap;
@@ -403,6 +461,11 @@ display:flex;flex-direction:column;gap:14px;
 <option value="관리보강">관리보강</option>
 <option value="결석보강">결석보강</option>
 <option value="직전보강">직전보강</option>
+<option value="결석">결석</option>
+<option value="보강">보강(시간표)</option>
+<option value="예약">예약</option>
+<option value="반이동">반이동</option>
+<option value="첫수업">첫수업</option>
 </select>
 <select id="bg-range-select">
 <option value="all">전체 기간</option>
@@ -592,6 +655,7 @@ document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
 document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
 btn.classList.add('active');
 document.getElementById('panel-'+btn.dataset.tab).classList.add('active');
+document.body.classList.toggle('wide', btn.dataset.tab === 'bogang' || btn.dataset.tab === 'timetable');
 if(btn.dataset.tab === 'bogang') renderBogang();
 if(btn.dataset.tab === 'student') renderStudent();
 if(btn.dataset.tab === 'timetable') renderTimetable();
@@ -770,6 +834,27 @@ card.innerHTML = `
 <div class="entry-text"></div>
 `;
 card.querySelector('.entry-text').textContent = e.text;
+const replies = repliesFor(e.id);
+if(replies.length){
+const box = document.createElement('div');
+box.className = 'reply-box';
+box.innerHTML = replies.map(r => `
+<div class="reply">
+<div class="reply-head"><span class="reply-tag">어머님 답장</span><span class="bogang-meta">${esc(r.date ? mdLabel(r.date) : '')} ${esc(r.time || '')}</span><button class="ghost reply-copy" data-reply-copy="${esc(r.id)}">복사</button><button class="ghost reply-del" data-reply-del="${esc(r.id)}" title="답장 지우기">×</button></div>
+<div class="reply-text"></div>
+</div>`).join('');
+box.querySelectorAll('.reply-text').forEach((el, i) => { el.textContent = replies[i].text; });
+box.querySelectorAll('[data-reply-copy]').forEach(btn => btn.onclick = () => {
+const r = replies.find(x => x.id === btn.dataset.replyCopy);
+if(r) copyToClipboard(r.text, btn);
+});
+box.querySelectorAll('[data-reply-del]').forEach(btn => btn.onclick = () => {
+if(!confirm('이 답장을 지울까요?')) return;
+const all = loadObj(REPLY_KEY); delete all[btn.dataset.replyDel]; saveObj(REPLY_KEY, all);
+renderFeedbackList();
+});
+card.appendChild(box);
+}
 card.querySelector('[data-act=copy]').onclick = (ev) => {
 const btn = ev.currentTarget;
 const showResult = (ok) => {
@@ -856,6 +941,37 @@ if(candidate) showBogangConfirm(candidate, name);
 document.getElementById('fb-add-open').onclick = () => openFeedbackForm(null);
 document.getElementById('fb-search').addEventListener('input', (e)=>{ fbSearch = e.target.value.trim(); renderFeedbackList(); });
 
+// ---------- 어머님 답장 (카톡 답장 확인 예약 작업이 넣는다) ----------
+// 저장: kladi_parent_replies_v1 = { id: { name, feedbackId, date, time, text, addedAt } }
+const REPLY_KEY = 'kladi_parent_replies_v1';
+function repliesFor(feedbackId){
+return Object.entries(loadObj(REPLY_KEY)).map(([id, r]) => ({ id, ...r }))
+.filter(r => r.feedbackId === feedbackId)
+.sort((a,b) => ((a.date || '') + (a.addedAt || '')).localeCompare((b.date || '') + (b.addedAt || '')));
+}
+// 예약 작업이 크롬에서 호출: kladiAddParentReply("유지아", "답장 원문", "오전 11:01", "2026-11-06")
+// 그 학생의 피드백 중 답장 날짜 이전(같은 날 포함)의 가장 최근 피드백 아래에 붙인다.
+window.kladiAddParentReply = (name, text, time, date) => {
+name = String(name || '').trim(); text = String(text || '').trim();
+if(!name || !text) return JSON.stringify({ status: 'error', reason: '이름 또는 내용 없음' });
+date = date || localToday();
+const fb = Object.entries(loadObj(FEEDBACK_KEY)).map(([id, e]) => ({ id, ...e }));
+let target = fb.filter(e => e.name === name);
+// 카톡방 이름이 명단과 조금 다를 때(예: 이채원 ↔ 이채원B) 앞부분이 같은 이름으로 찾는다
+if(!target.length) target = fb.filter(e => e.name.startsWith(name) || name.startsWith(e.name));
+target = target.filter(e => e.date <= date).sort((a,b) => b.date.localeCompare(a.date) || b.id.localeCompare(a.id));
+const all = loadObj(REPLY_KEY);
+if(Object.values(all).some(r => r.text === text && (r.name === name || (target[0] && r.feedbackId === target[0].id)))){
+return JSON.stringify({ status: 'duplicate', name });
+}
+if(!target.length) return JSON.stringify({ status: 'no-feedback', name });
+all[uid()] = { name: target[0].name, feedbackId: target[0].id, date, time: time || '', text, addedAt: new Date().toISOString() };
+saveObj(REPLY_KEY, all);
+fbRevealDate(target[0].date);
+renderFeedbackList();
+return JSON.stringify({ status: 'added', name: target[0].name, feedbackDate: target[0].date });
+};
+
 // ---------- 보강 키워드 감지 (피드백 저장 시) ----------
 // "관리보강" / "결석보강" / "직전보강"(또는 "직보") 이라는 단어가 있으면 후보로 인식한다.
 // 글 안에 "N월 N일" 형식의 날짜가 있으면 그 날짜를, 없으면(예: "최태훈 결석보강"처럼 짧게만 쓴 경우)
@@ -938,6 +1054,11 @@ const type = document.getElementById('bc-type').value;
 const date = document.getElementById('bc-date').value;
 const time = document.getElementById('bc-time').value;
 if(!name || !date){ overlay.remove(); return; }
+if(cloudOn()){
+overlay.remove();
+cloudWrite(() => cloud.add('changes', { date, time, name, kind: type, note: '', by: myName(), at: new Date().toISOString() }), `${name} ${type} ${mdLabel(date)} ${fmtT(time)} (피드백에서)`);
+return;
+}
 const data = loadObj(BOGANG_KEY);
 data[uid()] = { name, type, date, time, memo: '' };
 saveObj(BOGANG_KEY, data);
@@ -958,10 +1079,32 @@ function bgFilterActive(){
 return !!bgSearch || bgRangeMode !== 'all' || bgTypeFilter !== 'all';
 }
 
-function bogangTypeClass(type){
-if(type === '결석보강') return 'gyeolseok';
-if(type === '직전보강') return 'jikjeon';
-return 'gwanli';
+function bogangTypeClass(type){ return kindCls(type); }
+
+// 학교별 시험기간 색 (배경, 글자). 목록에 없는 학교는 이름으로 남은 색 중 하나를 고른다.
+const SCHOOL_COLORS = {
+'서일중': ['#D9F0E3','#2D6A4A'], '원촌중': ['#FCE3C8','#7A4316'], '이수중': ['#E3DAF5','#4B3F78'],
+'서초중': ['#D8E8F7','#2E5A85'], '세화여중': ['#FFD9E8','#9C2D5A'], '서문여중': ['#FADBD3','#8A3B2A'],
+'동덕여중': ['#F3DDF0','#7A2E6E'], '신반포중': ['#FCEBC7','#7A5A12'], '경원중': ['#D6EEF0','#1F6168'],
+'예원중': ['#DCE0F5','#33407A'], '서운중': ['#DDE7D0','#4D5F2E'], '동작중': ['#E8E4DA','#5A4E3A'], '방배중': ['#F7E1CC','#7A4A16'],
+};
+const EXTRA_COLORS = [['#E9E0F7','#4B3F78'],['#D3ECE8','#1F5E55'],['#FBE0E6','#8A2E48'],['#E2E8D3','#4A5A26'],['#F5E6CF','#6E4C14'],['#DCE6F4','#2E4E7A']];
+function schoolColor(school){
+if(SCHOOL_COLORS[school]) return SCHOOL_COLORS[school];
+let h = 0; for(const ch of String(school)) h = (h * 31 + ch.charCodeAt(0)) >>> 0;
+return EXTRA_COLORS[h % EXTRA_COLORS.length];
+}
+const examStyle = (x) => { const [bg, ink] = schoolColor(x.school); return `background:${bg};color:${ink};`; };
+
+// 보강 목록: 공유 시간표에 로그인했으면 클라우드의 결석·보강, 아니면 이 브라우저의 보강 기록
+function getBogangEntries(){
+if(cloudOn()){
+return Object.entries(cloudData.changes).map(([id,c]) => ({
+id, cloud: true, name: c.name, type: c.kind, date: c.date, time: c.time || '', by: c.by || '',
+memo: [c.absentDate ? `${mdLabel(c.absentDate)} 결석분` : '', c.note || ''].filter(Boolean).join(' · ')
+}));
+}
+return Object.entries(loadObj(BOGANG_KEY)).map(([id,b]) => ({ id, ...b }));
 }
 
 function getBogangRangeBounds(){
@@ -982,48 +1125,82 @@ const el = document.getElementById('cal-dow');
 el.innerHTML = DOW.map((d,i)=>`<div class="cal-dow${i===0?' sun':''}">${d}</div>`).join('');
 }
 
+// 한 주를 한 줄(그리드)로 그린다: 1행 날짜 숫자, 그 아래 시험기간 띠(겹치면 여러 줄), 맨 아래 보강 목록
 function renderCalendar(){
-document.getElementById('cal-title').textContent = `${calCursor.getFullYear()}년 ${calCursor.getMonth()+1}월`;
-const bogang = loadObj(BOGANG_KEY);
+const y = calCursor.getFullYear(), m = calCursor.getMonth();
+document.getElementById('cal-title').textContent = `${y}년 ${m+1}월`;
 const byDate = {};
-Object.values(bogang).forEach(b => { (byDate[b.date] = byDate[b.date]||[]).push(b); });
+getBogangEntries().forEach(b => { (byDate[b.date] = byDate[b.date] || []).push(b); });
+Object.values(byDate).forEach(list => list.sort((a,b) => (a.time||'99').localeCompare(b.time||'99')));
+const exams = examList();
+const today = localToday();
 
 const grid = document.getElementById('cal-grid');
 grid.innerHTML = '';
-const firstDow = calCursor.getDay();
-const daysInMonth = new Date(calCursor.getFullYear(), calCursor.getMonth()+1, 0).getDate();
-for(let i=0;i<firstDow;i++){
-const blank = document.createElement('div');
-blank.className = 'cal-cell empty';
-grid.appendChild(blank);
-}
-for(let d=1; d<=daysInMonth; d++){
-const dateObj = new Date(calCursor.getFullYear(), calCursor.getMonth(), d);
-const dateStr = fmtDate(dateObj);
+const first = new Date(y, m, 1);
+const lastDay = new Date(y, m + 1, 0);
+const wk = new Date(first); wk.setDate(1 - first.getDay());
+while(wk <= lastDay){
+const days = [...Array(7)].map((_, i) => { const d = new Date(wk); d.setDate(d.getDate() + i); return d; });
+const ds = days.map(fmtDate);
+// 이 주에 걸치는 시험기간을 잘라서 띠로 만들고, 겹치지 않게 줄(lane)을 나눈다
+const segs = exams.filter(x => x.start <= ds[6] && (x.end || x.start) >= ds[0]).map(x => {
+const endDate = x.end || x.start;
+return { x, s: x.start < ds[0] ? 0 : ds.indexOf(x.start), e: endDate > ds[6] ? 6 : ds.indexOf(endDate), contL: x.start < ds[0], contR: endDate > ds[6] };
+}).sort((a,b) => a.s - b.s || (b.e - b.s) - (a.e - a.s));
+const lanes = [];
+segs.forEach(sg => { let l = lanes.findIndex(end => end < sg.s); if(l < 0){ l = lanes.length; lanes.push(-1); } lanes[l] = sg.e; sg.lane = l; });
+const L = lanes.length;
+
+const week = document.createElement('div');
+week.className = 'cal-week';
+week.style.gridTemplateRows = `auto${L ? ` repeat(${L}, 19px)` : ''} 1fr`;
+const evRow = L + 2;
+days.forEach((d, i) => {
+const dateStr = ds[i];
+const inMonth = d.getMonth() === m;
 const cell = document.createElement('div');
-cell.className = 'cal-cell';
-if(dateStr === todayStr()) cell.classList.add('today');
-if(dateStr === selectedDate) cell.classList.add('selected');
-if(dateObj.getDay() === 0) cell.classList.add('sun');
-const items = byDate[dateStr] || [];
-const examsToday = examsOn(dateStr);
-const examHtml = examsToday.length ? `<div class="cal-exams">${examsToday.slice(0,2).map(x=>`<span class="cal-exam" title="${esc(examLabel(x))}">${esc(shortSchool(x.school))}</span>`).join('')}${examsToday.length>2?`<span class="cal-exam">+${examsToday.length-2}</span>`:''}</div>` : '';
-const gwanli = items.filter(b=>b.type==='관리보강').length;
-const gyeolseok = items.filter(b=>b.type==='결석보강').length;
-const jikjeon = items.filter(b=>b.type==='직전보강').length;
-cell.innerHTML = `
-<button class="cal-add-btn" title="이 날짜에 보강 등록">+</button>
-<div class="cal-daynum">${d}</div>
-<div class="cal-dots">${gwanli?`<span class="dot gwanli"></span>`:''}${gyeolseok?`<span class="dot gyeolseok"></span>`:''}${jikjeon?`<span class="dot jikjeon"></span>`:''}</div>
-${examHtml}`;
+cell.className = 'cal-cell' + (inMonth ? '' : ' other') + (dateStr === today ? ' today' : '') + (dateStr === selectedDate ? ' selected' : '') + (d.getDay() === 0 ? ' sun' : '');
+cell.style.gridColumn = `${i + 1}`;
+cell.style.gridRow = '1 / -1';
+cell.innerHTML = `<button class="cal-add-btn" title="이 날짜에 보강 등록">+</button>`;
 cell.onclick = () => { selectedDate = dateStr; renderCalendar(); renderBogangList(); };
 cell.querySelector('.cal-add-btn').onclick = (ev) => {
 ev.stopPropagation();
 selectedDate = dateStr;
 renderCalendar(); renderBogangList();
-openBogangForm(null);
+if(cloudOn()) openAddChange({ date: dateStr }); else openBogangForm(null);
 };
-grid.appendChild(cell);
+week.appendChild(cell);
+
+const num = document.createElement('div');
+num.className = 'cal-daynum' + (d.getDay() === 0 ? ' sun' : '') + (inMonth ? '' : ' other') + (dateStr === today ? ' today' : '');
+num.style.gridColumn = `${i + 1}`; num.style.gridRow = '1';
+num.textContent = d.getDate();
+week.appendChild(num);
+
+const items = byDate[dateStr] || [];
+if(items.length){
+const ev = document.createElement('div');
+ev.className = 'cal-evs';
+ev.style.gridColumn = `${i + 1}`; ev.style.gridRow = `${evRow}`;
+const MAX = 4;
+ev.innerHTML = items.slice(0, MAX).map(b => `<div class="cal-ev ${bogangTypeClass(b.type)}" title="${esc(b.type)} ${esc(b.name)} ${esc(b.time || '')}"><span class="cal-ev-t">${b.time ? esc(fmtT(b.time)) : ''}</span> ${b.name ? esc(b.name) : '예약'}${b.type === '반이동' || b.type === '첫수업' ? ' · ' + esc(kindShort(b.type)) : ''}</div>`).join('')
++ (items.length > MAX ? `<div class="cal-ev more">+${items.length - MAX}건</div>` : '');
+week.appendChild(ev);
+}
+});
+segs.forEach(sg => {
+const band = document.createElement('div');
+band.className = 'cal-band' + (sg.contL ? ' cont-l' : '') + (sg.contR ? ' cont-r' : '');
+band.style.cssText = examStyle(sg.x) + `grid-column:${sg.s + 1} / ${sg.e + 2};grid-row:${sg.lane + 2};`;
+band.title = examLabel(sg.x) + (sg.x.memo ? ' · ' + sg.x.memo : '');
+band.textContent = `${sg.x.school}${sg.x.grades && sg.x.grades.length ? ' ' + sg.x.grades.join('·') + '학년' : ''} ${sg.x.name.replace('2학기 ', '').replace('1학기 ', '')}`;
+band.onclick = () => { selectedDate = ds[sg.s]; renderCalendar(); renderBogangList(); };
+week.appendChild(band);
+});
+grid.appendChild(week);
+wk.setDate(wk.getDate() + 7);
 }
 }
 
@@ -1032,29 +1209,34 @@ const row = document.createElement('div');
 row.className = 'bogang-row';
 row.innerHTML = `
 <div class="bogang-row-top">
-<span class="type-chip ${bogangTypeClass(b.type)}">${b.type}</span>
+<span class="type-chip ${bogangTypeClass(b.type)}">${esc(kindShort(b.type))}</span>
 <span class="entry-actions">
-<button class="ghost" data-act="edit">수정</button>
+${b.cloud ? '' : '<button class="ghost" data-act="edit">수정</button>'}
 <button class="ghost" data-act="delete">삭제</button>
 </span>
 </div>
 <div class="bogang-body">
-<div class="bogang-name">${b.name}</div>
-${b.time ? `<div class="bogang-meta">${b.time}</div>` : ''}
-${b.memo ? `<div class="bogang-memo">${b.memo}</div>` : ''}
+<div class="bogang-name">${esc(b.name || '자리 예약')}</div>
+${b.time ? `<div class="bogang-meta">${esc(fmtT(b.time))}</div>` : ''}
+${b.memo ? `<div class="bogang-memo">${esc(b.memo)}</div>` : ''}
+${b.cloud && b.by ? `<div class="bogang-memo">입력: ${esc(b.by)}</div>` : ''}
 </div>`;
-row.querySelector('[data-act=delete]').onclick = () => {
+row.querySelector('[data-act=delete]').onclick = async () => {
 if(!confirm(`${b.name} ${b.type} 항목을 삭제할까요?`)) return;
+if(b.cloud){
+await cloudWrite(() => cloud.remove('changes', b.id), `${b.name} ${mdLabel(b.date)} ${b.type} 삭제`);
+return;
+}
 const data = loadObj(BOGANG_KEY); delete data[b.id]; saveObj(BOGANG_KEY, data);
 renderCalendar(); renderBogangList();
 };
-row.querySelector('[data-act=edit]').onclick = () => openBogangForm(b);
+const edit = row.querySelector('[data-act=edit]');
+if(edit) edit.onclick = () => openBogangForm(b);
 return row;
 }
 
 function renderBogangDateList(){
-const bogang = loadObj(BOGANG_KEY);
-const entries = Object.entries(bogang).map(([id,b])=>({id,...b})).filter(b=>b.date===selectedDate);
+const entries = getBogangEntries().filter(b=>b.date===selectedDate);
 entries.sort((a,b)=> (a.time||'').localeCompare(b.time||''));
 document.getElementById('bg-selected-title').textContent = `${selectedDate} (${dowLabel(selectedDate)}) 보강 — ${entries.length}건`;
 const list = document.getElementById('bg-list');
@@ -1064,8 +1246,7 @@ entries.forEach(b=> list.appendChild(buildBogangRow(b)));
 }
 
 function renderBogangFilteredList(){
-const bogang = loadObj(BOGANG_KEY);
-let entries = Object.entries(bogang).map(([id,b])=>({id,...b}));
+let entries = getBogangEntries();
 if(bgSearch) entries = entries.filter(b=>b.name.includes(bgSearch));
 if(bgTypeFilter !== 'all') entries = entries.filter(b=>b.type===bgTypeFilter);
 const { start, end } = getBogangRangeBounds();
@@ -1213,7 +1394,7 @@ updateBgFilterUI();
 // 저장 구조: { [학생이름]: { books:[{id,title}], plans:[{id,date,book,content,memo,done}] } }
 // 나중에 클라우드 DB(Supabase 등)로 옮기기 쉽도록 학생 이름 단위로만 묶어 둔다.
 const STUDENT_KEY = 'kladi_students_v1';
-const BACKUP_KEYS = [FEEDBACK_KEY, BOGANG_KEY, ROSTER_KEY, STUDENT_KEY, 'kladi_timetable_v1', 'kladi_exams_v1'];
+const BACKUP_KEYS = [FEEDBACK_KEY, BOGANG_KEY, ROSTER_KEY, STUDENT_KEY, 'kladi_timetable_v1', 'kladi_exams_v1', 'kladi_parent_replies_v1'];
 
 let stName = null;
 let stShowPast = false;
@@ -1406,8 +1587,9 @@ const fbHtml = `
 <div class="st-section-head"><div class="form-title">최근 피드백</div><span class="bogang-meta">총 ${fbAll.length}건</span></div>
 ${fbAll.length ? fbAll.slice(0,5).map((e,i) => `
 <details class="st-details" ${i === 0 ? 'open' : ''}>
-<summary>${esc(e.date)} (${dowLabel(e.date)})</summary>
+<summary>${esc(e.date)} (${dowLabel(e.date)})${repliesFor(e.id).length ? ' · 어머님 답장 ' + repliesFor(e.id).length + '건' : ''}</summary>
 <div class="entry-text">${esc(e.text)}</div>
+${repliesFor(e.id).map(r => `<div class="reply"><div class="reply-head"><span class="reply-tag">어머님 답장</span><span class="bogang-meta">${esc(r.date ? mdLabel(r.date) : '')} ${esc(r.time || '')}</span><button class="ghost reply-copy" data-act="reply-copy" data-id="${esc(r.id)}">복사</button></div><div class="reply-text">${esc(r.text)}</div></div>`).join('')}
 </details>`).join('') : '<div class="empty-note">저장된 피드백이 없어요.</div>'}
 </div>`;
 
@@ -1418,7 +1600,7 @@ const bgUpcoming = bgAll.filter(b => b.date >= today).reverse();
 const bgPast = bgAll.filter(b => b.date < today).slice(0,5);
 const bgRow = (b) => `
 <div class="bogang-row">
-<div class="bogang-row-top"><span class="type-chip ${bogangTypeClass(b.type)}">${esc(b.type)}</span>
+<div class="bogang-row-top"><span class="type-chip ${bogangTypeClass(b.type)}">${esc(kindShort(b.type))}</span>
 <span class="bogang-meta">${shortDate(b.date)}${b.time ? ' ' + esc(b.time) : ''}</span></div>
 ${b.memo ? `<div class="bogang-memo">${esc(b.memo)}</div>` : ''}
 </div>`;
@@ -1543,6 +1725,9 @@ stKakaoRange = document.getElementById('st-kakao-range').value;
 stKakaoText = buildKakaoText(stName, stKakaoRange);
 if(!stKakaoText) stKakaoText = '선택한 기간에 예정된 진도 계획이 없어요. 위에서 계획을 먼저 추가해주세요.';
 renderStudent();
+}else if(act === 'reply-copy'){
+const r = loadObj(REPLY_KEY)[id];
+if(r) copyToClipboard(r.text, el);
 }else if(act === 'kakao-copy'){
 const text = document.getElementById('st-kakao-text').value;
 if(text) copyToClipboard(text, el);
@@ -1600,7 +1785,7 @@ return examsOn(date).map(x => {
 const ours = Object.entries(tt).filter(([n,s]) => examMatches(x, s) && s.slots.length).map(([n]) => n);
 return `
 <div class="bogang-row">
-<div class="bogang-row-top"><span class="exam-chip">시험기간</span><span class="bogang-meta">${mdLabel(x.start)}${x.end && x.end !== x.start ? ' ~ ' + mdLabel(x.end) : ''}</span></div>
+<div class="bogang-row-top"><span class="exam-chip" style="${examStyle(x)}">시험기간</span><span class="bogang-meta">${mdLabel(x.start)}${x.end && x.end !== x.start ? ' ~ ' + mdLabel(x.end) : ''}</span></div>
 <div class="bogang-body">
 <div class="bogang-name">${esc(examTarget(x))} ${esc(x.name)}</div>
 ${ours.length ? `<div class="bogang-meta">우리 학생: ${ours.map(esc).join(', ')}</div>` : ''}
@@ -1808,8 +1993,12 @@ ${s.wait ? `<div class="modal-hint">대기·희망: ${esc(s.wait)}</div>` : ''}
 </div>`;
 }
 
-const kindCls = (k) => k === '결석' ? 'off' : (k === '결석보강' ? 'gyeolseok' : (k === '직전보강' ? 'jikjeon' : 'gwanli'));
-const kindShort = (k) => ({ '관리보강': '관리', '결석보강': '결석보강', '직전보강': '직전', '보강': '보강', '결석': '결석' }[k] || k);
+const KIND_CLASS = { '결석': 'k-absent', '관리보강': 'k-gwanli', '직전보강': 'k-jikbo', '결석보강': 'k-bogang', '보강': 'k-bogang', '예약': 'k-yeyak', '반이동': 'k-move', '첫수업': 'k-first' };
+const kindCls = (k) => KIND_CLASS[k] || 'k-gwanli';
+const kindShort = (k) => ({ '관리보강': '관리', '결석보강': '보강', '직전보강': '직보', '보강': '보강', '결석': '결석', '예약': '예약', '반이동': '반이동', '첫수업': '첫수업' }[k] || k);
+// 추가 창의 종류 목록 (값, 표시 이름)
+const CHANGE_KINDS = [['결석','결석'],['결석보강','보강 (결석보강)'],['관리보강','관리 (관리보강)'],['직전보강','직보 (직전보강)'],['예약','예약 (자리 맡아 두기)'],['반이동','반이동 (다른 반에서 옴)'],['첫수업','첫수업 (신규생 첫 등원)']];
+const displayName = (e) => e.name || (e.memo ? `자리 예약 · ${e.memo}` : '자리 예약');
 
 // ----- 시간표 탭: 한 주 단위로 정규 수업 + 결석·보강을 합쳐서 보여준다 -----
 let ttWeekStart = (() => { const d = new Date(); d.setHours(0,0,0,0); d.setDate(d.getDate() - ((d.getDay() + 6) % 7)); return d; })();
@@ -1829,7 +2018,12 @@ const absent = changes.find(c => c.kind === '결석' && c.name === name && (!c.t
 out.push({ name, time: x.time, kind: '정규', absent: absent || null });
 });
 });
-changes.filter(c => c.kind !== '결석').forEach(c => out.push({ name: c.name, time: c.time || '', kind: c.kind, memo: c.note, change: c }));
+changes.filter(c => c.kind !== '결석').forEach(c => {
+// 반이동·첫수업 날 정규 수업으로도 등록돼 있으면 같은 줄에 꼬리표만 붙인다
+const same = (c.kind === '반이동' || c.kind === '첫수업') && out.find(o => o.kind === '정규' && o.name === c.name && o.time === (c.time || ''));
+if(same){ same.tag = c.kind; same.change = c; return; }
+out.push({ name: c.name, time: c.time || '', kind: c.kind, memo: c.note, change: c });
+});
 // 정규 수업이 없는 날에 잡힌 결석 기록도 보이게
 changes.filter(c => c.kind === '결석' && !out.some(o => o.absent && o.absent.id === c.id))
 .forEach(c => out.push({ name: c.name, time: c.time || '', kind: '정규', absent: c }));
@@ -1970,13 +2164,13 @@ const present = entries.filter(e => !e.absent).length;
 return `
 <div class="tt-col${date === today ? ' today' : ''}">
 <div class="tt-day">${DOW[dow]} <span>${+date.slice(5,7)}/${+date.slice(8)}</span>${editable ? `<button class="tt-add" data-tt-add="${date}" title="이 날 결석·보강 추가">+</button>` : ''}</div>
-${exams.length ? `<div class="tt-exams">${exams.map(x => `<span class="cal-exam" title="${esc(examLabel(x))}">${esc(shortSchool(x.school))}${x.grades && x.grades.length ? x.grades.join('·') : ''} 시험</span>`).join('')}</div>` : ''}
+${exams.length ? `<div class="tt-exams">${exams.map(x => `<span class="cal-exam" style="${examStyle(x)}" title="${esc(examLabel(x))}">${esc(shortSchool(x.school))}${x.grades && x.grades.length ? x.grades.join('·') : ''} 시험</span>`).join('')}</div>` : ''}
 ${times.length ? times.map(t => `
 <div class="tt-time">${t === '시간 미정' ? t : fmtT(t)} <span>${byTime[t].filter(e => !e.absent).length}명</span></div>
 ${byTime[t].sort((a,b) => (a.kind === '정규' ? 0 : 1) - (b.kind === '정규' ? 0 : 1) || a.name.localeCompare(b.name,'ko')).map(e => {
-const tag = e.absent ? `<span class="type-chip off tt-tag">결석</span>` : (e.kind !== '정규' ? `<span class="type-chip ${kindCls(e.kind)} tt-tag" title="${esc(e.memo || '')}">${esc(kindShort(e.kind))}</span>` : '');
+const tag = e.absent ? `<span class="type-chip k-absent tt-tag">결석</span>` : e.tag ? `<span class="type-chip ${kindCls(e.tag)} tt-tag">${esc(kindShort(e.tag))}</span>` : (e.kind !== '정규' ? `<span class="type-chip ${kindCls(e.kind)} tt-tag" title="${esc(e.memo || '')}">${esc(kindShort(e.kind))}</span>` : '');
 const attrs = editable ? ` data-tt-name="${esc(e.name)}" data-tt-date="${date}" data-tt-time="${esc(e.time)}" data-tt-kind="${esc(e.kind)}" data-tt-change="${esc(e.change ? e.change.id : (e.absent ? e.absent.id : ''))}" role="button" tabindex="0"` : '';
-return `<div class="tt-name${e.absent ? ' absent' : ''}${editable ? ' editable' : ''}"${attrs}><span class="tt-n">${esc(e.name)}</span>${tag}${e.exam ? '<span class="exam-chip tt-tag">시험</span>' : ''}</div>`;
+return `<div class="tt-name${e.absent ? ' absent' : ''}${editable ? ' editable' : ''}"${attrs}><span class="tt-n">${esc(displayName(e))}</span>${tag}${e.exam ? '<span class="type-chip k-exam tt-tag">시험</span>' : ''}</div>`;
 }).join('')}
 `).join('') : '<div class="empty-note" style="padding:8px 0;">수업 없음</div>'}
 </div>`;
@@ -1999,7 +2193,7 @@ body.innerHTML = userBar + `
 <button class="ghost" id="tt-this-week">이번 주</button>
 </div>
 <div class="tt-scroll"><div class="tt-grid">${cols}</div></div>
-<div class="tt-legend"><span class="type-chip off tt-tag">결석</span><span class="type-chip gwanli tt-tag">관리</span><span class="type-chip gyeolseok tt-tag">결석보강</span><span class="type-chip jikjeon tt-tag">직전</span><span class="type-chip gwanli tt-tag">보강</span> 시간표에 적힌 보강 <span class="exam-chip tt-tag">시험</span> 그 학생 학교가 시험기간</div>
+<div class="tt-legend">${['결석','관리보강','직전보강','결석보강','예약','반이동','첫수업'].map(k => `<span class="type-chip ${kindCls(k)} tt-tag">${kindShort(k)}</span>`).join('')}<span class="type-chip k-exam tt-tag">시험</span> 그 학생 학교가 시험기간</div>
 </div>
 ${editable ? `
 <div class="form-card st-section">
@@ -2008,11 +2202,7 @@ ${logs.length ? `<div class="tt-log">${logs.map(l => `<div><span class="bogang-m
 </div>
 ${regularEditHtml()}
 ${cloudRole === 'teacher' ? staffCardHtml() : ''}` : ''}
-${waits.length ? `
-<div class="form-card st-section">
-<div class="form-title">대기 · 시간 변경 희망</div>
-<div class="bogang-list">${waits.map(([n,s]) => `<div class="bogang-row"><div class="bogang-name" style="font-size:14px;">${esc(n)} <span class="bogang-meta">${esc(s.label || '')}</span></div><div class="bogang-memo">${esc(s.wait)}</div></div>`).join('')}</div>
-</div>` : ''}
+${waitlistHtml(tt.students, editable)}
 ${!loggedIn ? loginCardHtml() + importCardHtml('시간표 바꾸기', `지금 시간표: ${esc(tt.source || '')} · ${esc(tt.updatedAt || '')} 기준. 시간표가 바뀌면 새로 정리한 파일을 불러오세요.`) : ''}`;
 
 document.getElementById('tt-prev').onclick = () => { ttWeekStart.setDate(ttWeekStart.getDate() - 7); renderTimetable(); };
@@ -2020,7 +2210,7 @@ document.getElementById('tt-next').onclick = () => { ttWeekStart.setDate(ttWeekS
 document.getElementById('tt-this-week').onclick = () => { const d = new Date(); d.setHours(0,0,0,0); d.setDate(d.getDate() - ((d.getDay() + 6) % 7)); ttWeekStart = d; renderTimetable(); };
 if(!loggedIn){ bindLogin(); bindTtImport(); }
 bindUserBar();
-if(editable){ bindRegularEdit(); if(cloudRole === 'teacher') bindStaffCard(); }
+if(editable){ bindRegularEdit(); bindWaitlist(); if(cloudRole === 'teacher') bindStaffCard(); }
 }
 
 function importCardHtml(title, hint){
@@ -2053,7 +2243,7 @@ btn.disabled = true; btn.textContent = '올리는 중…';
 try{
 const at = new Date().toISOString();
 for(const [name, s] of Object.entries(local.students)){
-await cloud.set('students', name, { label: s.label || '', school: s.school || '', grade: s.grade || null, slots: s.slots || [], wait: s.wait || '', updatedAt: at, updatedBy: myName() });
+await cloud.set('students', name, { label: s.label || '', school: s.school || '', grade: s.grade || null, slots: s.slots || [], wait: s.wait || '', waitAt: s.waitAt || '', updatedAt: at, updatedBy: myName() });
 }
 for(const e of (local.extras || [])){
 await cloud.add('changes', { date: e.date, time: e.time, name: e.name, kind: e.note === '관리' ? '관리보강' : '보강', note: e.note === '관리' ? '' : (e.note || ''), by: '엑셀 시간표', at });
@@ -2092,9 +2282,9 @@ openTtModal(`
 ${p.absentDate ? `<div class="modal-hint">${mdLabel(p.absentDate)} ${fmtT(p.absentTime)} 수업은 결석으로 표시했어요. 보강 날짜와 시간을 골라 주세요.</div>` : ''}
 ${studentDatalist()}
 <div class="form-row">
-<div class="field"><label>학생</label><input type="text" id="tc-name" list="tt-student-list" value="${esc(p.name || '')}" placeholder="학생 이름"></div>
+<div class="field"><label id="tc-name-label">학생</label><input type="text" id="tc-name" list="tt-student-list" value="${esc(p.name || '')}" placeholder="학생 이름"></div>
 <div class="field"><label>종류</label>
-<select id="tc-kind">${['관리보강','결석보강','직전보강','결석'].map(k => `<option value="${k}" ${k === (p.kind || '관리보강') ? 'selected' : ''}>${k}</option>`).join('')}</select></div>
+<select id="tc-kind">${CHANGE_KINDS.map(([k, label]) => `<option value="${k}" ${k === (p.kind || '관리보강') ? 'selected' : ''}>${label}</option>`).join('')}</select></div>
 </div>
 <div class="form-row">
 <div class="field"><label>날짜</label><input type="date" id="tc-date" value="${esc(p.date || localToday())}"></div>
@@ -2102,12 +2292,23 @@ ${studentDatalist()}
 <input type="time" id="tc-time-custom" style="display:none;margin-top:6px;width:100%;"></div>
 </div>
 <div class="field" id="tc-absent-wrap" style="${(p.kind || '관리보강') === '결석보강' && !p.absentDate ? '' : 'display:none;'}"><label>빠진 수업 날짜 (선택, 넣으면 그날은 결석으로 표시)</label><input type="date" id="tc-absent" style="width:100%;"></div>
+<div id="tc-regular-wrap" style="display:none;">
+<div class="field"><label>학교·학년 (시간표에 없는 학생이면)</label><input type="text" id="tc-label" placeholder="예: 서일중2" style="width:100%;"></div>
+<label style="display:flex;align-items:center;gap:8px;font-size:13.5px;margin-top:8px;"><input type="checkbox" id="tc-regular" checked> 이 날부터 매주 같은 요일·시간 정규 수업으로 등록</label>
+</div>
 <div class="field"><label>메모 (선택)</label><input type="text" id="tc-note" placeholder="예: 수만프 오답 마무리"></div>
 <div class="modal-actions"><button id="tc-cancel">취소</button><button class="primary" id="tc-save">저장</button></div>`,
 (ov, close) => {
 const kindSel = ov.querySelector('#tc-kind');
 const timeSel = ov.querySelector('#tc-time');
-kindSel.onchange = () => { ov.querySelector('#tc-absent-wrap').style.display = (kindSel.value === '결석보강' && !p.absentDate) ? '' : 'none'; };
+const syncKind = () => {
+const k = kindSel.value;
+ov.querySelector('#tc-absent-wrap').style.display = (k === '결석보강' && !p.absentDate) ? '' : 'none';
+ov.querySelector('#tc-regular-wrap').style.display = (k === '반이동' || k === '첫수업') ? '' : 'none';
+ov.querySelector('#tc-name-label').textContent = k === '예약' ? '학생 (예약은 비워도 돼요)' : '학생';
+ov.querySelector('#tc-note').placeholder = k === '예약' ? '예: 신규 상담 중, 11/20 확정 예정' : '예: 수만프 오답 마무리';
+};
+kindSel.onchange = syncKind; syncKind();
 timeSel.onchange = () => { ov.querySelector('#tc-time-custom').style.display = timeSel.value === '__custom' ? '' : 'none'; };
 ov.querySelector('#tc-cancel').onclick = close;
 ov.querySelector('#tc-save').onclick = async () => {
@@ -2117,9 +2318,21 @@ const date = ov.querySelector('#tc-date').value;
 const time = timeSel.value === '__custom' ? ov.querySelector('#tc-time-custom').value : timeSel.value;
 const note = ov.querySelector('#tc-note').value.trim();
 const absentDate = p.absentDate || (kind === '결석보강' ? ov.querySelector('#tc-absent').value : '');
-if(!name || !date){ alert('학생과 날짜를 입력해 주세요.'); return; }
+if((!name && kind !== '예약') || !date){ alert(kind === '예약' ? '날짜를 입력해 주세요.' : '학생과 날짜를 입력해 주세요.'); return; }
 const at = new Date().toISOString();
 close();
+// 반이동·첫수업: 이 날부터 매주 정규 수업으로 등록 (시간표에 없는 학생이면 새로 만든다)
+if((kind === '반이동' || kind === '첫수업') && ov.querySelector('#tc-regular').checked){
+const dow = new Date(date + 'T00:00:00').getDay();
+const cur = ttStudents()[name];
+const label = ov.querySelector('#tc-label').value.trim();
+const m = label.match(/^(.+?)(\d)$/);
+const base = cur ? { ...cur } : { label, school: m ? m[1] : label, grade: m ? +m[2] : null, slots: [], wait: '' };
+if(!(base.slots || []).some(x => x.day === dow && x.time === time)){
+base.slots = [...(base.slots || []), { day: dow, time, from: date }].sort((a,b) => a.day - b.day || a.time.localeCompare(b.time));
+await cloudWrite(() => cloud.set('students', name, { ...base, updatedAt: at, updatedBy: myName() }), `${name} 정규 수업 등록: ${DOW[dow]} ${fmtT(time)} (${mdLabel(date)}부터, ${kind})`);
+}
+}
 // 빠진 수업 날짜를 적었고 아직 결석 기록이 없으면 결석도 함께 남긴다
 if(absentDate && !p.absentDate && !Object.values(cloudData.changes).some(c => c.kind === '결석' && c.name === name && c.date === absentDate)){
 const s = ttStudents()[name];
@@ -2129,7 +2342,7 @@ await cloudWrite(() => cloud.add('changes', { date: absentDate, time: slot ? slo
 }
 const doc = { date, time, name, kind, note, by: myName(), at };
 if(absentDate) doc.absentDate = absentDate;
-await cloudWrite(() => cloud.add('changes', doc), `${name} ${kind} ${mdLabel(date)} ${fmtT(time)}${absentDate ? ` (${mdLabel(absentDate)} 결석분)` : ''}${note ? ' · ' + note : ''}`);
+await cloudWrite(() => cloud.add('changes', doc), `${name || '자리'} ${kind} ${mdLabel(date)} ${fmtT(time)}${absentDate ? ` (${mdLabel(absentDate)} 결석분)` : ''}${note ? ' · ' + note : ''}`);
 };
 });
 }
@@ -2142,10 +2355,11 @@ let body;
 if(kind === '정규' && !isAbsent){
 body = `
 <div class="modal-title">${esc(name)} · ${mdLabel(date)} ${fmtT(time)}</div>
-<div class="modal-hint">정규 수업이에요. 결석이면 결석 처리하고, 보강까지 바로 잡을 수 있어요.</div>
+<div class="modal-hint">정규 수업이에요. 결석이면 결석 처리하고 보강까지 바로 잡을 수 있어요. 따로 관리가 필요하면 관리보강을 잡아 주세요.</div>
 <div class="tt-actions">
 <button id="ea-absent-makeup" class="primary">결석 + 결석보강 잡기</button>
 <button id="ea-absent">결석만 표시</button>
+<button id="ea-gwanli" class="k-gwanli">관리보강 잡기</button>
 <button id="ea-close" class="ghost">닫기</button>
 </div>`;
 }else if(isAbsent){
@@ -2160,7 +2374,7 @@ ${linked.length ? '' : '<button id="ea-makeup" class="primary">결석보강 잡�
 </div>`;
 }else{
 body = `
-<div class="modal-title">${esc(name)} · ${esc(kind)}</div>
+<div class="modal-title">${esc(name || '자리 예약')} · ${esc(kindShort(kind))}</div>
 <div class="modal-hint">${mdLabel(date)} ${fmtT(time)}${change && change.absentDate ? ` · ${mdLabel(change.absentDate)} 결석분` : ''}${change && change.note ? ` · ${esc(change.note)}` : ''}${change && change.by ? `<br>입력: ${esc(change.by)}` : ''}</div>
 <div class="tt-actions">
 <button id="ea-delete">이 ${esc(kindShort(kind))} 삭제</button>
@@ -2174,6 +2388,7 @@ const markAbsent = () => cloudWrite(() => cloud.add('changes', { date, time, nam
 on('ea-absent', async () => { close(); await markAbsent(); });
 on('ea-absent-makeup', async () => { close(); await markAbsent(); openAddChange({ name, kind: '결석보강', absentDate: date, absentTime: time, date }); });
 on('ea-makeup', () => { close(); openAddChange({ name, kind: '결석보강', absentDate: date, absentTime: time, date }); });
+on('ea-gwanli', () => { close(); openAddChange({ name, kind: '관리보강', date }); });
 on('ea-undo', async () => { close(); await cloudWrite(() => cloud.remove('changes', change.id), `${name} ${mdLabel(date)} 결석 취소`); });
 on('ea-delete', async () => {
 if(!confirm(`${name} ${mdLabel(date)} ${kind}를 삭제할까요?`)) return;
@@ -2257,12 +2472,84 @@ const slots = [...s.slots, slot].sort((a,b) => a.day - b.day || a.time.localeCom
 await save(ttEditStudent, { ...s, slots }, `${ttEditStudent} 정규 수업 추가: ${DOW[day]} ${fmtT(time)}${from ? ` (${mdLabel(from)}부터)` : ''}${until ? ` (${mdLabel(until)}까지)` : ''}`);
 };
 document.getElementById('re-wait-save').onclick = async () => {
-await save(ttEditStudent, { ...s, wait: document.getElementById('re-wait').value.trim() }, `${ttEditStudent} 대기·희망 메모 수정`);
+const wait = document.getElementById('re-wait').value.trim();
+// 대기 순번은 처음 등록한 시각 기준: 메모를 고쳐도 순번은 그대로, 비우면 대기에서 빠짐
+const waitAt = !wait ? '' : (s.wait && s.waitAt ? s.waitAt : new Date().toISOString());
+await save(ttEditStudent, { ...s, wait, waitAt }, wait ? `${ttEditStudent} 대기·희망 메모 ${s.wait ? '수정' : '등록'}` : `${ttEditStudent} 대기 해제`);
 };
 document.getElementById('re-remove').onclick = async () => {
 if(!confirm(`${ttEditStudent} 학생을 시간표에서 뺄까요? (지난 결석·보강 기록은 남아요)`)) return;
 const name = ttEditStudent; ttEditStudent = '';
 await cloudWrite(() => cloud.remove('students', name), `${name} 시간표에서 뺌(휴원·퇴원)`);
+};
+}
+
+// ---------- 대기 · 시간 변경 희망 (등록한 순서대로 순번) ----------
+function waitlistEntries(students){
+return Object.entries(students || {}).filter(([n,s]) => s.wait)
+.map(([name, s]) => ({ name, ...s }))
+.sort((a,b) => (a.waitAt ? 0 : 1) - (b.waitAt ? 0 : 1) || (a.waitAt || '').localeCompare(b.waitAt || '') || a.name.localeCompare(b.name,'ko'));
+}
+function waitlistHtml(students, editable){
+const list = waitlistEntries(students);
+if(!list.length && !editable) return '';
+const dateOf = (iso) => iso ? iso.slice(0,10) : '';
+return `
+<div class="form-card st-section">
+<div class="st-section-head"><div class="form-title">대기 · 시간 변경 희망</div><span class="bogang-meta">먼저 등록한 순서대로 순번이 매겨져요</span></div>
+${list.length ? `<div class="bogang-list">${list.map((w, i) => `
+<div class="bogang-row wait-row">
+<div class="bogang-row-top">
+<span class="wait-head"><span class="wait-no">${i + 1}</span><b>${esc(w.name)}</b> <span class="bogang-meta">${esc(w.label || '')}</span></span>
+<span class="bogang-meta">${w.waitAt ? `${mdLabel(dateOf(w.waitAt))} 등록` : '등록일 없음'}</span>
+</div>
+<div class="bogang-memo" style="color:var(--ink);">${esc(w.wait)}</div>
+${editable ? `<div class="wait-actions">
+<label class="bogang-meta">등록일 <input type="date" data-wait-date="${esc(w.name)}" value="${esc(dateOf(w.waitAt))}"></label>
+<button class="ghost" data-wait-done="${esc(w.name)}">대기 해제</button>
+</div>` : ''}
+</div>`).join('')}</div>` : '<div class="empty-note" style="padding:4px 2px;">대기 중인 학생이 없어요.</div>'}
+${editable ? `
+${studentDatalist()}
+<div class="chip-label" style="margin-top:4px;">대기 등록</div>
+<div class="form-row">
+<div class="field"><label>이름</label><input type="text" id="wt-name" list="tt-student-list" placeholder="학생 이름"></div>
+<div class="field"><label>학교·학년 (새 학생이면)</label><input type="text" id="wt-label" placeholder="예: 원명초6"></div>
+</div>
+<div class="field"><label>희망 내용</label><input type="text" id="wt-memo" placeholder="예: 수 4시 대기(자리 나면 주 2회)" style="width:100%;"></div>
+<div class="form-actions"><button class="primary" id="wt-add">대기 등록</button></div>` : ''}
+</div>`;
+}
+function bindWaitlist(){
+const students = ttStudents();
+const save = (name, data, text) => cloudWrite(() => cloud.set('students', name, { ...data, updatedAt: new Date().toISOString(), updatedBy: myName() }), text);
+document.querySelectorAll('[data-wait-date]').forEach(inp => inp.onchange = async () => {
+const name = inp.dataset.waitDate; const s = students[name];
+if(!s || !inp.value) return;
+// 같은 날 여러 명이면 기존 순서가 유지되도록 원래 시각은 살리고 날짜만 바꾼다
+const timePart = s.waitAt && s.waitAt.length > 10 ? s.waitAt.slice(10) : 'T12:00:00.000Z';
+await save(name, { ...s, waitAt: inp.value + timePart }, `${name} 대기 등록일 → ${mdLabel(inp.value)}`);
+});
+document.querySelectorAll('[data-wait-done]').forEach(btn => btn.onclick = async () => {
+const name = btn.dataset.waitDone; const s = students[name];
+if(!s || !confirm(`${name} 학생을 대기 명단에서 뺄까요?`)) return;
+if(!(s.slots || []).length){
+await cloudWrite(() => cloud.remove('students', name), `${name} 대기 해제`);
+}else{
+await save(name, { ...s, wait: '', waitAt: '' }, `${name} 대기 해제`);
+}
+});
+const add = document.getElementById('wt-add');
+if(add) add.onclick = async () => {
+const name = document.getElementById('wt-name').value.trim();
+const memo = document.getElementById('wt-memo').value.trim();
+if(!name || !memo){ alert('이름과 희망 내용을 입력해 주세요.'); return; }
+const cur = students[name];
+const label = document.getElementById('wt-label').value.trim();
+const m = label.match(/^(.+?)(\d)$/);
+const base = cur ? { ...cur } : { label, school: m ? m[1] : label, grade: m ? +m[2] : null, slots: [] };
+const waitAt = cur && cur.wait && cur.waitAt ? cur.waitAt : new Date().toISOString();
+await save(name, { ...base, wait: memo, waitAt }, `${name} 대기 등록: ${memo}`);
 };
 }
 
