@@ -7,61 +7,75 @@
 <title>학부모 피드백 모음 · 클라디수학학원</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Pretendard:wght@400;500;600;700&display=swap">
 <style>
+/* Celeste 브랜드 팔레트 — 미드나잇 네이비 #2B2A4C · 벚꽃 핑크 #FFD9E8/#FFB6C9 · 크림 #FFF9FB · 라벤더 #C9B6E4 · 골드 #E8C468
+   accent=벚꽃 로즈(관리보강·제목), sage=라벤더(선택 상태), absent=밤하늘 블루(결석보강), jikjeon=골드(직전보강) */
 :root{
---bg:#ECE4D4;
---surface:#FFFDF9;
---surface-2:#F5EFE2;
---ink:#2C2416;
---muted:#8C8270;
---faint:#B3A98F;
---border:#E6DCC8;
---accent:#D97A2E;
+--brand-navy:#2B2A4C;
+--brand-pink:#FFD9E8;
+--brand-rose:#FFB6C9;
+--brand-cream:#FFF9FB;
+--brand-lavender:#C9B6E4;
+--brand-gold:#E8C468;
+--bg:#F5EFF6;
+--surface:#FFF9FB;
+--surface-2:#F2E9F3;
+--ink:#2B2A4C;
+--muted:#76718F;
+--faint:#ABA5C2;
+--border:#EADDEA;
+--accent:#C2557D;
 --accent-ink:#FFFFFF;
---accent-soft:#F7E4D2;
---sage:#74805F;
---sage-soft:#EEF0E6;
---sage-ink:#4E5740;
---absent:#4A6FA5;
---absent-soft:#E4EAF3;
---absent-ink:#33507A;
---jikjeon:#8A6FB0;
---jikjeon-soft:#EAE3F3;
---jikjeon-ink:#5C4577;
---shadow: 0 1px 2px rgba(44,36,22,0.04), 0 8px 24px -14px rgba(44,36,22,0.28);
+--accent-soft:#FFE3ED;
+--sage:#8E7BBE;
+--sage-soft:#EEE7F8;
+--sage-ink:#4B3F78;
+--absent:#5368A8;
+--absent-soft:#E5E9F6;
+--absent-ink:#34437A;
+--jikjeon:#C29A2E;
+--jikjeon-soft:#FBF0D3;
+--jikjeon-ink:#735A12;
+--shadow: 0 1px 2px rgba(43,42,76,0.05), 0 8px 24px -14px rgba(43,42,76,0.30);
+--sun:#D64545;
+--exam-bg:#2B2A4C;
+--exam-ink:#FFD9E8;
 }
 @media (prefers-color-scheme: dark){
 :root:not([data-theme="light"]){
---bg:#1C1811;
---surface:#252017;
---surface-2:#2C2619;
---ink:#F1E9D8;
---muted:#A79C84;
---faint:#6E6653;
---border:#3A3325;
---accent:#E8934F;
---accent-ink:#211505;
---accent-soft:#3A2A17;
---sage:#9BAA84;
---sage-soft:#2B301F;
---sage-ink:#D8E2C6;
---absent:#7FA3D6;
---absent-soft:#22304A;
---absent-ink:#BFD4F0;
---jikjeon:#B79BDB;
---jikjeon-soft:#332B44;
---jikjeon-ink:#DCC9F0;
+--bg:#1E1D36;
+--surface:#2B2A4C;
+--surface-2:#35345A;
+--ink:#FFF9FB;
+--muted:#C9B6E4;
+--faint:#7F7AA3;
+--border:#413F68;
+--accent:#FFB6C9;
+--accent-ink:#2B2A4C;
+--accent-soft:#4A3552;
+--sage:#C9B6E4;
+--sage-soft:#3C3863;
+--sage-ink:#EDE4FA;
+--absent:#9DAEE6;
+--absent-soft:#2E3562;
+--absent-ink:#D0D9F7;
+--jikjeon:#E8C468;
+--jikjeon-soft:#4A4128;
+--jikjeon-ink:#F5E2A6;
 --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 8px 24px -14px rgba(0,0,0,0.6);
+--sun:#FF8A8A;
+--exam-bg:#C9B6E4;
+--exam-ink:#2B2A4C;
 }
 }
 :root[data-theme="dark"]{
---bg:#1C1811; --surface:#252017; --surface-2:#2C2619; --ink:#F1E9D8;
---muted:#A79C84; --faint:#6E6653; --border:#3A3325;
---accent:#E8934F; --accent-ink:#211505; --accent-soft:#3A2A17;
---sage:#9BAA84; --sage-soft:#2B301F; --sage-ink:#D8E2C6;
---absent:#7FA3D6; --absent-soft:#22304A; --absent-ink:#BFD4F0;
---jikjeon:#B79BDB; --jikjeon-soft:#332B44; --jikjeon-ink:#DCC9F0;
+--bg:#1E1D36; --surface:#2B2A4C; --surface-2:#35345A; --ink:#FFF9FB;
+--muted:#C9B6E4; --faint:#7F7AA3; --border:#413F68;
+--accent:#FFB6C9; --accent-ink:#2B2A4C; --accent-soft:#4A3552;
+--sage:#C9B6E4; --sage-soft:#3C3863; --sage-ink:#EDE4FA;
+--absent:#9DAEE6; --absent-soft:#2E3562; --absent-ink:#D0D9F7;
+--jikjeon:#E8C468; --jikjeon-soft:#4A4128; --jikjeon-ink:#F5E2A6;
 --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 8px 24px -14px rgba(0,0,0,0.6);
-}
+--sun:#FF8A8A; --exam-bg:#C9B6E4; --exam-ink:#2B2A4C;
 }
 *{box-sizing:border-box;}
 body{
@@ -74,6 +88,18 @@ padding:40px 20px 80px;
 .wrap{max-width:760px;margin:0 auto;display:flex;flex-direction:column;gap:22px;}
 h1{font-size:24px;margin:0;font-weight:700;}
 .sub{font-size:13.5px;color:var(--muted);margin:6px 0 0;line-height:1.6;}
+
+/* 상단 헤더 — 네이비 밤하늘 + 흩날리는 벚꽃잎 + 작은 별빛 점 */
+.brand-hero{
+position:relative;overflow:hidden;
+background:var(--brand-navy);border:1px solid var(--border);
+border-radius:20px;padding:28px 28px 26px;
+}
+.brand-hero h1{color:var(--brand-cream);position:relative;}
+.brand-hero .sub{color:var(--brand-lavender);position:relative;}
+.brand-hero .petal{position:absolute;pointer-events:none;overflow:visible;}
+@media (max-width:600px){ .brand-hero .petal.p-far{display:none;} .brand-hero .petal{opacity:.55 !important;} }
+.brand-hero .dot-star{position:absolute;width:3px;height:3px;border-radius:50%;background:#FFFFFF;}
 
 .toolbar{display:flex;gap:10px;}
 input[type=text], input[type=date], input[type=time], textarea, select{
@@ -132,6 +158,25 @@ font-weight:700;color:var(--accent);
 }
 .date-head .count{color:var(--muted);font-weight:500;font-size:13px;}
 .date-arrow{font-size:12px;width:14px;}
+/* 년도·월 묶음 */
+.year-group{display:flex;flex-direction:column;}
+.year-head{
+display:flex;align-items:center;gap:8px;padding:18px 2px 8px;cursor:pointer;
+font-size:18px;font-weight:700;color:var(--ink);
+}
+.year-head .count, .month-head .count{color:var(--muted);font-weight:500;font-size:13px;}
+.month-group{
+background:var(--surface);border:1px solid var(--border);border-radius:14px;
+margin:6px 0;overflow:hidden;
+}
+.month-head{
+display:flex;align-items:center;gap:8px;padding:13px 16px;cursor:pointer;
+font-size:15px;font-weight:700;color:var(--ink);
+}
+.month-head:hover, .year-head:hover{color:var(--accent);}
+.month-body{padding:0 16px 6px;}
+.month-body .date-group:first-child{border-top-color:var(--border);}
+.month-body .date-head{padding:11px 2px;font-size:14.5px;}
 .entries{display:flex;flex-direction:column;gap:14px;padding:0 2px 16px;}
 .entry{
 background:var(--surface);border:1px solid var(--border);border-radius:14px;
@@ -183,10 +228,36 @@ min-width:0;
 .cal-dots{display:flex;gap:3px;flex-wrap:wrap;}
 .cal-add-btn{
 position:absolute;top:3px;right:3px;width:18px;height:18px;border-radius:50%;
-background:var(--accent-soft);color:var(--accent);border:none;cursor:pointer;
+background:var(--surface-2);color:var(--ink);border:none;cursor:pointer;
 font-size:13px;line-height:1;font-weight:700;padding:0;display:flex;align-items:center;justify-content:center;
 }
-.cal-add-btn:hover{background:var(--accent);color:var(--accent-ink);}
+.cal-add-btn:hover{background:var(--ink);color:var(--surface);}
+/* 일요일 빨간색 */
+.cal-dow.sun, .cal-cell.sun .cal-daynum{color:var(--sun);}
+/* 시험기간 표시 */
+.cal-exams{display:flex;flex-direction:column;gap:2px;}
+.cal-exam{
+font-size:10px;font-weight:700;line-height:1.35;border-radius:5px;padding:1px 4px;
+background:var(--exam-bg);color:var(--exam-ink);
+white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+/* 시간표 탭 */
+.tt-scroll{overflow-x:auto;margin:0 -4px;padding:0 4px 4px;}
+.tt-grid{display:grid;grid-template-columns:repeat(6,minmax(104px,1fr));gap:8px;}
+.tt-col{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:10px 10px 12px;min-width:0;}
+.tt-col.today{border-color:var(--accent);}
+.tt-day{font-weight:700;font-size:14.5px;padding-bottom:6px;border-bottom:1px solid var(--border);}
+.tt-day span{color:var(--muted);font-weight:500;font-size:12.5px;font-variant-numeric:tabular-nums;}
+.tt-exams{display:flex;flex-wrap:wrap;gap:3px;margin-top:6px;}
+.tt-time{font-size:12px;font-weight:700;color:var(--accent);margin:10px 0 3px;}
+.tt-time span{color:var(--faint);font-weight:500;}
+.tt-name{font-size:13.5px;display:flex;align-items:center;gap:4px;flex-wrap:wrap;padding:2px 0;}
+.tt-tag{font-size:10px !important;padding:1px 6px !important;}
+.tt-legend{display:flex;align-items:center;gap:6px;flex-wrap:wrap;font-size:12px;color:var(--muted);}
+.exam-chip{
+display:inline-block;font-size:11.5px;font-weight:700;border-radius:100px;padding:3px 9px;
+background:var(--exam-bg);color:var(--exam-ink);white-space:nowrap;
+}
 .dot{width:7px;height:7px;border-radius:50%;}
 .dot.gwanli{background:var(--accent);}
 .dot.gyeolseok{background:var(--absent);}
@@ -258,7 +329,25 @@ display:flex;flex-direction:column;gap:14px;
 <body>
 <div class="wrap">
 
-<div>
+<div class="brand-hero">
+<svg width="0" height="0" style="position:absolute;" aria-hidden="true">
+<defs>
+<linearGradient id="petal-grad" x1="0" y1="1" x2="0" y2="0">
+<stop offset="0" stop-color="#FFB6C9"/><stop offset="1" stop-color="#FFE3ED"/>
+</linearGradient>
+<symbol id="petal" viewBox="-16 -24 32 40">
+<path d="M0,-22 C7,-15 9,-4 5,7 C3,15 -3,15 -5,7 C-9,-4 -7,-15 0,-22 Z" fill="url(#petal-grad)" stroke="#F79CB8" stroke-width="1"/>
+</symbol>
+</defs>
+</svg>
+<svg class="petal" style="top:14px;right:62px;width:30px;height:38px;opacity:.9;transform:rotate(20deg);" aria-hidden="true"><use href="#petal"/></svg>
+<svg class="petal p-far" style="top:64px;right:128px;width:18px;height:23px;opacity:.6;transform:rotate(150deg);" aria-hidden="true"><use href="#petal"/></svg>
+<svg class="petal" style="top:88px;right:30px;width:22px;height:28px;opacity:.75;transform:rotate(80deg);" aria-hidden="true"><use href="#petal"/></svg>
+<svg class="petal p-far" style="top:8px;right:178px;width:15px;height:19px;opacity:.5;transform:rotate(-40deg);" aria-hidden="true"><use href="#petal"/></svg>
+<span class="dot-star" style="top:18px;left:62%;opacity:.8;"></span>
+<span class="dot-star" style="top:46px;left:74%;opacity:.5;width:2px;height:2px;"></span>
+<span class="dot-star" style="top:96px;left:66%;opacity:.6;"></span>
+<span class="dot-star" style="top:30px;left:96%;opacity:.4;width:2px;height:2px;"></span>
 <h1>학부모 피드백 모음</h1>
 <p class="sub">박유경T · 그날그날 보낸 피드백을 모아둡니다<br>데이터는 이 브라우저에 저장됩니다.</p>
 </div>
@@ -267,6 +356,7 @@ display:flex;flex-direction:column;gap:14px;
 <button class="tab-btn active" data-tab="feedback">피드백</button>
 <button class="tab-btn" data-tab="bogang">보강 관리</button>
 <button class="tab-btn" data-tab="student">학생 관리</button>
+<button class="tab-btn" data-tab="timetable">시간표</button>
 </div>
 
 <!-- ===== FEEDBACK PANEL ===== -->
@@ -320,6 +410,10 @@ display:flex;flex-direction:column;gap:14px;
 </div>
 
 <div id="bg-form-slot"></div>
+<div style="display:flex;justify-content:flex-end;margin:-8px 0 -6px;">
+<button class="ghost" id="exam-manage-open" style="padding:3px 10px;font-size:12.5px;">시험기간 관리</button>
+</div>
+<div id="exam-panel-slot"></div>
 
 <div class="bg-layout">
 <div class="bg-cal-col">
@@ -351,6 +445,11 @@ display:flex;flex-direction:column;gap:14px;
 <div class="chips" id="st-chips" style="margin-top:8px;"></div>
 </div>
 <div id="st-body"></div>
+</div>
+
+<!-- ===== TIMETABLE PANEL ===== -->
+<div class="panel" id="panel-timetable">
+<div id="tt-body"></div>
 </div>
 
 <script>
@@ -481,6 +580,7 @@ btn.classList.add('active');
 document.getElementById('panel-'+btn.dataset.tab).classList.add('active');
 if(btn.dataset.tab === 'bogang') renderBogang();
 if(btn.dataset.tab === 'student') renderStudent();
+if(btn.dataset.tab === 'timetable') renderTimetable();
 });
 });
 
@@ -488,6 +588,8 @@ if(btn.dataset.tab === 'student') renderStudent();
 let fbFilter = null;
 let fbSearch = '';
 let fbOpenDates = new Set();
+let fbYearState = {};  // 사용자가 직접 접거나 펼친 년도 { '2026': true/false }
+let fbMonthState = {}; // 사용자가 직접 접거나 펼친 월 { '2026-11': true/false }
 let fbEditingId = null;
 
 function renderFeedbackChips(){
@@ -521,25 +623,81 @@ entries.forEach(e=>{ (byDate[e.date] = byDate[e.date]||[]).push(e); });
 const dates = Object.keys(byDate).sort((a,b)=>b.localeCompare(a));
 list.innerHTML = '';
 if(dates.length===0){ list.innerHTML = '<div class="empty-note">해당하는 피드백이 없어요.</div>'; return; }
-dates.forEach(date=>{
+
+// 년도 → 월 → 날짜로 묶는다. 기본으로는 가장 최근 년도·월만 펼치고,
+// 학생 선택이나 검색 중일 때는 결과가 적으니 전부 펼친다.
+const filtering = !!(fbFilter || fbSearch);
+const latestYear = dates[0].slice(0,4);
+const latestMonth = dates[0].slice(0,7);
+const isYearOpen = (y) => (y in fbYearState) ? fbYearState[y] : (filtering || y === latestYear);
+const isMonthOpen = (m) => (m in fbMonthState) ? fbMonthState[m] : (filtering || m === latestMonth);
+const countIn = (ds) => ds.reduce((n,d)=>n+byDate[d].length, 0);
+
+const byYear = {};
+dates.forEach(d=>{
+const y = d.slice(0,4), m = d.slice(0,7);
+((byYear[y] = byYear[y]||{})[m] = byYear[y][m]||[]).push(d);
+});
+
+Object.keys(byYear).sort((a,b)=>b.localeCompare(a)).forEach(year=>{
+const months = byYear[year];
+const yOpen = isYearOpen(year);
+const yGroup = document.createElement('div');
+yGroup.className = 'year-group';
+const yHead = document.createElement('div');
+yHead.className = 'year-head';
+const yDates = Object.values(months).flat();
+yHead.innerHTML = `<span class="date-arrow">${yOpen?'▾':'▸'}</span> ${year}년 <span class="count">${countIn(yDates)}건</span>`;
+yHead.onclick = () => { fbYearState[year] = !yOpen; renderFeedbackList(); };
+yGroup.appendChild(yHead);
+if(yOpen){
+Object.keys(months).sort((a,b)=>b.localeCompare(a)).forEach(month=>{
+const mOpen = isMonthOpen(month);
+const mGroup = document.createElement('div');
+mGroup.className = 'month-group';
+const mHead = document.createElement('div');
+mHead.className = 'month-head';
+mHead.innerHTML = `<span class="date-arrow">${mOpen?'▾':'▸'}</span> ${parseInt(month.slice(5),10)}월 <span class="count">${months[month].length}일 · ${countIn(months[month])}건</span>`;
+mHead.onclick = () => { fbMonthState[month] = !mOpen; renderFeedbackList(); };
+mGroup.appendChild(mHead);
+if(mOpen){
+const mBody = document.createElement('div');
+mBody.className = 'month-body';
+months[month].forEach(date=> mBody.appendChild(buildFeedbackDateGroup(date, byDate[date])));
+mGroup.appendChild(mBody);
+}
+yGroup.appendChild(mGroup);
+});
+}
+list.appendChild(yGroup);
+});
+}
+
+// 저장·수정한 날짜가 접힌 년도/월 안에 있어도 바로 보이도록 펼친다.
+function fbRevealDate(date){
+fbOpenDates.add(date);
+fbYearState[date.slice(0,4)] = true;
+fbMonthState[date.slice(0,7)] = true;
+}
+
+function buildFeedbackDateGroup(date, items){
 const group = document.createElement('div');
 group.className = 'date-group';
 const open = fbOpenDates.has(date);
 const head = document.createElement('div');
 head.className = 'date-head';
-head.innerHTML = `<span class="date-arrow">${open?'▾':'▸'}</span> ${date} <span class="count">${byDate[date].length}건</span>`;
+head.innerHTML = `<span class="date-arrow">${open?'▾':'▸'}</span> ${date} (${dowLabel(date)}) <span class="count">${items.length}건</span>`;
 head.onclick = () => { open ? fbOpenDates.delete(date) : fbOpenDates.add(date); renderFeedbackList(); };
 group.appendChild(head);
 if(open){
 const wrap = document.createElement('div');
 wrap.className = 'entries';
-byDate[date].forEach(e=>{
+items.forEach(e=>{
 wrap.appendChild(renderFeedbackEntry(e));
 });
 group.appendChild(wrap);
 }
-list.appendChild(group);
-});
+return group;
 }
 
 function renderFeedbackEntry(e){
@@ -579,7 +737,7 @@ const data = loadObj(FEEDBACK_KEY);
 data[e.id] = { name, date, text };
 saveObj(FEEDBACK_KEY, data);
 fbEditingId = null;
-fbOpenDates.add(date);
+fbRevealDate(date);
 renderFeedbackChips();
 renderFeedbackList();
 };
@@ -674,7 +832,7 @@ const id = isEdit ? existing.id : ('feedback:' + date + '-' + Date.now());
 data[id] = { name, date, text };
 saveObj(FEEDBACK_KEY, data);
 slot.innerHTML = '';
-fbOpenDates.add(date);
+fbRevealDate(date);
 renderFeedbackChips(); renderFeedbackList();
 const candidate = detectBogangCandidate(text, date);
 if(candidate) showBogangConfirm(candidate, name);
@@ -807,7 +965,7 @@ return { start: null, end: null };
 
 function renderCalDow(){
 const el = document.getElementById('cal-dow');
-el.innerHTML = DOW.map(d=>`<div class="cal-dow">${d}</div>`).join('');
+el.innerHTML = DOW.map((d,i)=>`<div class="cal-dow${i===0?' sun':''}">${d}</div>`).join('');
 }
 
 function renderCalendar(){
@@ -832,14 +990,18 @@ const cell = document.createElement('div');
 cell.className = 'cal-cell';
 if(dateStr === todayStr()) cell.classList.add('today');
 if(dateStr === selectedDate) cell.classList.add('selected');
+if(dateObj.getDay() === 0) cell.classList.add('sun');
 const items = byDate[dateStr] || [];
+const examsToday = examsOn(dateStr);
+const examHtml = examsToday.length ? `<div class="cal-exams">${examsToday.slice(0,2).map(x=>`<span class="cal-exam" title="${esc(examLabel(x))}">${esc(shortSchool(x.school))}</span>`).join('')}${examsToday.length>2?`<span class="cal-exam">+${examsToday.length-2}</span>`:''}</div>` : '';
 const gwanli = items.filter(b=>b.type==='관리보강').length;
 const gyeolseok = items.filter(b=>b.type==='결석보강').length;
 const jikjeon = items.filter(b=>b.type==='직전보강').length;
 cell.innerHTML = `
 <button class="cal-add-btn" title="이 날짜에 보강 등록">+</button>
 <div class="cal-daynum">${d}</div>
-<div class="cal-dots">${gwanli?`<span class="dot gwanli"></span>`:''}${gyeolseok?`<span class="dot gyeolseok"></span>`:''}${jikjeon?`<span class="dot jikjeon"></span>`:''}</div>`;
+<div class="cal-dots">${gwanli?`<span class="dot gwanli"></span>`:''}${gyeolseok?`<span class="dot gyeolseok"></span>`:''}${jikjeon?`<span class="dot jikjeon"></span>`:''}</div>
+${examHtml}`;
 cell.onclick = () => { selectedDate = dateStr; renderCalendar(); renderBogangList(); };
 cell.querySelector('.cal-add-btn').onclick = (ev) => {
 ev.stopPropagation();
@@ -882,8 +1044,8 @@ const entries = Object.entries(bogang).map(([id,b])=>({id,...b})).filter(b=>b.da
 entries.sort((a,b)=> (a.time||'').localeCompare(b.time||''));
 document.getElementById('bg-selected-title').textContent = `${selectedDate} (${dowLabel(selectedDate)}) 보강 — ${entries.length}건`;
 const list = document.getElementById('bg-list');
-list.innerHTML = '';
-if(entries.length===0){ list.innerHTML = '<div class="empty-note">이 날짜에 등록된 보강이 없어요.</div>'; return; }
+list.innerHTML = examBlockHtml(selectedDate);
+if(entries.length===0){ list.insertAdjacentHTML('beforeend', '<div class="empty-note">이 날짜에 등록된 보강이 없어요.</div>'); return; }
 entries.forEach(b=> list.appendChild(buildBogangRow(b)));
 }
 
@@ -1037,7 +1199,7 @@ updateBgFilterUI();
 // 저장 구조: { [학생이름]: { books:[{id,title}], plans:[{id,date,book,content,memo,done}] } }
 // 나중에 클라우드 DB(Supabase 등)로 옮기기 쉽도록 학생 이름 단위로만 묶어 둔다.
 const STUDENT_KEY = 'kladi_students_v1';
-const BACKUP_KEYS = [FEEDBACK_KEY, BOGANG_KEY, ROSTER_KEY, STUDENT_KEY];
+const BACKUP_KEYS = [FEEDBACK_KEY, BOGANG_KEY, ROSTER_KEY, STUDENT_KEY, 'kladi_timetable_v1', 'kladi_exams_v1'];
 
 let stName = null;
 let stShowPast = false;
@@ -1086,7 +1248,7 @@ const all = loadObj(STUDENT_KEY);
 const today = localToday();
 const chips = document.getElementById('st-chips');
 chips.innerHTML = '';
-getRoster().forEach(name => {
+studentTabNames().forEach(name => {
 const plans = (all[name] && all[name].plans) || [];
 const hasUpcoming = plans.some(p => !p.done && p.date >= today);
 const c = document.createElement('button');
@@ -1255,7 +1417,7 @@ ${bgPast.length ? `<div class="chip-label">최근 지난 보강</div><div class=
 : '<div class="empty-note">등록된 보강이 없어요.</div>'}
 </div>`;
 
-body.innerHTML = booksHtml + plansHtml + kakaoHtml + fbHtml + bgHtml + backupCardHtml();
+body.innerHTML = classInfoHtml(stName) + booksHtml + plansHtml + kakaoHtml + fbHtml + bgHtml + backupCardHtml();
 bindBackup();
 }
 
@@ -1288,12 +1450,24 @@ document.getElementById('st-import').onclick = () => fileInput.click();
 fileInput.onchange = () => {
 const f = fileInput.files[0];
 if(!f) return;
+importBackupFile(f);
+fileInput.value = '';
+};
+}
+
+// 백업 파일·시간표 파일 공통 불러오기 (파일에 들어 있는 항목만 바꾼다)
+function importBackupFile(f){
 const reader = new FileReader();
 reader.onload = () => {
 try{
 const parsed = JSON.parse(reader.result);
 if(!parsed || parsed.app !== 'kladi-feedback-archive' || typeof parsed.data !== 'object') throw new Error('형식 오류');
-if(!confirm('이 브라우저의 기존 데이터가 파일 내용으로 바뀝니다. 계속할까요?')) return;
+const keysInFile = Object.keys(parsed.data).filter(k => BACKUP_KEYS.includes(k));
+const onlyTimetable = keysInFile.length && keysInFile.every(k => k === 'kladi_timetable_v1' || k === 'kladi_exams_v1');
+const msg = onlyTimetable
+? '시간표 파일이에요. 시간표만 새 내용으로 바뀌고, 피드백·보강·진도 기록은 그대로 남아요. 불러올까요?'
+: '이 브라우저의 기존 데이터가 파일 내용으로 바뀝니다. 계속할까요?';
+if(!confirm(msg)) return;
 BACKUP_KEYS.forEach(k => {
 if(parsed.data[k] !== undefined) localStorage.setItem(k, JSON.stringify(parsed.data[k]));
 });
@@ -1301,8 +1475,6 @@ location.reload();
 }catch(err){ alert('백업 파일을 읽지 못했어요. 이 사이트에서 내보낸 파일이 맞는지 확인해주세요.'); }
 };
 reader.readAsText(f);
-fileInput.value = '';
-};
 }
 
 document.getElementById('st-body').addEventListener('click', (ev) => {
@@ -1372,9 +1544,256 @@ document.querySelector('#st-body [data-act="book-add"]').click();
 }
 });
 
+// ================= 시험기간 =================
+// 기본값은 노션 "2026년 클라디 일정"(NEIS 확인)에서 가져온 것. 처음 한 번만 브라우저에 저장되고,
+// 이후로는 보강 관리 탭의 "시험기간 관리"에서 추가·삭제한다. 학교 이름은 시간표 표기(서일중, 서문여중 등)에 맞춘다.
+const EXAM_KEY = 'kladi_exams_v1';
+const DEFAULT_EXAMS = [
+{ school:'경원중', grades:[], name:'2학기 기말고사', start:'2026-11-02', end:'2026-11-04', memo:'NEIS에 학년 구분 없이 등록(확인 필요)' },
+{ school:'서일중', grades:[3], name:'2학기 기말고사', start:'2026-11-02', end:'2026-11-04', memo:'' },
+{ school:'서문여중', grades:[3], name:'2학기 기말고사', start:'2026-11-03', end:'2026-11-06', memo:'3학년 조기 기말(추정)' },
+{ school:'동덕여중', grades:[], name:'2학기 기말고사', start:'2026-12-08', end:'2026-12-10', memo:'' },
+{ school:'원촌중', grades:[1,2], name:'2학기 기말고사', start:'2026-12-09', end:'2026-12-10', memo:'' },
+{ school:'서문여중', grades:[1,2], name:'2학기 기말고사', start:'2026-12-11', end:'2026-12-15', memo:'' },
+{ school:'이수중', grades:[1,2], name:'2학기 기말고사', start:'2026-12-14', end:'2026-12-16', memo:'' },
+{ school:'서초중', grades:[1,2], name:'2학기 기말고사', start:'2026-12-14', end:'2026-12-17', memo:'' },
+{ school:'서일중', grades:[1,2], name:'2학기 기말고사', start:'2026-12-14', end:'2026-12-16', memo:'' },
+{ school:'세화여중', grades:[1,2], name:'2학기 기말고사', start:'2026-12-14', end:'2026-12-17', memo:'수학 시험일 12/14(월)' },
+{ school:'신반포중', grades:[1,2], name:'2학기 기말고사', start:'2026-12-21', end:'2026-12-23', memo:'' },
+];
+function getExams(){
+try{ const raw = localStorage.getItem(EXAM_KEY); if(raw) return JSON.parse(raw); }catch(e){}
+const obj = {};
+DEFAULT_EXAMS.forEach((x,i) => { obj['exam_' + i] = { ...x }; });
+saveObj(EXAM_KEY, obj);
+return obj;
+}
+function examList(){
+return Object.entries(getExams()).map(([id,x]) => ({ id, ...x })).sort((a,b) => a.start.localeCompare(b.start));
+}
+function examsOn(date){ return examList().filter(x => x.start <= date && date <= (x.end || x.start)); }
+const shortSchool = (s) => String(s || '').replace(/(여중|중|학교)$/, '');
+const mdLabel = (s) => { const p = s.split('-'); return `${+p[1]}/${+p[2]}(${dowLabel(s)})`; };
+function examTarget(x){ return `${x.school}${x.grades && x.grades.length ? ' ' + x.grades.join('·') + '학년' : ''}`; }
+function examLabel(x){ return `${examTarget(x)} ${x.name} ${mdLabel(x.start)}${x.end && x.end !== x.start ? '~' + mdLabel(x.end) : ''}`; }
+function examMatches(x, s){ return !!s && s.school === x.school && (!x.grades || !x.grades.length || x.grades.includes(s.grade)); }
+
+function examBlockHtml(date){
+const tt = ttStudents();
+return examsOn(date).map(x => {
+const ours = Object.entries(tt).filter(([n,s]) => examMatches(x, s) && s.slots.length).map(([n]) => n);
+return `
+<div class="bogang-row">
+<div class="bogang-row-top"><span class="exam-chip">시험기간</span><span class="bogang-meta">${mdLabel(x.start)}${x.end && x.end !== x.start ? ' ~ ' + mdLabel(x.end) : ''}</span></div>
+<div class="bogang-body">
+<div class="bogang-name">${esc(examTarget(x))} ${esc(x.name)}</div>
+${ours.length ? `<div class="bogang-meta">우리 학생: ${ours.map(esc).join(', ')}</div>` : ''}
+${x.memo ? `<div class="bogang-memo">${esc(x.memo)}</div>` : ''}
+</div>
+</div>`;
+}).join('');
+}
+
+function renderExamPanel(){
+const slot = document.getElementById('exam-panel-slot');
+if(!slot.classList.contains('open')){ slot.innerHTML = ''; return; }
+const today = localToday();
+const list = examList();
+const schools = Array.from(new Set([...Object.values(ttStudents()).map(s => s.school).filter(Boolean), ...list.map(x => x.school)])).sort((a,b)=>a.localeCompare(b,'ko'));
+slot.innerHTML = `
+<div class="form-card" style="margin-bottom:6px;">
+<div class="form-title">시험기간 관리</div>
+<div class="modal-hint" style="margin:-4px 0 0;">처음 값은 노션 "2026년 클라디 일정"에서 가져왔어요. 학년을 비워 두면 전 학년으로 봐요. 학교 이름은 시간표와 같게 써야(예: 서문여중) 학생과 연결돼요.</div>
+<div class="bogang-list">
+${list.map(x => `
+<div class="bogang-row" style="${(x.end||x.start) < today ? 'opacity:.55;' : ''}">
+<div class="bogang-row-top">
+<span class="bogang-name" style="font-size:14px;">${esc(examTarget(x))} · ${esc(x.name)}</span>
+<button class="ghost" data-exam-del="${esc(x.id)}" style="padding:4px 9px;font-size:12.5px;">삭제</button>
+</div>
+<div class="bogang-meta">${mdLabel(x.start)}${x.end && x.end !== x.start ? ' ~ ' + mdLabel(x.end) : ''}${x.memo ? ' · ' + esc(x.memo) : ''}</div>
+</div>`).join('')}
+</div>
+<datalist id="exam-school-list">${schools.map(s => `<option value="${esc(s)}">`).join('')}</datalist>
+<div class="form-row">
+<div class="field"><label>학교</label><input type="text" id="ex-school" list="exam-school-list" placeholder="예: 예원중"></div>
+<div class="field"><label>학년 (선택)</label><input type="text" id="ex-grades" placeholder="예: 1,2"></div>
+<div class="field"><label>이름</label><input type="text" id="ex-name" value="2학기 기말고사"></div>
+</div>
+<div class="form-row">
+<div class="field"><label>시작일</label><input type="date" id="ex-start"></div>
+<div class="field"><label>종료일</label><input type="date" id="ex-end"></div>
+<div class="field"><label>메모 (선택)</label><input type="text" id="ex-memo" placeholder="예: 수학 시험일 12/14"></div>
+</div>
+<div class="form-actions"><button id="exam-manage-close">닫기</button><button class="primary" id="ex-add">추가</button></div>
+</div>`;
+slot.querySelectorAll('[data-exam-del]').forEach(btn => btn.onclick = () => {
+const all = getExams(); const x = all[btn.dataset.examDel];
+if(!x || !confirm(`${examLabel(x)} 일정을 삭제할까요?`)) return;
+delete all[btn.dataset.examDel]; saveObj(EXAM_KEY, all);
+renderExamPanel(); renderCalendar(); renderBogangList();
+});
+document.getElementById('exam-manage-close').onclick = () => { slot.classList.remove('open'); renderExamPanel(); };
+document.getElementById('ex-add').onclick = () => {
+const school = document.getElementById('ex-school').value.trim();
+const start = document.getElementById('ex-start').value;
+const end = document.getElementById('ex-end').value || start;
+if(!school || !start) return;
+const grades = document.getElementById('ex-grades').value.split(/[,·\s]+/).map(n => parseInt(n,10)).filter(n => n >= 1 && n <= 3);
+const all = getExams();
+all[uid()] = { school, grades, name: document.getElementById('ex-name').value.trim() || '시험', start, end: end < start ? start : end, memo: document.getElementById('ex-memo').value.trim() };
+saveObj(EXAM_KEY, all);
+renderExamPanel(); renderCalendar(); renderBogangList();
+};
+}
+document.getElementById('exam-manage-open').onclick = () => {
+const slot = document.getElementById('exam-panel-slot');
+slot.classList.toggle('open');
+renderExamPanel();
+};
+
+// ================= 시간표 =================
+// 시간표 엑셀을 정리한 파일을 "불러오기"로 넣는다(학생 개인 정보라 공개 저장소 코드에는 넣지 않음).
+// 구조: { students: { 이름: { label, school, grade, slots:[{day(1=월..6=토), time, from?, until?}], wait } },
+//         extras: [{date, time, name, note}]  ← 시간표 아래쪽에 날짜와 함께 적힌 보강 자리 }
+const TIMETABLE_KEY = 'kladi_timetable_v1';
+const getTimetable = () => loadObj(TIMETABLE_KEY);
+const ttStudents = () => getTimetable().students || {};
+const fmtT = (t) => {
+if(!t) return '';
+let [h, m] = t.split(':').map(Number);
+if(h > 12) h -= 12;
+return `${h}시${m === 30 ? ' 반' : (m ? ' ' + m + '분' : '')}`;
+};
+const slotActive = (slot, date) => (!slot.from || date >= slot.from) && (!slot.until || date <= slot.until);
+function studentTabNames(){
+const names = new Set(getRoster());
+Object.entries(ttStudents()).forEach(([n,s]) => { if(s.slots && s.slots.length) names.add(n); });
+return Array.from(names).sort((a,b) => a.localeCompare(b,'ko'));
+}
+
+function classInfoHtml(name){
+const tt = getTimetable();
+if(!tt.students) return '';
+const s = tt.students[name];
+const today = localToday();
+if(!s || !s.slots.length) return `<div class="form-card st-section"><div class="form-title">수업 시간</div><div class="empty-note" style="padding:4px 2px;">시간표에 없는 학생이에요.</div></div>`;
+const slotChips = s.slots.map(x => {
+const range = x.from ? ` (${mdLabel(x.from)}부터)` : (x.until ? ` (${mdLabel(x.until)}까지)` : '');
+return `<span class="chip has-data" style="cursor:default;">${DOW[x.day]} ${fmtT(x.time)}${range}</span>`;
+}).join('');
+const extras = (tt.extras || []).filter(e => e.name === name && e.date >= today);
+const exams = examList().filter(x => examMatches(x, s) && (x.end || x.start) >= today);
+const dday = (d) => { const n = Math.round((new Date(d+'T00:00:00') - new Date(today+'T00:00:00')) / 86400000); return n > 0 ? `D-${n}` : '진행 중'; };
+return `
+<div class="form-card st-section">
+<div class="st-section-head"><div class="form-title">수업 시간</div><span class="bogang-meta">${esc(s.label)}</span></div>
+<div class="chips">${slotChips}</div>
+${extras.length ? `<div class="chip-label">시간표에 적힌 보강</div><div class="chips">${extras.map(e => `<span class="type-chip gwanli">${mdLabel(e.date)} ${fmtT(e.time)}${e.note ? ' · ' + esc(e.note) : ''}</span>`).join('')}</div>` : ''}
+${exams.length ? `<div class="chip-label">다가오는 시험</div>${exams.map(x => `<div class="bogang-meta"><span class="exam-chip">${dday(x.start)}</span> ${esc(x.name)} ${mdLabel(x.start)}${x.end && x.end !== x.start ? ' ~ ' + mdLabel(x.end) : ''}${x.memo ? ' · ' + esc(x.memo) : ''}</div>`).join('')}` : ''}
+${s.wait ? `<div class="modal-hint">대기·희망: ${esc(s.wait)}</div>` : ''}
+</div>`;
+}
+
+// ----- 시간표 탭: 한 주 단위로 정규 수업 + 보강을 합쳐서 보여준다 -----
+let ttWeekStart = (() => { const d = new Date(); d.setHours(0,0,0,0); d.setDate(d.getDate() - ((d.getDay() + 6) % 7)); return d; })();
+
+function dayEntries(dateStr, dow){
+const tt = getTimetable();
+const out = [];
+Object.entries(tt.students || {}).forEach(([name, s]) => {
+s.slots.forEach(x => { if(x.day === dow && slotActive(x, dateStr)) out.push({ name, time: x.time, kind: '정규' }); });
+});
+const bogang = Object.values(loadObj(BOGANG_KEY)).filter(b => b.date === dateStr);
+bogang.forEach(b => out.push({ name: b.name, time: b.time || '', kind: b.type, memo: b.memo }));
+(tt.extras || []).filter(e => e.date === dateStr).forEach(e => {
+// 보강 관리에 이미 같은 날 같은 학생이 있으면 중복으로 넣지 않는다
+if(!bogang.some(b => b.name === e.name)) out.push({ name: e.name, time: e.time, kind: '보강', memo: e.note ? e.note + '보강' : '' });
+});
+const exams = examsOn(dateStr);
+out.forEach(o => { o.exam = exams.some(x => examMatches(x, (tt.students || {})[o.name])); });
+return out;
+}
+
+function renderTimetable(){
+const body = document.getElementById('tt-body');
+const tt = getTimetable();
+const importCard = (title, hint) => `
+<div class="form-card st-section">
+<div class="form-title">${title}</div>
+<div class="modal-hint">${hint}</div>
+<div class="form-actions">
+<button class="primary" id="tt-import">시간표 파일 불러오기</button>
+<input type="file" id="tt-import-file" accept="application/json,.json" style="display:none;">
+</div>
+</div>`;
+if(!tt.students){
+body.innerHTML = importCard('시간표가 아직 없어요', '정리된 시간표 파일(kladi-timetable.json)을 불러오면 요일별 시간표와 학생별 수업 시간이 보여요. 피드백·보강 기록은 바뀌지 않아요.');
+bindTtImport();
+return;
+}
+const days = [1,2,3,4,5,6].map(i => { const d = new Date(ttWeekStart); d.setDate(d.getDate() + i - 1); return { dow: i, date: fmtDate(d) }; });
+const today = localToday();
+const kindCls = (k) => k === '정규' ? '' : (k === '결석보강' ? 'gyeolseok' : (k === '직전보강' ? 'jikjeon' : 'gwanli'));
+const cols = days.map(({dow, date}) => {
+const entries = dayEntries(date, dow);
+const byTime = {};
+entries.forEach(e => { (byTime[e.time || '시간 미정'] = byTime[e.time || '시간 미정'] || []).push(e); });
+const exams = examsOn(date);
+const times = Object.keys(byTime).sort();
+return `
+<div class="tt-col${date === today ? ' today' : ''}">
+<div class="tt-day">${DOW[dow]} <span>${+date.slice(5,7)}/${+date.slice(8)}</span></div>
+${exams.length ? `<div class="tt-exams">${exams.map(x => `<span class="cal-exam" title="${esc(examLabel(x))}">${esc(shortSchool(x.school))}${x.grades && x.grades.length ? x.grades.join('·') : ''} 시험</span>`).join('')}</div>` : ''}
+${times.length ? times.map(t => `
+<div class="tt-time">${t === '시간 미정' ? t : fmtT(t)} <span>${byTime[t].length}명</span></div>
+${byTime[t].sort((a,b) => (a.kind === '정규' ? 0 : 1) - (b.kind === '정규' ? 0 : 1) || a.name.localeCompare(b.name,'ko')).map(e => `
+<div class="tt-name">${esc(e.name)}${e.kind !== '정규' ? `<span class="type-chip ${kindCls(e.kind)} tt-tag" title="${esc(e.memo || '')}">${esc(e.kind === '보강' ? '보강' : e.kind.replace('보강',''))}</span>` : ''}${e.exam ? '<span class="exam-chip tt-tag">시험</span>' : ''}</div>`).join('')}
+`).join('') : '<div class="empty-note" style="padding:8px 0;">수업 없음</div>'}
+</div>`;
+}).join('');
+const waits = Object.entries(tt.students).filter(([n,s]) => s.wait);
+const last = days[5].date;
+body.innerHTML = `
+<div class="form-card st-section">
+<div class="cal-head">
+<div class="cal-nav"><button id="tt-prev">‹</button></div>
+<div class="cal-title">${+days[0].date.slice(5,7)}/${+days[0].date.slice(8)} ~ ${+last.slice(5,7)}/${+last.slice(8)} 시간표</div>
+<div class="cal-nav"><button id="tt-next">›</button></div>
+</div>
+<div class="st-pick" style="justify-content:space-between;">
+<span class="bogang-meta">정규 수업에 이번 주 보강(보강 관리 + 시간표에 적힌 보강)과 시험기간을 함께 표시해요.</span>
+<button class="ghost" id="tt-this-week">이번 주</button>
+</div>
+<div class="tt-scroll"><div class="tt-grid">${cols}</div></div>
+<div class="tt-legend"><span class="type-chip gwanli tt-tag">관리</span><span class="type-chip gyeolseok tt-tag">결석</span><span class="type-chip jikjeon tt-tag">직전</span><span class="type-chip gwanli tt-tag">보강</span> 시간표에 적힌 보강 <span class="exam-chip tt-tag">시험</span> 그 학생 학교가 시험기간</div>
+</div>
+${waits.length ? `
+<div class="form-card st-section">
+<div class="form-title">대기 · 시간 변경 희망</div>
+<div class="bogang-list">${waits.map(([n,s]) => `<div class="bogang-row"><div class="bogang-name" style="font-size:14px;">${esc(n)} <span class="bogang-meta">${esc(s.label || '')}</span></div><div class="bogang-memo">${esc(s.wait)}</div></div>`).join('')}</div>
+</div>` : ''}
+${importCard('시간표 바꾸기', `지금 시간표: ${esc(tt.source || '')} · ${esc(tt.updatedAt || '')} 기준. 시간표가 바뀌면 새로 정리한 파일을 불러오세요.`)}`;
+document.getElementById('tt-prev').onclick = () => { ttWeekStart.setDate(ttWeekStart.getDate() - 7); renderTimetable(); };
+document.getElementById('tt-next').onclick = () => { ttWeekStart.setDate(ttWeekStart.getDate() + 7); renderTimetable(); };
+document.getElementById('tt-this-week').onclick = () => { const d = new Date(); d.setHours(0,0,0,0); d.setDate(d.getDate() - ((d.getDay() + 6) % 7)); ttWeekStart = d; renderTimetable(); };
+bindTtImport();
+}
+function bindTtImport(){
+const input = document.getElementById('tt-import-file');
+document.getElementById('tt-import').onclick = () => input.click();
+input.onchange = () => { if(input.files[0]) importBackupFile(input.files[0]); input.value = ''; };
+}
+
 // ================= INIT =================
 renderFeedbackChips();
 renderFeedbackList();
+// 주소 끝 #timetable, #bogang, #student 로 해당 탭을 바로 연다 (예약 작업의 "시간표 창 열기"에서 사용)
+(function openTabFromHash(){
+const tab = (location.hash || '').replace('#','');
+const btn = tab && document.querySelector(`.tab-btn[data-tab="${tab}"]`);
+if(btn) btn.click();
+})();
 </script>
 </body>
 </html>
