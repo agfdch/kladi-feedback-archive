@@ -1876,7 +1876,24 @@ const pw = document.getElementById('lg-pw').value;
 if(!email || !pw){ msg.textContent = '이메일과 비밀번호를 입력해 주세요.'; return; }
 go.disabled = true; msg.textContent = '로그인 중…';
 try{ await cloud.signIn(email, pw); }
-catch(e){ msg.textContent = '로그인하지 못했어요. 이메일과 비밀번호를 다시 확인해 주세요.'; go.disabled = false; }
+catch(e){
+// 실패 이유를 구체적으로 알려 준다 (Firebase 오류 코드 기준)
+const code = (e && e.code) || '';
+const why = {
+'auth/invalid-credential': '이메일 또는 비밀번호가 맞지 않아요. Gmail 비밀번호가 아니라 Firebase 사용자 추가 때 정한 비밀번호예요.',
+'auth/wrong-password': '비밀번호가 맞지 않아요. Firebase 사용자 추가 때 정한 비밀번호예요.',
+'auth/invalid-login-credentials': '이메일 또는 비밀번호가 맞지 않아요. Firebase 사용자 추가 때 정한 비밀번호예요.',
+'auth/user-not-found': '이 이메일로 만든 계정이 없어요. Firebase → Authentication → 사용자(Users)에서 추가해 주세요.',
+'auth/invalid-email': '이메일 형식이 맞지 않아요.',
+'auth/operation-not-allowed': '이메일/비밀번호 로그인이 꺼져 있어요. Authentication → 로그인 방법(Sign-in method)에서 켜 주세요.',
+'auth/unauthorized-domain': '이 사이트 주소가 허용되지 않았어요. Authentication → 설정 → 승인된 도메인에 agfdch.github.io를 추가해 주세요.',
+'auth/too-many-requests': '여러 번 실패해서 잠시 막혔어요. 몇 분 뒤에 다시 해 주세요.',
+'auth/network-request-failed': '인터넷 연결을 확인해 주세요.',
+'auth/user-disabled': '사용 중지된 계정이에요.',
+}[code];
+msg.textContent = (why || '로그인하지 못했어요.') + (code ? ` (${code})` : '');
+go.disabled = false;
+}
 };
 go.onclick = submit;
 document.getElementById('lg-pw').addEventListener('keydown', (e) => { if(e.key === 'Enter') submit(); });
