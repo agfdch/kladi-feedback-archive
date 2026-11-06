@@ -204,6 +204,13 @@ padding:20px;display:flex;flex-direction:column;gap:14px;box-shadow:var(--shadow
 .field label{display:block;font-size:12.5px;font-weight:700;color:var(--muted);margin-bottom:6px;}
 .field textarea{width:100%;min-height:120px;resize:vertical;border-radius:12px;}
 .field input{width:100%;}
+.field select{width:100%;}
+/* 창(모달) 안 입력칸이 밖으로 튀어나오지 않게 */
+.modal-card{max-width:460px;overflow:hidden;}
+.modal-card .form-row{flex-wrap:nowrap;}
+.modal-card .form-row .field{min-width:0;}
+.modal-card input, .modal-card select{max-width:100%;}
+@media (max-width:420px){ .modal-card .form-row{flex-wrap:wrap;} .modal-card .form-row .field{flex:1 1 100%;} }
 .form-row{display:flex;gap:12px;flex-wrap:wrap;}
 .form-row .field{flex:1;min-width:140px;}
 .form-actions{display:flex;justify-content:flex-end;gap:8px;}
@@ -426,8 +433,8 @@ display:flex;flex-direction:column;gap:14px;
 
 <div class="tabs">
 <button class="tab-btn active" data-tab="timetable">시간표</button>
-<button class="tab-btn" data-tab="student">학생 관리</button>
 <button class="tab-btn" data-tab="bogang">보강 관리</button>
+<button class="tab-btn" data-tab="student">학생 관리</button>
 <button class="tab-btn" data-tab="feedback">피드백</button>
 </div>
 
@@ -487,7 +494,8 @@ display:flex;flex-direction:column;gap:14px;
 </div>
 
 <div id="bg-form-slot"></div>
-<div style="display:flex;justify-content:flex-end;margin:-8px 0 -6px;">
+<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;margin:-6px 0 -8px;">
+<div class="tt-legend" id="bg-legend"></div>
 <button class="ghost" id="exam-manage-open" style="padding:3px 10px;font-size:12.5px;">시험기간 관리</button>
 </div>
 <div id="exam-panel-slot"></div>
@@ -1211,7 +1219,7 @@ row.innerHTML = `
 <div class="bogang-row-top">
 <span class="type-chip ${bogangTypeClass(b.type)}">${esc(kindShort(b.type))}</span>
 <span class="entry-actions">
-${b.cloud ? '' : '<button class="ghost" data-act="edit">수정</button>'}
+<button class="ghost" data-act="edit">수정</button>
 <button class="ghost" data-act="delete">삭제</button>
 </span>
 </div>
@@ -1231,7 +1239,10 @@ const data = loadObj(BOGANG_KEY); delete data[b.id]; saveObj(BOGANG_KEY, data);
 renderCalendar(); renderBogangList();
 };
 const edit = row.querySelector('[data-act=edit]');
-if(edit) edit.onclick = () => openBogangForm(b);
+if(edit) edit.onclick = () => {
+if(b.cloud) openEditChange(Object.assign({ id: b.id }, cloudData.changes[b.id]));
+else openBogangForm(b);
+};
 return row;
 }
 
@@ -1383,7 +1394,12 @@ renderBogangList();
 updateBgFilterUI();
 };
 
+function legendChipsHtml(){
+return ['결석','관리보강','직전보강','결석보강','예약','반이동','첫수업'].map(k => `<span class="type-chip ${kindCls(k)} tt-tag">${kindShort(k)}</span>`).join('');
+}
 function renderBogang(){
+const lg = document.getElementById('bg-legend');
+if(lg) lg.innerHTML = legendChipsHtml() + '<span class="type-chip k-exam tt-tag">시험</span> 학교 시험기간(학교별 색 띠)';
 renderCalDow();
 renderCalendar();
 renderBogangList();
@@ -1998,7 +2014,7 @@ const KIND_CLASS = { '결석': 'k-absent', '관리보강': 'k-gwanli', '직전�
 const kindCls = (k) => KIND_CLASS[k] || 'k-gwanli';
 const kindShort = (k) => ({ '관리보강': '관리', '결석보강': '보강', '직전보강': '직보', '보강': '보강', '결석': '결석', '예약': '예약', '반이동': '반이동', '첫수업': '첫수업' }[k] || k);
 // 추가 창의 종류 목록 (값, 표시 이름)
-const CHANGE_KINDS = [['결석','결석'],['결석보강','보강 (결석보강)'],['관리보강','관리 (관리보강)'],['직전보강','직보 (직전보강)'],['예약','예약 (자리 맡아 두기)'],['반이동','반이동 (다른 반에서 옴)'],['첫수업','첫수업 (신규생 첫 등원)']];
+const CHANGE_KINDS = [['결석','결석'],['결석보강','보강'],['관리보강','관리'],['직전보강','직보'],['예약','예약'],['반이동','반이동'],['첫수업','첫수업']];
 const displayName = (e) => e.name || (e.memo ? `자리 예약 · ${e.memo}` : '자리 예약');
 
 // ----- 시간표 탭: 한 주 단위로 정규 수업 + 결석·보강을 합쳐서 보여준다 -----
@@ -2348,6 +2364,56 @@ await cloudWrite(() => cloud.add('changes', doc), `${name || '자리'} ${kind} $
 });
 }
 
+// 이미 잡힌 결석·보강 고치기 (종류·학생·날짜·시간·메모). 바꾼 내용은 변경 기록에 남긴다.
+function openEditChange(c){
+if(!c || !c.id || !cloudOn()) return;
+const custom = c.time && !COMMON_TIMES.includes(c.time);
+openTtModal(`
+<div class="modal-title">${esc(c.name || '자리 예약')} · ${esc(kindShort(c.kind))} 수정</div>
+${c.absentDate ? `<div class="modal-hint">${mdLabel(c.absentDate)} 결석분 보강이에요.</div>` : ''}
+${studentDatalist()}
+<div class="form-row">
+<div class="field"><label>학생</label><input type="text" id="te-name" list="tt-student-list" value="${esc(c.name || '')}"></div>
+<div class="field"><label>종류</label><select id="te-kind">${CHANGE_KINDS.map(([k, label]) => `<option value="${k}" ${k === c.kind ? 'selected' : ''}>${label}</option>`).join('')}${CHANGE_KINDS.some(([k]) => k === c.kind) ? '' : `<option value="${esc(c.kind)}" selected>${esc(c.kind)}</option>`}</select></div>
+</div>
+<div class="form-row">
+<div class="field"><label>날짜</label><input type="date" id="te-date" value="${esc(c.date)}"></div>
+<div class="field"><label>시간</label><select id="te-time">${timeOptions(custom ? '' : (c.time || '16:00'))}<option value="__custom" ${custom ? 'selected' : ''}>직접 입력</option></select>
+<input type="time" id="te-time-custom" value="${esc(custom ? c.time : '')}" style="${custom ? '' : 'display:none;'}margin-top:6px;width:100%;"></div>
+</div>
+<div class="field"><label>메모</label><input type="text" id="te-note" value="${esc(c.note || '')}" style="width:100%;"></div>
+<div class="modal-actions"><button class="ghost" id="te-delete" style="margin-right:auto;color:var(--sun);">취소(삭제)</button><button id="te-cancel">닫기</button><button class="primary" id="te-save">저장</button></div>`,
+(ov, close) => {
+const timeSel = ov.querySelector('#te-time');
+timeSel.onchange = () => { ov.querySelector('#te-time-custom').style.display = timeSel.value === '__custom' ? '' : 'none'; };
+ov.querySelector('#te-cancel').onclick = close;
+ov.querySelector('#te-delete').onclick = async () => {
+if(!confirm(`${c.name || '자리 예약'} ${mdLabel(c.date)} ${kindShort(c.kind)}를 취소(삭제)할까요?`)) return;
+close();
+await cloudWrite(() => cloud.remove('changes', c.id), `${c.name || '자리'} ${mdLabel(c.date)} ${c.kind} 취소`);
+};
+ov.querySelector('#te-save').onclick = async () => {
+const name = ov.querySelector('#te-name').value.trim();
+const kind = ov.querySelector('#te-kind').value;
+const date = ov.querySelector('#te-date').value;
+const time = timeSel.value === '__custom' ? ov.querySelector('#te-time-custom').value : timeSel.value;
+const note = ov.querySelector('#te-note').value.trim();
+if((!name && kind !== '예약') || !date){ alert('학생과 날짜를 입력해 주세요.'); return; }
+const diffs = [];
+if(name !== (c.name || '')) diffs.push(`학생 ${c.name || '없음'}→${name || '없음'}`);
+if(kind !== c.kind) diffs.push(`종류 ${kindShort(c.kind)}→${kindShort(kind)}`);
+if(date !== c.date) diffs.push(`날짜 ${mdLabel(c.date)}→${mdLabel(date)}`);
+if(time !== (c.time || '')) diffs.push(`시간 ${fmtT(c.time) || '없음'}→${fmtT(time) || '없음'}`);
+if(note !== (c.note || '')) diffs.push('메모 수정');
+close();
+if(!diffs.length) return;
+const { id, ...rest } = c;
+await cloudWrite(() => cloud.set('changes', id, { ...rest, name, kind, date, time, note, editedBy: myName(), editedAt: new Date().toISOString() }),
+`${name || c.name || '자리'} ${kindShort(c.kind)} 수정: ${diffs.join(', ')}`);
+};
+});
+}
+
 function openEntryActions(el){
 const name = el.dataset.ttName, date = el.dataset.ttDate, time = el.dataset.ttTime, kind = el.dataset.ttKind, changeId = el.dataset.ttChange;
 const change = changeId ? Object.assign({ id: changeId }, cloudData.changes[changeId]) : null;
@@ -2378,7 +2444,8 @@ body = `
 <div class="modal-title">${esc(name || '자리 예약')} · ${esc(kindShort(kind))}</div>
 <div class="modal-hint">${mdLabel(date)} ${fmtT(time)}${change && change.absentDate ? ` · ${mdLabel(change.absentDate)} 결석분` : ''}${change && change.note ? ` · ${esc(change.note)}` : ''}${change && change.by ? `<br>입력: ${esc(change.by)}` : ''}</div>
 <div class="tt-actions">
-<button id="ea-delete">이 ${esc(kindShort(kind))} 삭제</button>
+<button id="ea-edit" class="primary">날짜·시간·내용 수정</button>
+<button id="ea-delete">이 ${esc(kindShort(kind))} 취소(삭제)</button>
 <button id="ea-close" class="ghost">닫기</button>
 </div>`;
 }
@@ -2390,6 +2457,7 @@ on('ea-absent', async () => { close(); await markAbsent(); });
 on('ea-absent-makeup', async () => { close(); await markAbsent(); openAddChange({ name, kind: '결석보강', absentDate: date, absentTime: time, date }); });
 on('ea-makeup', () => { close(); openAddChange({ name, kind: '결석보강', absentDate: date, absentTime: time, date }); });
 on('ea-gwanli', () => { close(); openAddChange({ name, kind: '관리보강', date }); });
+on('ea-edit', () => { close(); openEditChange(change); });
 on('ea-undo', async () => { close(); await cloudWrite(() => cloud.remove('changes', change.id), `${name} ${mdLabel(date)} 결석 취소`); });
 on('ea-delete', async () => {
 if(!confirm(`${name} ${mdLabel(date)} ${kind}를 삭제할까요?`)) return;
