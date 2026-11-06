@@ -4,7 +4,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>학부모 피드백 모음 · 클라디수학학원</title>
+<title>박유경T 학생 관리 · 클라디수학학원</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Pretendard:wght@400;500;600;700&display=swap">
 <style>
 /* Celeste 브랜드 팔레트 — 미드나잇 네이비 #2B2A4C · 벚꽃 핑크 #FFD9E8/#FFB6C9 · 크림 #FFF9FB · 라벤더 #C9B6E4 · 골드 #E8C468
@@ -85,7 +85,7 @@ color:var(--ink);
 font-family:'Pretendard',-apple-system,'Malgun Gothic',sans-serif;
 padding:40px 20px 80px;
 }
-.wrap{max-width:760px;margin:0 auto;display:flex;flex-direction:column;gap:22px;}
+.wrap{max-width:1180px;margin:0 auto;display:flex;flex-direction:column;gap:22px;}
 h1{font-size:24px;margin:0;font-weight:700;}
 .sub{font-size:13.5px;color:var(--muted);margin:6px 0 0;line-height:1.6;}
 
@@ -420,19 +420,19 @@ display:flex;flex-direction:column;gap:14px;
 <span class="dot-star" style="top:46px;left:74%;opacity:.5;width:2px;height:2px;"></span>
 <span class="dot-star" style="top:96px;left:66%;opacity:.6;"></span>
 <span class="dot-star" style="top:30px;left:96%;opacity:.4;width:2px;height:2px;"></span>
-<h1>학부모 피드백 모음</h1>
-<p class="sub">박유경T · 그날그날 보낸 피드백을 모아둡니다<br>데이터는 이 브라우저에 저장됩니다.</p>
+<h1>박유경T 학생 관리</h1>
+<p class="sub">클라디수학학원 · 시간표, 진도, 보강, 학부모 피드백을 한곳에서 관리해요</p>
 </div>
 
 <div class="tabs">
-<button class="tab-btn active" data-tab="feedback">피드백</button>
-<button class="tab-btn" data-tab="bogang">보강 관리</button>
+<button class="tab-btn active" data-tab="timetable">시간표</button>
 <button class="tab-btn" data-tab="student">학생 관리</button>
-<button class="tab-btn" data-tab="timetable">시간표</button>
+<button class="tab-btn" data-tab="bogang">보강 관리</button>
+<button class="tab-btn" data-tab="feedback">피드백</button>
 </div>
 
 <!-- ===== FEEDBACK PANEL ===== -->
-<div class="panel active" id="panel-feedback">
+<div class="panel" id="panel-feedback">
 <div class="toolbar">
 <input type="text" id="fb-search" placeholder="학생 이름으로 검색">
 <button class="primary" id="fb-add-open">+ 새 피드백</button>
@@ -525,7 +525,7 @@ display:flex;flex-direction:column;gap:14px;
 </div>
 
 <!-- ===== TIMETABLE PANEL ===== -->
-<div class="panel" id="panel-timetable">
+<div class="panel active" id="panel-timetable">
 <div id="tt-body"></div>
 </div>
 
@@ -2588,7 +2588,7 @@ renderFeedbackList();
 // 주소 끝 #timetable, #bogang, #student 로 해당 탭을 바로 연다 (예약 작업의 "시간표 창 열기"에서 사용)
 (function openTabFromHash(){
 const tab = (location.hash || '').replace('#','');
-const btn = tab && document.querySelector(`.tab-btn[data-tab="${tab}"]`);
+const btn = (tab && document.querySelector(`.tab-btn[data-tab="${tab}"]`)) || document.querySelector('.tab-btn[data-tab="timetable"]');
 if(btn) btn.click();
 })();
 </script>
