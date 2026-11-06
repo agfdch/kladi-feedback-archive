@@ -1932,18 +1932,19 @@ renderTimetableIfOpen();
 });
 };
 
-// 데스크 계정은 시간표 탭만 보이게 한다(피드백·진도·학부모 문구는 박유경T 전용)
+// 데스크 계정은 시간표·보강 관리 탭만 보이게 한다(피드백·어머님 답장·학생 관리는 박유경T 전용)
 function applyRoleUI(){
 const desk = cloudRole === 'desk';
-document.querySelectorAll('.tab-btn').forEach(b => { b.style.display = (desk && b.dataset.tab !== 'timetable') ? 'none' : ''; });
+const DESK_TABS = ['timetable', 'bogang'];
+document.querySelectorAll('.tab-btn').forEach(b => { b.style.display = (desk && !DESK_TABS.includes(b.dataset.tab)) ? 'none' : ''; });
 const sub = document.querySelector('.brand-hero .sub');
 if(sub){
 if(!sub.dataset.orig) sub.dataset.orig = sub.innerHTML;
 sub.innerHTML = desk ? '클라디 · 박유경T 시간표 (데스크 공유)' : sub.dataset.orig;
 }
 if(desk){
-const btn = document.querySelector('.tab-btn[data-tab="timetable"]');
-if(btn && !btn.classList.contains('active')) btn.click();
+const active = document.querySelector('.tab-btn.active');
+if(!active || !DESK_TABS.includes(active.dataset.tab)) document.querySelector('.tab-btn[data-tab="timetable"]').click();
 }
 }
 function renderTimetableIfOpen(){
@@ -1953,7 +1954,7 @@ if(panel && panel.classList.contains('active')) renderTimetable();
 function refreshOtherViews(){
 const active = document.querySelector('.panel.active');
 if(!active) return;
-if(active.id === 'panel-bogang') renderBogang();
+if(active.id === 'panel-bogang'){ renderBogang(); renderExamPanel(); }
 if(active.id === 'panel-student') renderStudent();
 }
 
