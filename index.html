@@ -290,6 +290,7 @@ body.wide .wrap{max-width:1180px;}
 .k-yeyak{background:#FFF0B3 !important;color:#735300 !important;}
 .k-move{background:#E7DBF7 !important;color:#5A3A8E !important;}
 .k-first{background:#D6F0DC !important;color:#2A6A3B !important;}
+.k-early{background:#EFE2D3 !important;color:#7A4A22 !important;}
 .k-exam{background:#2B2A4C !important;color:#FFD9E8 !important;}
 .cal-ev.k-absent{text-decoration:line-through;}
 /* 일요일 빨간색 */
@@ -328,6 +329,11 @@ background:var(--surface-2);color:var(--ink);font-size:14px;line-height:1;displa
 .tt-actions{display:flex;flex-direction:column;gap:8px;}
 .tt-actions button{width:100%;}
 .tt-log{display:flex;flex-direction:column;gap:6px;font-size:13.5px;line-height:1.5;}
+.pending-card{border-color:var(--sun);}
+.pending-list{display:flex;flex-direction:column;gap:6px;}
+.pending-row{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;background:var(--surface-2);border-radius:10px;padding:7px 10px;font-size:14px;}
+.pending-row button{padding:4px 10px;font-size:12.5px;}
+#bg-pending:empty{display:none;}
 .re-slots{display:flex;flex-direction:column;gap:6px;}
 .re-slot{display:flex;align-items:center;justify-content:space-between;gap:8px;background:var(--surface-2);border-radius:10px;padding:7px 10px;font-size:14px;font-weight:600;}
 .re-slot.focus{outline:2px solid var(--sage);}
@@ -477,6 +483,8 @@ display:flex;flex-direction:column;gap:14px;
 <option value="결석보강">결석보강</option>
 <option value="직전보강">직전보강</option>
 <option value="결석">결석</option>
+<option value="조퇴">조퇴</option>
+<option value="조퇴보강">조퇴보강</option>
 <option value="보강">보강(시간표)</option>
 <option value="예약">예약</option>
 <option value="반이동">반이동</option>
@@ -507,6 +515,7 @@ display:flex;flex-direction:column;gap:14px;
 <button class="ghost" id="exam-manage-open" style="padding:3px 10px;font-size:12.5px;">시험기간 관리</button>
 </div>
 <div id="exam-panel-slot"></div>
+<div id="bg-pending"></div>
 
 <div class="bg-layout">
 <div class="bg-cal-col">
@@ -1117,7 +1126,7 @@ function getBogangEntries(){
 if(cloudOn()){
 return Object.entries(cloudData.changes).map(([id,c]) => ({
 id, cloud: true, name: c.name, type: c.kind, date: c.date, time: c.time || '', by: c.by || '',
-memo: [c.absentDate ? `${mdLabel(c.absentDate)} 결석분` : '', c.note || ''].filter(Boolean).join(' · ')
+memo: [c.absentDate ? `${mdLabel(c.absentDate)} ${c.kind === '조퇴보강' ? '조퇴' : '결석'}분` : '', c.note || ''].filter(Boolean).join(' · ')
 }));
 }
 return Object.entries(loadObj(BOGANG_KEY)).map(([id,b]) => ({ id, ...b }));
@@ -1354,6 +1363,7 @@ renderCalendar(); renderBogangList();
 };
 }
 
+document.getElementById('bg-pending').addEventListener('click', (ev) => { const b = ev.target.closest('[data-pend]'); if(b && cloudOn()) openPendingMakeup(b.dataset.pend); });
 document.getElementById('bg-today').onclick = () => {
 selectedDate = todayStr();
 calCursor = new Date(); calCursor.setDate(1);
@@ -1403,9 +1413,11 @@ updateBgFilterUI();
 };
 
 function legendChipsHtml(){
-return ['결석','관리보강','직전보강','결석보강','예약','반이동','첫수업'].map(k => `<span class="type-chip ${kindCls(k)} tt-tag">${kindShort(k)}</span>`).join('');
+return ['결석','조퇴','관리보강','직전보강','결석보강','조퇴보강','예약','반이동','첫수업'].map(k => `<span class="type-chip ${kindCls(k)} tt-tag">${kindShort(k)}</span>`).join('');
 }
 function renderBogang(){
+const pd = document.getElementById('bg-pending');
+if(pd) pd.innerHTML = pendingHtml();
 const lg = document.getElementById('bg-legend');
 if(lg) lg.innerHTML = legendChipsHtml() + '<span class="type-chip k-exam tt-tag">시험</span> 학교 시험기간(학교별 색 띠)';
 renderCalDow();
@@ -1891,7 +1903,7 @@ renderExamPanel();
 // 1) 로그인 전(이 컴퓨터만): 정리된 시간표 파일을 "불러오기"로 넣고 보기만 한다.
 // 2) 로그인 후(공유 시간표, Firebase): 박유경T·데스크가 같은 시간표를 보고 고친다. 바뀐 내용은 바로 서로의 화면에 반영된다.
 //    - students/{이름}: 정규 시간표 { label, school, grade, slots:[{day(1=월..6=토), time, from?, until?}], wait }
-//    - changes/{id}:   날짜별 변경 { date, time, name, kind('결석'|'관리보강'|'결석보강'|'직전보강'|'보강'), note, absentDate?, by, at }
+//    - changes/{id}:   날짜별 변경 { date, time, name, kind('결석'|'조퇴'|'관리보강'|'결석보강'|'조퇴보강'|'직전보강'|'보강'|'예약'|'반이동'|'첫수업'), note, absentDate?, by, at }
 //    - exams/{id}:     시험기간,  log/{id}: 변경 기록 { at, by, text },  staff/{이메일}: 데스크 계정 { name }
 const TIMETABLE_KEY = 'kladi_timetable_v1';
 const TEACHER_EMAIL = 'yuuuukk77@gmail.com';
@@ -2018,11 +2030,46 @@ ${s.wait ? `<div class="modal-hint">대기·희망: ${esc(s.wait)}</div>` : ''}
 </div>`;
 }
 
-const KIND_CLASS = { '결석': 'k-absent', '관리보강': 'k-gwanli', '직전보강': 'k-jikbo', '결석보강': 'k-bogang', '보강': 'k-bogang', '예약': 'k-yeyak', '반이동': 'k-move', '첫수업': 'k-first' };
+const KIND_CLASS = { '결석': 'k-absent', '조퇴': 'k-early', '조퇴보강': 'k-bogang', '관리보강': 'k-gwanli', '직전보강': 'k-jikbo', '결석보강': 'k-bogang', '보강': 'k-bogang', '예약': 'k-yeyak', '반이동': 'k-move', '첫수업': 'k-first' };
 const kindCls = (k) => KIND_CLASS[k] || 'k-gwanli';
-const kindShort = (k) => ({ '관리보강': '관리', '결석보강': '보강', '직전보강': '직보', '보강': '보강', '결석': '결석', '예약': '예약', '반이동': '반이동', '첫수업': '첫수업' }[k] || k);
+const kindShort = (k) => ({ '조퇴': '조퇴', '조퇴보강': '조퇴보강', '관리보강': '관리', '결석보강': '보강', '직전보강': '직보', '보강': '보강', '결석': '결석', '예약': '예약', '반이동': '반이동', '첫수업': '첫수업' }[k] || k);
 // 추가 창의 종류 목록 (값, 표시 이름)
-const CHANGE_KINDS = [['결석','결석'],['결석보강','보강'],['관리보강','관리'],['직전보강','직보'],['예약','예약'],['반이동','반이동'],['첫수업','첫수업']];
+const CHANGE_KINDS = [['결석','결석'],['결석보강','보강'],['조퇴','조퇴'],['조퇴보강','조퇴보강'],['관리보강','관리'],['직전보강','직보'],['예약','예약'],['반이동','반이동'],['첫수업','첫수업']];
+const MISS_OF = { '결석보강': '결석', '조퇴보강': '조퇴' };   // 보강 종류 → 빠진 수업 종류
+const MAKEUP_OF = { '결석': '결석보강', '조퇴': '조퇴보강' };
+const missLabel = (c) => `${mdLabel(c.absentDate)} ${MISS_OF[c.kind] || '결석'}분`;
+// 결석·조퇴 기록 찾기 (보강을 바로 못 잡으면 makeup:'미정'으로 표시해 두고 '보강 미정' 목록에 띄운다)
+const findMiss = (name, date, kind) => Object.entries(cloudData.changes).map(([id, c]) => ({ id, ...c })).find(c => c.name === name && c.date === date && (kind ? c.kind === kind : (c.kind === '결석' || c.kind === '조퇴')));
+const pendingMisses = () => Object.entries(cloudData.changes).map(([id, c]) => ({ id, ...c }))
+.filter(c => (c.kind === '결석' || c.kind === '조퇴') && c.makeup === '미정')
+.sort((a,b) => (a.date + (a.time || '')).localeCompare(b.date + (b.time || '')));
+async function setMakeupFlag(miss, flag, note){
+if(!miss) return;
+const { id, ...rest } = miss;
+const data = { ...rest, makeup: flag };
+if(note !== undefined) data.makeupNote = note;
+await cloudWrite(() => cloud.set('changes', id, data),
+flag === '미정' ? `${miss.name} ${mdLabel(miss.date)} ${miss.kind} — 보강 미정${note ? ' · ' + note : ''}` : '');
+}
+function pendingHtml(){
+if(!cloudOn()) return '';
+const list = pendingMisses();
+if(!list.length) return '';
+return `
+<div class="form-card st-section pending-card">
+<div class="st-section-head"><div class="form-title">보강 미정 ${list.length}건</div><span class="bogang-meta">보강 날짜를 아직 못 잡은 결석·조퇴예요</span></div>
+<div class="pending-list">${list.map(c => `
+<div class="pending-row">
+<span><span class="type-chip ${kindCls(c.kind)} tt-tag">${esc(c.kind)}</span> <b>${esc(c.name)}</b> <span class="bogang-meta">${mdLabel(c.date)} ${fmtT(c.time)}${c.makeupNote ? ' · ' + esc(c.makeupNote) : ''}</span></span>
+<button class="ghost" data-pend="${esc(c.id)}">보강 잡기</button>
+</div>`).join('')}</div>
+</div>`;
+}
+function openPendingMakeup(id){
+const c = cloudData.changes[id];
+if(!c) return;
+openAddChange({ name: c.name, kind: MAKEUP_OF[c.kind] || '결석보강', absentDate: c.date, absentTime: c.time, date: localToday() });
+}
 const displayName = (e) => e.name || (e.memo ? `자리 예약 · ${e.memo}` : '자리 예약');
 
 // ----- 시간표 탭: 한 주 단위로 정규 수업 + 결석·보강을 합쳐서 보여준다 -----
@@ -2042,8 +2089,8 @@ out.push({ name, time: x.time, kind: '정규', absent: absent || null });
 });
 });
 changes.filter(c => c.kind !== '결석').forEach(c => {
-// 반이동·첫수업 날 정규 수업으로도 등록돼 있으면 같은 줄에 꼬리표만 붙인다
-const same = (c.kind === '반이동' || c.kind === '첫수업') && out.find(o => o.kind === '정규' && o.name === c.name && o.time === (c.time || ''));
+// 반이동·첫수업·조퇴는 그날 정규 수업 줄에 꼬리표만 붙인다(조퇴는 출석으로 센다)
+const same = (c.kind === '반이동' || c.kind === '첫수업' || c.kind === '조퇴') && out.find(o => o.kind === '정규' && o.name === c.name && o.time === (c.time || ''));
 if(same){ same.tag = c.kind; same.change = c; return; }
 out.push({ name: c.name, time: c.time || '', kind: c.kind, memo: c.note, change: c });
 });
@@ -2191,7 +2238,8 @@ ${exams.length ? `<div class="tt-exams">${exams.map(x => `<span class="cal-exam"
 ${times.length ? times.map(t => `
 <div class="tt-time">${t === '시간 미정' ? t : fmtT(t)} <span>${byTime[t].filter(e => !e.absent).length}명</span></div>
 ${byTime[t].sort((a,b) => (a.kind === '정규' ? 0 : 1) - (b.kind === '정규' ? 0 : 1) || a.name.localeCompare(b.name,'ko')).map(e => {
-const tag = e.absent ? `<span class="type-chip k-absent tt-tag">결석</span>` : e.tag ? `<span class="type-chip ${kindCls(e.tag)} tt-tag">${esc(kindShort(e.tag))}</span>` : (e.kind !== '정규' ? `<span class="type-chip ${kindCls(e.kind)} tt-tag" title="${esc(e.memo || '')}">${esc(kindShort(e.kind))}</span>` : '');
+const pend = (c) => c && c.makeup === '미정' ? ' · 미정' : '';
+const tag = e.absent ? `<span class="type-chip k-absent tt-tag">결석${pend(e.absent)}</span>` : e.tag ? `<span class="type-chip ${kindCls(e.tag)} tt-tag">${esc(kindShort(e.tag))}${e.tag === '조퇴' ? pend(e.change) : ''}</span>` : (e.kind !== '정규' ? `<span class="type-chip ${kindCls(e.kind)} tt-tag" title="${esc(e.memo || '')}">${esc(kindShort(e.kind))}</span>` : '');
 const attrs = editable ? ` data-tt-name="${esc(e.name)}" data-tt-date="${date}" data-tt-time="${esc(e.time)}" data-tt-kind="${esc(e.kind)}" data-tt-change="${esc(e.change ? e.change.id : (e.absent ? e.absent.id : ''))}" role="button" tabindex="0"` : '';
 return `<div class="tt-name${e.absent ? ' absent' : ''}${editable ? ' editable' : ''}"${attrs}>${e.name && tt.students[e.name] && tt.students[e.name].label ? `<span class="tt-school">${esc(tt.students[e.name].label)}</span>` : ''}<span class="tt-n">${esc(displayName(e))}</span>${tag}${e.exam ? '<span class="type-chip k-exam tt-tag">시험</span>' : ''}</div>`;
 }).join('')}
@@ -2216,8 +2264,9 @@ body.innerHTML = userBar + `
 <button class="ghost" id="tt-this-week">이번 주</button>
 </div>
 <div class="tt-scroll"><div class="tt-grid">${cols}</div></div>
-<div class="tt-legend">${['결석','관리보강','직전보강','결석보강','예약','반이동','첫수업'].map(k => `<span class="type-chip ${kindCls(k)} tt-tag">${kindShort(k)}</span>`).join('')}<span class="type-chip k-exam tt-tag">시험</span> 그 학생 학교가 시험기간</div>
+<div class="tt-legend">${['결석','조퇴','관리보강','직전보강','결석보강','조퇴보강','예약','반이동','첫수업'].map(k => `<span class="type-chip ${kindCls(k)} tt-tag">${kindShort(k)}</span>`).join('')}<span class="type-chip k-exam tt-tag">시험</span> 그 학생 학교가 시험기간</div>
 </div>
+${editable ? pendingHtml() : ''}
 ${editable ? `
 <div class="form-card st-section">
 <div class="st-section-head"><div class="form-title">최근 변경</div><span class="bogang-meta">누가 언제 고쳤는지 남아요</span></div>
@@ -2300,20 +2349,20 @@ const studentDatalist = () => `<datalist id="tt-student-list">${Object.keys(ttSt
 function openAddChange(prefill){
 const p = prefill || {};
 openTtModal(`
-<div class="modal-title">${p.absentDate ? `${esc(p.name)} 결석보강 잡기` : '결석·보강 추가'}</div>
-${p.absentDate ? `<div class="modal-hint">${mdLabel(p.absentDate)} ${fmtT(p.absentTime)} 수업은 결석으로 표시했어요. 보강 날짜와 시간을 골라 주세요.</div>` : ''}
+<div class="modal-title">${p.absentDate ? `${esc(p.name)} ${esc(p.kind)} 잡기` : '결석·보강 추가'}</div>
+${p.absentDate ? `<div class="modal-hint">${mdLabel(p.absentDate)} ${fmtT(p.absentTime)} 수업은 ${MISS_OF[p.kind] || '결석'}로 표시했어요. 보강 날짜와 시간을 골라 주세요.</div>` : ''}
 ${studentDatalist()}
 <div class="form-row">
 <div class="field"><label id="tc-name-label">학생</label><input type="text" id="tc-name" list="tt-student-list" value="${esc(p.name || '')}" placeholder="학생 이름"></div>
 <div class="field"><label>종류</label>
-<select id="tc-kind">${CHANGE_KINDS.map(([k, label]) => `<option value="${k}" ${k === (p.kind || '관리보강') ? 'selected' : ''}>${label}</option>`).join('')}</select></div>
+<select id="tc-kind">${CHANGE_KINDS.map(([k, label]) => `<option value="${k}" ${k === (p.kind || '관리보강') ? 'selected' : ''}>${label}</option>`).join('')}${p.absentDate ? '<option value="미정">미정 (보강은 나중에)</option>' : ''}</select></div>
 </div>
-<div class="form-row">
+<div class="form-row" id="tc-dt-row">
 <div class="field"><label>날짜</label><input type="date" id="tc-date" value="${esc(p.date || localToday())}"></div>
 <div class="field"><label>시간</label><select id="tc-time">${timeOptions(p.time || '16:00')}<option value="__custom">직접 입력</option></select>
 <input type="time" id="tc-time-custom" style="display:none;margin-top:6px;width:100%;"></div>
 </div>
-<div class="field" id="tc-absent-wrap" style="${(p.kind || '관리보강') === '결석보강' && !p.absentDate ? '' : 'display:none;'}"><label>빠진 수업 날짜 (선택, 넣으면 그날은 결석으로 표시)</label><input type="date" id="tc-absent" style="width:100%;"></div>
+<div class="field" id="tc-absent-wrap" style="${MISS_OF[p.kind || '관리보강'] && !p.absentDate ? '' : 'display:none;'}"><label id="tc-absent-label">빠진 수업 날짜 (선택, 넣으면 그날은 결석으로 표시)</label><input type="date" id="tc-absent" style="width:100%;"></div>
 <div id="tc-regular-wrap" style="display:none;">
 <div class="field"><label>학교·학년 (시간표에 없는 학생이면)</label><input type="text" id="tc-label" placeholder="예: 서일중2" style="width:100%;"></div>
 <label style="display:flex;align-items:center;gap:8px;font-size:13.5px;margin-top:8px;"><input type="checkbox" id="tc-regular" checked> 이 날부터 매주 같은 요일·시간 정규 수업으로 등록</label>
@@ -2325,10 +2374,13 @@ const kindSel = ov.querySelector('#tc-kind');
 const timeSel = ov.querySelector('#tc-time');
 const syncKind = () => {
 const k = kindSel.value;
-ov.querySelector('#tc-absent-wrap').style.display = (k === '결석보강' && !p.absentDate) ? '' : 'none';
+ov.querySelector('#tc-absent-wrap').style.display = (MISS_OF[k] && !p.absentDate) ? '' : 'none';
+ov.querySelector('#tc-absent-label').textContent = `빠진 수업 날짜 (선택, 넣으면 그날은 ${MISS_OF[k] || '결석'}로 표시)`;
 ov.querySelector('#tc-regular-wrap').style.display = (k === '반이동' || k === '첫수업') ? '' : 'none';
 ov.querySelector('#tc-name-label').textContent = k === '예약' ? '학생 (예약은 비워도 돼요)' : '학생';
-ov.querySelector('#tc-note').placeholder = k === '예약' ? '예: 신규 상담 중, 11/20 확정 예정' : '예: 수만프 오답 마무리';
+ov.querySelector('#tc-note').placeholder = k === '예약' ? '예: 신규 상담 중, 11/20 확정 예정' : (k === '미정' ? '예: 어머님 연락 기다리는 중' : '예: 수만프 오답 마무리');
+ov.querySelector('#tc-dt-row').style.display = k === '미정' ? 'none' : '';
+ov.querySelector('#tc-save').textContent = k === '미정' ? '미정으로 저장' : '저장';
 };
 kindSel.onchange = syncKind; syncKind();
 timeSel.onchange = () => { ov.querySelector('#tc-time-custom').style.display = timeSel.value === '__custom' ? '' : 'none'; };
@@ -2339,7 +2391,14 @@ const kind = kindSel.value;
 const date = ov.querySelector('#tc-date').value;
 const time = timeSel.value === '__custom' ? ov.querySelector('#tc-time-custom').value : timeSel.value;
 const note = ov.querySelector('#tc-note').value.trim();
-const absentDate = p.absentDate || (kind === '결석보강' ? ov.querySelector('#tc-absent').value : '');
+const absentDate = p.absentDate || (MISS_OF[kind] ? ov.querySelector('#tc-absent').value : '');
+const missKind = MISS_OF[kind] || MISS_OF[p.kind] || '결석';
+// 미정: 보강 날짜는 비워 두고, 빠진 수업에 '보강 미정' 표시만 남긴다
+if(kind === '미정'){
+close();
+await setMakeupFlag(findMiss(name, p.absentDate, missKind), '미정', note);
+return;
+}
 if((!name && kind !== '예약') || !date){ alert(kind === '예약' ? '날짜를 입력해 주세요.' : '학생과 날짜를 입력해 주세요.'); return; }
 const at = new Date().toISOString();
 close();
@@ -2356,15 +2415,17 @@ await cloudWrite(() => cloud.set('students', name, { ...base, updatedAt: at, upd
 }
 }
 // 빠진 수업 날짜를 적었고 아직 결석 기록이 없으면 결석도 함께 남긴다
-if(absentDate && !p.absentDate && !Object.values(cloudData.changes).some(c => c.kind === '결석' && c.name === name && c.date === absentDate)){
+if(absentDate && !p.absentDate && !Object.values(cloudData.changes).some(c => c.kind === missKind && c.name === name && c.date === absentDate)){
 const s = ttStudents()[name];
 const dow = new Date(absentDate + 'T00:00:00').getDay();
 const slot = s && s.slots.find(x => x.day === dow && slotActive(x, absentDate));
-await cloudWrite(() => cloud.add('changes', { date: absentDate, time: slot ? slot.time : '', name, kind: '결석', note: '', by: myName(), at }), `${name} ${mdLabel(absentDate)} 결석`);
+await cloudWrite(() => cloud.add('changes', { date: absentDate, time: slot ? slot.time : '', name, kind: missKind, note: '', by: myName(), at }), `${name} ${mdLabel(absentDate)} ${missKind}`);
 }
 const doc = { date, time, name, kind, note, by: myName(), at };
 if(absentDate) doc.absentDate = absentDate;
-await cloudWrite(() => cloud.add('changes', doc), `${name || '자리'} ${kind} ${mdLabel(date)} ${fmtT(time)}${absentDate ? ` (${mdLabel(absentDate)} 결석분)` : ''}${note ? ' · ' + note : ''}`);
+// 보강을 잡았으면 '보강 미정' 표시를 지운다
+if(absentDate){ const miss = findMiss(name, absentDate, missKind); if(miss && miss.makeup === '미정') await setMakeupFlag(miss, ''); }
+await cloudWrite(() => cloud.add('changes', doc), `${name || '자리'} ${kind} ${mdLabel(date)} ${fmtT(time)}${absentDate ? ` (${mdLabel(absentDate)} ${missKind}분)` : ''}${note ? ' · ' + note : ''}`);
 };
 });
 }
@@ -2375,7 +2436,7 @@ if(!c || !c.id || !cloudOn()) return;
 const custom = c.time && !COMMON_TIMES.includes(c.time);
 openTtModal(`
 <div class="modal-title">${esc(c.name || '자리 예약')} · ${esc(kindShort(c.kind))} 수정</div>
-${c.absentDate ? `<div class="modal-hint">${mdLabel(c.absentDate)} 결석분 보강이에요.</div>` : ''}
+${c.absentDate ? `<div class="modal-hint">${mdLabel(c.absentDate)} ${MISS_OF[c.kind] || '결석'}분 보강이에요.</div>` : ''}
 ${studentDatalist()}
 <div class="form-row">
 <div class="field"><label>학생</label><input type="text" id="te-name" list="tt-student-list" value="${esc(c.name || '')}"></div>
@@ -2422,7 +2483,8 @@ await cloudWrite(() => cloud.set('changes', id, { ...rest, name, kind, date, tim
 function openEntryActions(el){
 const name = el.dataset.ttName, date = el.dataset.ttDate, time = el.dataset.ttTime, kind = el.dataset.ttKind, changeId = el.dataset.ttChange;
 const change = changeId ? Object.assign({ id: changeId }, cloudData.changes[changeId]) : null;
-const isAbsent = change && change.kind === '결석';
+const missKind = change && (change.kind === '결석' || change.kind === '조퇴') ? change.kind : '';
+const isAbsent = !!missKind;
 let body;
 if(kind === '정규' && !isAbsent){
 body = `
@@ -2431,24 +2493,28 @@ body = `
 <div class="tt-actions">
 <button id="ea-absent-makeup" class="primary">결석 + 결석보강 잡기</button>
 <button id="ea-absent">결석만 표시</button>
+<button id="ea-early-makeup" class="k-early">조퇴 + 조퇴보강 잡기</button>
+<button id="ea-early" class="k-early">조퇴만 표시</button>
 <button id="ea-gwanli" class="k-gwanli">관리보강 잡기</button>
 <button id="ea-regular">정규 시간표 수정 (요일·시간 변경)</button>
 <button id="ea-close" class="ghost">닫기</button>
 </div>`;
 }else if(isAbsent){
-const linked = Object.values(cloudData.changes).filter(c => c.kind === '결석보강' && c.name === name && c.absentDate === date);
+const makeupKind = MAKEUP_OF[missKind];
+const linked = Object.values(cloudData.changes).filter(c => c.kind === makeupKind && c.name === name && c.absentDate === date);
 body = `
-<div class="modal-title">${esc(name)} · ${mdLabel(date)} 결석</div>
-<div class="modal-hint">${linked.length ? `결석보강: ${linked.map(c => `${mdLabel(c.date)} ${fmtT(c.time)}`).join(', ')}` : '아직 결석보강이 잡히지 않았어요.'}${change.by ? `<br>입력: ${esc(change.by)}` : ''}</div>
+<div class="modal-title">${esc(name)} · ${mdLabel(date)} ${missKind}</div>
+<div class="modal-hint">${linked.length ? `${makeupKind}: ${linked.map(c => `${mdLabel(c.date)} ${fmtT(c.time)}`).join(', ')}` : (change.makeup === '미정' ? `보강 미정이에요${change.makeupNote ? ' · ' + esc(change.makeupNote) : ''}. 날짜가 정해지면 ${makeupKind}을 잡아 주세요.` : `아직 ${makeupKind}이 잡히지 않았어요.`)}${change.by ? `<br>입력: ${esc(change.by)}` : ''}</div>
 <div class="tt-actions">
-${linked.length ? '' : '<button id="ea-makeup" class="primary">결석보강 잡기</button>'}
-<button id="ea-undo">결석 취소</button>
+${linked.length ? '' : `<button id="ea-makeup" class="primary">${makeupKind} 잡기</button>`}
+${!linked.length && change.makeup !== '미정' ? '<button id="ea-pending">보강 미정으로 표시</button>' : ''}
+<button id="ea-undo">${missKind} 취소</button>
 <button id="ea-close" class="ghost">닫기</button>
 </div>`;
 }else{
 body = `
 <div class="modal-title">${esc(name || '자리 예약')} · ${esc(kindShort(kind))}</div>
-<div class="modal-hint">${mdLabel(date)} ${fmtT(time)}${change && change.absentDate ? ` · ${mdLabel(change.absentDate)} 결석분` : ''}${change && change.note ? ` · ${esc(change.note)}` : ''}${change && change.by ? `<br>입력: ${esc(change.by)}` : ''}</div>
+<div class="modal-hint">${mdLabel(date)} ${fmtT(time)}${change && change.absentDate ? ` · ${mdLabel(change.absentDate)} ${MISS_OF[change.kind] || '결석'}분` : ''}${change && change.note ? ` · ${esc(change.note)}` : ''}${change && change.by ? `<br>입력: ${esc(change.by)}` : ''}</div>
 <div class="tt-actions">
 <button id="ea-edit" class="primary">날짜·시간·내용 수정</button>
 <button id="ea-delete">이 ${esc(kindShort(kind))} 취소(삭제)</button>
@@ -2458,14 +2524,17 @@ body = `
 openTtModal(body, (ov, close) => {
 const on = (id, fn) => { const b = ov.querySelector('#' + id); if(b) b.onclick = fn; };
 on('ea-close', close);
-const markAbsent = () => cloudWrite(() => cloud.add('changes', { date, time, name, kind: '결석', note: '', by: myName(), at: new Date().toISOString() }), `${name} ${mdLabel(date)} ${fmtT(time)} 결석`);
-on('ea-absent', async () => { close(); await markAbsent(); });
-on('ea-absent-makeup', async () => { close(); await markAbsent(); openAddChange({ name, kind: '결석보강', absentDate: date, absentTime: time, date }); });
-on('ea-makeup', () => { close(); openAddChange({ name, kind: '결석보강', absentDate: date, absentTime: time, date }); });
+const mark = (k) => cloudWrite(() => cloud.add('changes', { date, time, name, kind: k, note: '', by: myName(), at: new Date().toISOString() }), `${name} ${mdLabel(date)} ${fmtT(time)} ${k}`);
+on('ea-absent', async () => { close(); await mark('결석'); });
+on('ea-absent-makeup', async () => { close(); await mark('결석'); openAddChange({ name, kind: '결석보강', absentDate: date, absentTime: time, date }); });
+on('ea-early', async () => { close(); await mark('조퇴'); });
+on('ea-early-makeup', async () => { close(); await mark('조퇴'); openAddChange({ name, kind: '조퇴보강', absentDate: date, absentTime: time, date }); });
+on('ea-pending', async () => { close(); await setMakeupFlag(change, '미정'); });
+on('ea-makeup', () => { close(); openAddChange({ name, kind: MAKEUP_OF[missKind] || '결석보강', absentDate: date, absentTime: time, date }); });
 on('ea-gwanli', () => { close(); openAddChange({ name, kind: '관리보강', date }); });
 on('ea-edit', () => { close(); openEditChange(change); });
 on('ea-regular', () => { close(); openRegularEdit(name, { day: new Date(date + 'T00:00:00').getDay(), time }); });
-on('ea-undo', async () => { close(); await cloudWrite(() => cloud.remove('changes', change.id), `${name} ${mdLabel(date)} 결석 취소`); });
+on('ea-undo', async () => { close(); await cloudWrite(() => cloud.remove('changes', change.id), `${name} ${mdLabel(date)} ${missKind} 취소`); });
 on('ea-delete', async () => {
 if(!confirm(`${name} ${mdLabel(date)} ${kind}를 삭제할까요?`)) return;
 close();
@@ -2475,6 +2544,8 @@ await cloudWrite(() => cloud.remove('changes', change.id), `${name} ${mdLabel(da
 }
 
 document.getElementById('tt-body').addEventListener('click', (ev) => {
+const pendBtn = ev.target.closest('[data-pend]');
+if(pendBtn && cloudOn()){ openPendingMakeup(pendBtn.dataset.pend); return; }
 const add = ev.target.closest('[data-tt-add]');
 if(add && cloudOn()){ openAddChange({ date: add.dataset.ttAdd }); return; }
 const el = ev.target.closest('[data-tt-name]');
