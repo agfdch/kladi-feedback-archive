@@ -334,6 +334,11 @@ background:var(--surface-2);color:var(--ink);font-size:14px;line-height:1;displa
 .pending-row{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;background:var(--surface-2);border-radius:10px;padding:7px 10px;font-size:14px;}
 .pending-row button{padding:4px 10px;font-size:12.5px;}
 #bg-pending:empty{display:none;}
+.rs-rows{display:flex;flex-direction:column;gap:6px;}
+.rs-row{display:flex;gap:8px;align-items:center;}
+.rs-row select{flex:1;min-width:0;}
+.rs-row .rs-del{flex:none;padding:4px 10px;}
+.re-rsv{display:flex;flex-direction:column;gap:6px;}
 .re-slots{display:flex;flex-direction:column;gap:6px;}
 .re-slot{display:flex;align-items:center;justify-content:space-between;gap:8px;background:var(--surface-2);border-radius:10px;padding:7px 10px;font-size:14px;font-weight:600;}
 .re-slot.focus{outline:2px solid var(--sage);}
@@ -346,6 +351,11 @@ background:var(--surface-2);color:var(--ink);font-size:14px;line-height:1;displa
 .wait-actions{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;}
 .wait-actions input[type=date]{padding:4px 8px;font-size:12.5px;border-radius:8px;}
 .wait-actions button{padding:4px 10px;font-size:12.5px;}
+.wait-edit{display:flex;gap:6px;align-items:center;}
+.wait-edit input{flex:1;min-width:0;border-radius:10px !important;padding:7px 10px !important;}
+.wait-edit button{padding:6px 12px;font-size:12.5px;flex:none;}
+.log-head{cursor:pointer;}
+.log-head:hover .form-title{opacity:.8;}
 .exam-chip{
 display:inline-block;font-size:11.5px;font-weight:700;border-radius:100px;padding:3px 9px;
 background:var(--exam-bg);color:var(--exam-ink);white-space:nowrap;
@@ -1956,7 +1966,7 @@ const onErr = (e) => { cloudDenied = true; console.warn(e); renderTimetableIfOpe
 const watch = (col, key) => cloudUnsubs.push(cloud.watch(col, (data) => {
 cloudData[key] = data;
 renderTimetableIfOpen();
-if(key === 'exams' || key === 'students') refreshOtherViews();
+if(key === 'exams' || key === 'students' || key === 'changes') refreshOtherViews(key);
 }, onErr));
 watch('students', 'students');
 watch('changes', 'changes');
@@ -1983,15 +1993,40 @@ const active = document.querySelector('.tab-btn.active');
 if(!active || !DESK_TABS.includes(active.dataset.tab)) document.querySelector('.tab-btn[data-tab="timetable"]').click();
 }
 }
+// 다른 사람이 고친 내용이 들어오면 화면을 다시 그린다.
+// 단, 지금 그 화면의 입력칸에 글자를 쓰는 중이면 지워지지 않게 입력을 마칠 때까지 기다렸다가 다시 그린다.
+// 글자를 쓰는 칸(텍스트·메모)에 있을 때만 '입력 중'으로 본다. 날짜·선택 칸은 고르는 순간 저장되니 바로 다시 그린다.
+const isTyping = (el) => {
+const ae = document.activeElement;
+if(!(el && ae && el.contains(ae))) return false;
+if(ae.tagName === 'TEXTAREA') return true;
+return ae.tagName === 'INPUT' && /^(text|search|email|password|number|tel|url|)$/.test((ae.getAttribute('type') || '').toLowerCase());
+};
+const waitingRender = {};
+function renderWhenIdle(containerId, fn){
+const el = document.getElementById(containerId);
+if(!isTyping(el)){ fn(); return; }
+waitingRender[containerId] = fn;
+if(el.dataset.idleHook) return;
+el.dataset.idleHook = '1';
+el.addEventListener('focusout', () => setTimeout(() => {
+if(isTyping(el) || !waitingRender[containerId]) return;
+const f = waitingRender[containerId]; waitingRender[containerId] = null; f();
+}, 0));
+}
 function renderTimetableIfOpen(){
 const panel = document.getElementById('panel-timetable');
-if(panel && panel.classList.contains('active')) renderTimetable();
+if(panel && panel.classList.contains('active')) renderWhenIdle('tt-body', renderTimetable);
 }
-function refreshOtherViews(){
+function refreshOtherViews(key){
 const active = document.querySelector('.panel.active');
 if(!active) return;
-if(active.id === 'panel-bogang'){ renderBogang(); renderExamPanel(); }
-if(active.id === 'panel-student') renderStudent();
+// 보강 관리: 결석·보강·시간표·시험기간이 바뀌면 달력과 오른쪽 목록, 보강 미정 목록을 바로 다시 그린다
+if(active.id === 'panel-bogang'){
+renderWhenIdle('panel-bogang', () => { renderBogang(); if(key === 'exams') renderExamPanel(); });
+}
+// 학생 관리: 수업 시간·다가오는 결석·보강이 바뀌면 다시 그린다 (진도 계획을 쓰는 중이면 기다림)
+if(active.id === 'panel-student' && !stEditingPlanId) renderWhenIdle('st-body', renderStudent);
 }
 
 // 쓰기 + 변경 기록을 한 번에. 실패하면(권한 없음·인터넷 끊김) 알려 준다.
@@ -2073,6 +2108,9 @@ openAddChange({ name: c.name, kind: MAKEUP_OF[c.kind] || '결석보강', absentD
 const displayName = (e) => e.name || (e.memo ? `자리 예약 · ${e.memo}` : '자리 예약');
 
 // ----- 시간표 탭: 한 주 단위로 정규 수업 + 결석·보강을 합쳐서 보여준다 -----
+// 최근 변경 접기 상태 (이 브라우저에 기억)
+let ttLogOpen = (() => { try{ return localStorage.getItem('kladi_log_open') === '1'; }catch(e){ return false; } })();
+let ttShowOldLogs = false;
 let ttWeekStart = (() => { const d = new Date(); d.setHours(0,0,0,0); d.setDate(d.getDate() - ((d.getDay() + 6) % 7)); return d; })();
 
 function dayEntries(dateStr, dow){
@@ -2249,7 +2287,11 @@ return `<div class="tt-name${e.absent ? ' absent' : ''}${editable ? ' editable' 
 
 const waits = Object.entries(tt.students).filter(([n,s]) => s.wait);
 const last = days[5].date;
-const logs = editable ? Object.values(cloudData.log).sort((a,b) => (b.at || '').localeCompare(a.at || '')).slice(0, 15) : [];
+// 최근 변경: 기록은 클라우드에 모두 남겨 두고, 화면에는 최근 7일 것만 보여 준다(지난 기록은 '지난 기록 보기'로)
+const allLogs = editable ? Object.values(cloudData.log).sort((a,b) => (b.at || '').localeCompare(a.at || '')) : [];
+const weekAgo = new Date(Date.now() - 7 * 86400000).toISOString();
+const logs = ttShowOldLogs ? allLogs : allLogs.filter(l => (l.at || '') >= weekAgo);
+const oldCount = allLogs.length - allLogs.filter(l => (l.at || '') >= weekAgo).length;
 const fmtAt = (iso) => { const d = new Date(iso); return `${d.getMonth()+1}/${d.getDate()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`; };
 
 body.innerHTML = userBar + `
@@ -2266,11 +2308,15 @@ body.innerHTML = userBar + `
 <div class="tt-scroll"><div class="tt-grid">${cols}</div></div>
 <div class="tt-legend">${['결석','조퇴','관리보강','직전보강','결석보강','조퇴보강','예약','반이동','첫수업'].map(k => `<span class="type-chip ${kindCls(k)} tt-tag">${kindShort(k)}</span>`).join('')}<span class="type-chip k-exam tt-tag">시험</span> 그 학생 학교가 시험기간</div>
 </div>
-${editable ? pendingHtml() : ''}
+${editable ? pendingHtml() + scheduleChangesHtml() : ''}
 ${editable ? `
 <div class="form-card st-section">
-<div class="st-section-head"><div class="form-title">최근 변경</div><span class="bogang-meta">누가 언제 고쳤는지 남아요</span></div>
-${logs.length ? `<div class="tt-log">${logs.map(l => `<div><span class="bogang-meta">${fmtAt(l.at)} · ${esc(l.by || '')}</span> ${esc(l.text || '')}</div>`).join('')}</div>` : '<div class="empty-note" style="padding:4px 2px;">아직 변경 기록이 없어요.</div>'}
+<div class="st-section-head log-head" id="log-toggle" role="button" tabindex="0">
+<div class="form-title"><span class="date-arrow">${ttLogOpen ? '▾' : '▸'}</span> 최근 변경 <span class="bogang-meta" style="font-weight:500;">${ttShowOldLogs ? `전체 ${logs.length}건` : `최근 7일 ${logs.length}건`}</span></div>
+<span class="bogang-meta">누가 언제 고쳤는지 남아요</span>
+</div>
+${ttLogOpen ? `${logs.length ? `<div class="tt-log">${logs.map(l => `<div><span class="bogang-meta">${fmtAt(l.at)} · ${esc(l.by || '')}</span> ${esc(l.text || '')}</div>`).join('')}</div>` : '<div class="empty-note" style="padding:4px 2px;">최근 7일 동안 바뀐 내용이 없어요.</div>'}
+${oldCount ? `<div><button class="ghost" id="log-old" style="padding:3px 10px;font-size:12.5px;">${ttShowOldLogs ? '최근 7일만 보기' : `지난 기록 ${oldCount}건 보기`}</button></div>` : ''}` : ''}
 </div>
 ${cloudRole === 'teacher' ? staffCardHtml() : ''}` : ''}
 ${waitlistHtml(tt.students, editable)}
@@ -2281,6 +2327,12 @@ document.getElementById('tt-next').onclick = () => { ttWeekStart.setDate(ttWeekS
 document.getElementById('tt-this-week').onclick = () => { const d = new Date(); d.setHours(0,0,0,0); d.setDate(d.getDate() - ((d.getDay() + 6) % 7)); ttWeekStart = d; renderTimetable(); };
 if(!loggedIn){ bindLogin(); bindTtImport(); }
 bindUserBar();
+if(editable){
+const lt = document.getElementById('log-toggle');
+if(lt) lt.onclick = () => { ttLogOpen = !ttLogOpen; try{ localStorage.setItem('kladi_log_open', ttLogOpen ? '1' : '0'); }catch(e){} renderTimetable(); };
+const lo = document.getElementById('log-old');
+if(lo) lo.onclick = () => { ttShowOldLogs = !ttShowOldLogs; renderTimetable(); };
+}
 if(editable){ bindWaitlist(); if(cloudRole === 'teacher') bindStaffCard(); }
 }
 
@@ -2544,6 +2596,8 @@ await cloudWrite(() => cloud.remove('changes', change.id), `${name} ${mdLabel(da
 }
 
 document.getElementById('tt-body').addEventListener('click', (ev) => {
+const rsv = ev.target.closest('[data-rsv-cancel]');
+if(rsv && cloudOn()){ cancelReservation(rsv.dataset.rsvCancel, rsv.dataset.rsvDate); return; }
 const pendBtn = ev.target.closest('[data-pend]');
 if(pendBtn && cloudOn()){ openPendingMakeup(pendBtn.dataset.pend); return; }
 const add = ev.target.closest('[data-tt-add]');
@@ -2557,6 +2611,76 @@ if(el && cloudOn()) openEntryActions(el);
 const dayBefore = (d) => fmtDate(new Date(new Date(d + 'T00:00:00').getTime() - 86400000));
 const slotLabel = (x) => `${DOW[x.day]} ${fmtT(x.time)}${x.from ? ` (${mdLabel(x.from)}부터)` : ''}${x.until ? ` (${mdLabel(x.until)}까지)` : ''}`;
 const dayOptions = (sel) => [1,2,3,4,5,6].map(d => `<option value="${d}" ${d === sel ? 'selected' : ''}>${DOW[d]}</option>`).join('');
+const dayAfter = (d) => fmtDate(new Date(new Date(d + 'T00:00:00').getTime() + 86400000));
+const slotKey = (x) => `${x.day}|${x.time}`;
+const sortSlotList = (arr) => arr.slice().sort((a,b) => a.day - b.day || a.time.localeCompare(b.time));
+const slotsBrief = (arr) => arr.length ? sortSlotList(arr).map(x => `${DOW[x.day]} ${fmtT(x.time)}`).join(' · ') : '수업 없음';
+const nextMonday = () => { const d = new Date(); d.setDate(d.getDate() + ((8 - d.getDay()) % 7 || 7)); return fmtDate(d); };
+
+// ---------- 시간표 변경 예약 ----------
+// 정해진 날(S)부터 시간표가 바뀌도록: 빠지는 수업은 S 전날까지(until), 새 수업은 S부터(from)로 저장한다.
+// 그날이 되면 시간표가 저절로 새 시간으로 보이고, 그 전 주들은 지금 시간표 그대로 남는다.
+function slotReservations(s){
+const today = localToday();
+const map = {};
+(s.slots || []).forEach(x => {
+if(x.from && x.from > today) (map[x.from] = map[x.from] || { add: [], remove: [] }).add.push(x);
+if(x.until && x.until >= today){ const d = dayAfter(x.until); (map[d] = map[d] || { add: [], remove: [] }).remove.push(x); }
+});
+return Object.keys(map).sort().map(date => ({ date, ...map[date] }));
+}
+function allReservations(){
+const out = [];
+Object.entries(ttStudents()).forEach(([name, s]) => slotReservations(s).forEach(r => out.push({ name, label: s.label || '', ...r })));
+return out.sort((a,b) => a.date.localeCompare(b.date) || a.name.localeCompare(b.name,'ko'));
+}
+const reservationText = (r) => `${r.remove.length ? slotsBrief(r.remove) : ''}${r.remove.length && r.add.length ? ' → ' : ''}${r.add.length ? slotsBrief(r.add) : ''}${r.remove.length && !r.add.length ? ' 끝' : ''}${!r.remove.length && r.add.length ? ' 시작' : ''}`;
+function scheduleChangesHtml(){
+if(!cloudOn()) return '';
+const list = allReservations();
+if(!list.length) return '';
+return `
+<div class="form-card st-section">
+<div class="st-section-head"><div class="form-title">예약된 시간표 변경 ${list.length}건</div><span class="bogang-meta">그날이 되면 시간표가 저절로 바뀌어요</span></div>
+<div class="pending-list">${list.map(r => `
+<div class="pending-row">
+<span><span class="type-chip k-move tt-tag">${mdLabel(r.date)}부터</span> <b>${esc(r.name)}</b> <span class="bogang-meta">${esc(r.label)}</span> ${esc(reservationText(r))}</span>
+<button class="ghost" data-rsv-cancel="${esc(r.name)}" data-rsv-date="${r.date}">예약 취소</button>
+</div>`).join('')}</div>
+</div>`;
+}
+async function cancelReservation(name, date){
+const s = ttStudents()[name];
+if(!s) return;
+const r = slotReservations(s).find(x => x.date === date);
+if(!r || !confirm(`${name} ${mdLabel(date)}부터 시간표 변경(${reservationText(r)})을 취소할까요?`)) return;
+const end = dayBefore(date);
+const slots = (s.slots || []).filter(x => x.from !== date).map(x => { if(x.until === end){ const { until, ...rest } = x; return rest; } return x; });
+await cloudWrite(() => cloud.set('students', name, { ...s, slots, updatedAt: new Date().toISOString(), updatedBy: myName() }), `${name} 시간표 변경 예약 취소: ${mdLabel(date)}부터 ${reservationText(r)}`);
+}
+async function saveReservation(name, start, wanted){
+const s = ttStudents()[name];
+if(!s || !start) return false;
+const today = localToday();
+const slots = s.slots || [];
+const uniq = []; wanted.forEach(w => { if(!uniq.some(u => slotKey(u) === slotKey(w))) uniq.push(w); });
+const active = slots.filter(x => slotActive(x, start));
+const wantKeys = new Set(uniq.map(slotKey)), actKeys = new Set(active.map(slotKey));
+const removed = active.filter(x => !wantKeys.has(slotKey(x)));
+const added = uniq.filter(x => !actKeys.has(slotKey(x)));
+if(!removed.length && !added.length){ alert('지금 시간표와 같아서 바뀌는 게 없어요.'); return false; }
+const immediate = start <= today;
+let next = slots.map(x => {
+if(!removed.includes(x)) return x;
+if(immediate || (x.from && x.from >= start)) return null;     // 바로 바꾸거나, 아직 시작 전인 수업이면 지운다
+return { ...x, until: dayBefore(start) };
+}).filter(Boolean);
+added.forEach(a => next.push(immediate ? { day: a.day, time: a.time } : { day: a.day, time: a.time, from: start }));
+const text = `${slotsBrief(active)} → ${slotsBrief(uniq)}`;
+await cloudWrite(() => cloud.set('students', name, { ...s, slots: sortSlotList(next), updatedAt: new Date().toISOString(), updatedBy: myName() }),
+immediate ? `${name} 시간표 변경: ${text}` : `${name} 시간표 변경 예약: ${mdLabel(start)}부터 ${text}`);
+return true;
+}
 
 function openRegularEdit(name, focus){
 const s = ttStudents()[name];
@@ -2566,11 +2690,20 @@ const slots = s.slots || [];
 openTtModal(`
 <div class="modal-title">${esc(name)} 정규 시간표</div>
 <div class="modal-hint">${s.label ? esc(s.label) + ' · ' : ''}여기서 바꾼 내용은 매주 시간표에 적용되고 "최근 변경"에 남아요.</div>
-<div class="re-slots">${slots.length ? slots.map((x, i) => `
+<div class="re-slots">${slots.some(x => !(x.until && x.until < today)) ? slots.map((x, i) => (x.until && x.until < today) ? '' : `
 <div class="re-slot${focus && x.day === focus.day && x.time === focus.time ? ' focus' : ''}">
 <span>${slotLabel(x)}</span>
 <span class="re-slot-btns"><button class="ghost" data-mv="${i}">옮기기</button><button class="ghost" data-rm="${i}">빼기</button></span>
 </div>`).join('') : '<div class="empty-note" style="padding:4px 2px;">정규 수업이 없어요.</div>'}</div>
+${slotReservations(s).length ? `<div class="re-rsv">${slotReservations(s).map(r => `<div class="pending-row"><span><span class="type-chip k-move tt-tag">${mdLabel(r.date)}부터</span> ${esc(reservationText(r))}</span><button class="ghost" data-rsv-cancel="${esc(name)}" data-rsv-date="${r.date}">예약 취소</button></div>`).join('')}</div>` : ''}
+<div class="re-box">
+<div class="chip-label">시간표 변경 예약</div>
+<div class="bogang-meta">바뀌는 날과 그날부터의 시간표를 저장해 두면, 그날부터 저절로 바뀌어요. 그 전까지는 지금 시간표 그대로예요.</div>
+<div class="field"><label>바뀌는 날</label><input type="date" id="rs-date" value="${nextMonday()}"></div>
+<div class="chip-label" style="margin-top:2px;">그날부터의 시간표</div>
+<div id="rs-rows" class="rs-rows"></div>
+<div class="form-actions"><button class="ghost" id="rs-addrow">+ 시간 추가</button><button class="primary" id="rs-save">변경 예약 저장</button></div>
+</div>
 <div id="re-move" class="re-box" style="display:none;">
 <div class="chip-label" id="re-move-title"></div>
 <div class="form-row">
@@ -2601,6 +2734,31 @@ setTimeout(() => openRegularEdit(name), 60);   // 바뀐 내용으로 다시 열
 };
 const sortSlots = (arr) => arr.sort((a,b) => a.day - b.day || a.time.localeCompare(b.time));
 let moving = -1;
+// 시간표 변경 예약: 바뀌는 날 기준 지금 시간표로 줄을 채우고, 고쳐서 저장
+const rowsBox = ov.querySelector('#rs-rows');
+const rowHtml = (day, time) => `<div class="rs-row"><select class="rs-day">${dayOptions(day)}</select><select class="rs-time">${timeOptions(time)}</select><button class="ghost rs-del" title="이 시간 빼기">×</button></div>`;
+const fillRows = () => {
+const d = ov.querySelector('#rs-date').value || today;
+const act = sortSlotList(slots.filter(x => slotActive(x, d)));
+rowsBox.innerHTML = act.length ? act.map(x => rowHtml(x.day, x.time)).join('') : rowHtml(1, '16:00');
+};
+fillRows();
+ov.querySelector('#rs-date').onchange = fillRows;
+ov.querySelector('#rs-addrow').onclick = () => rowsBox.insertAdjacentHTML('beforeend', rowHtml(focus ? focus.day : 1, '16:00'));
+rowsBox.addEventListener('click', (e) => { const d = e.target.closest('.rs-del'); if(d) d.closest('.rs-row').remove(); });
+ov.querySelector('#rs-save').onclick = async () => {
+const start = ov.querySelector('#rs-date').value;
+if(!start){ alert('바뀌는 날을 골라 주세요.'); return; }
+const wanted = [...rowsBox.querySelectorAll('.rs-row')].map(r => ({ day: +r.querySelector('.rs-day').value, time: r.querySelector('.rs-time').value }));
+close();
+const ok = await saveReservation(name, start, wanted);
+setTimeout(() => openRegularEdit(name), 60);
+};
+ov.querySelectorAll('[data-rsv-cancel]').forEach(b => b.onclick = async () => {
+close();
+await cancelReservation(b.dataset.rsvCancel, b.dataset.rsvDate);
+setTimeout(() => openRegularEdit(name), 60);
+});
 ov.querySelector('#re-close').onclick = close;
 ov.querySelectorAll('[data-rm]').forEach(b => b.onclick = async () => {
 const i = +b.dataset.rm; const x = slots[i];
@@ -2666,9 +2824,13 @@ ${list.length ? `<div class="bogang-list">${list.map((w, i) => `
 <span class="bogang-meta">${w.waitAt ? `${mdLabel(dateOf(w.waitAt))} 등록` : '등록일 없음'}</span>
 </div>
 <div class="bogang-memo" style="color:var(--ink);">${esc(w.wait)}</div>
-${editable ? `<div class="wait-actions">
+${editable ? `<div class="wait-edit" data-wait-box="${esc(w.name)}" style="display:none;">
+<input type="text" class="wait-edit-input" value="${esc(w.wait)}" placeholder="희망 내용">
+<button class="ghost" data-wait-cancel="${esc(w.name)}">취소</button><button class="primary" data-wait-save="${esc(w.name)}">저장</button>
+</div>
+<div class="wait-actions">
 <label class="bogang-meta">등록일 <input type="date" data-wait-date="${esc(w.name)}" value="${esc(dateOf(w.waitAt))}"></label>
-<button class="ghost" data-wait-done="${esc(w.name)}">대기 해제</button>
+<span><button class="ghost" data-wait-edit="${esc(w.name)}">수정</button><button class="ghost" data-wait-done="${esc(w.name)}">대기 해제</button></span>
 </div>` : ''}
 </div>`).join('')}</div>` : '<div class="empty-note" style="padding:4px 2px;">대기 중인 학생이 없어요.</div>'}
 ${editable ? `
@@ -2692,6 +2854,26 @@ if(!s || !inp.value) return;
 const timePart = s.waitAt && s.waitAt.length > 10 ? s.waitAt.slice(10) : 'T12:00:00.000Z';
 await save(name, { ...s, waitAt: inp.value + timePart }, `${name} 대기 등록일 → ${mdLabel(inp.value)}`);
 });
+// 희망 내용 고치기 (순번=등록일은 그대로 유지)
+const box = (name) => document.querySelector(`[data-wait-box="${CSS.escape(name)}"]`);
+document.querySelectorAll('[data-wait-edit]').forEach(btn => btn.onclick = () => {
+const b = box(btn.dataset.waitEdit); if(!b) return;
+b.style.display = ''; const inp = b.querySelector('input'); inp.focus(); inp.setSelectionRange(inp.value.length, inp.value.length);
+});
+document.querySelectorAll('[data-wait-cancel]').forEach(btn => btn.onclick = () => { const b = box(btn.dataset.waitCancel); if(b) b.style.display = 'none'; });
+document.querySelectorAll('[data-wait-save]').forEach(btn => btn.onclick = async () => {
+const name = btn.dataset.waitSave; const s = students[name]; const b = box(name);
+if(!s || !b) return;
+const memo = b.querySelector('input').value.trim();
+if(!memo){ alert('희망 내용을 입력해 주세요. 대기를 없애려면 "대기 해제"를 눌러 주세요.'); return; }
+if(memo === s.wait){ b.style.display = 'none'; return; }
+b.querySelector('input').blur();
+await save(name, { ...s, wait: memo }, `${name} 대기 내용 수정: ${memo}`);
+});
+document.querySelectorAll('.wait-edit-input').forEach(inp => inp.addEventListener('keydown', (e) => {
+if(e.key === 'Enter'){ e.preventDefault(); inp.closest('.wait-edit').querySelector('[data-wait-save]').click(); }
+if(e.key === 'Escape'){ inp.closest('.wait-edit').style.display = 'none'; }
+}));
 document.querySelectorAll('[data-wait-done]').forEach(btn => btn.onclick = async () => {
 const name = btn.dataset.waitDone; const s = students[name];
 if(!s || !confirm(`${name} 학생을 대기 명단에서 뺄까요?`)) return;
