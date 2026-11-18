@@ -291,8 +291,13 @@ body.wide .wrap{max-width:1180px;}
 .k-move{background:#E7DBF7 !important;color:#5A3A8E !important;}
 .k-first{background:#D6F0DC !important;color:#2A6A3B !important;}
 .k-early{background:#EFE2D3 !important;color:#7A4A22 !important;}
+.k-math{background:#2B2A4C !important;color:#E8C468 !important;}
 .k-exam{background:#2B2A4C !important;color:#FFD9E8 !important;}
 .cal-ev.k-absent{text-decoration:line-through;}
+.cal-math{font-size:11.5px;font-weight:800;border-radius:5px;padding:1px 5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;border:1.5px solid #2B2A4C;}
+.cal-exam.is-math{outline:1.5px solid #2B2A4C;font-weight:800;}
+.exam-math-edit{display:flex;align-items:center;gap:6px;margin-top:4px;}
+.exam-math-edit input{padding:3px 8px;font-size:12.5px;border-radius:8px;}
 /* 일요일 빨간색 */
 .cal-dow.sun, .cal-cell.sun .cal-daynum{color:var(--sun);}
 /* 시험기간 표시 */
@@ -305,6 +310,15 @@ white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
 /* 시간표 탭 */
 .tt-scroll{overflow-x:auto;margin:0 -4px;padding:0 4px 4px;}
 .tt-grid{display:grid;grid-template-columns:repeat(6,minmax(104px,1fr));gap:8px;}
+.tt-grid2{display:grid;grid-template-columns:repeat(6,minmax(104px,1fr));column-gap:8px;row-gap:2px;}
+.tt-colbg{background:var(--surface);border:1px solid var(--border);border-radius:12px;z-index:0;}
+.tt-colbg.today{border-color:var(--accent);}
+.tt-colhead{z-index:1;padding:10px 10px 0;min-width:0;}
+.tt-colhead .tt-day{padding-bottom:6px;}
+.tt-colbody{z-index:1;padding:4px 10px 12px;min-width:0;}
+.tt-band{z-index:1;margin:1px 7px !important;}
+.tt-band.cont-l{margin-left:0 !important;}
+.tt-band.cont-r{margin-right:0 !important;}
 .tt-col{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:10px 10px 12px;min-width:0;}
 .tt-col.today{border-color:var(--accent);}
 .tt-day{font-weight:700;font-size:14.5px;padding-bottom:6px;border-bottom:1px solid var(--border);}
@@ -1134,7 +1148,7 @@ const examStyle = (x) => { const [bg, ink] = schoolColor(x.school); return `back
 // 보강 목록: 공유 시간표에 로그인했으면 클라우드의 결석·보강, 아니면 이 브라우저의 보강 기록
 function getBogangEntries(){
 if(cloudOn()){
-return Object.entries(cloudData.changes).map(([id,c]) => ({
+return Object.entries(cloudData.changes).filter(([id,c]) => c.kind !== '시험출석').map(([id,c]) => ({
 id, cloud: true, name: c.name, type: c.kind, date: c.date, time: c.time || '', by: c.by || '',
 memo: [c.absentDate ? `${mdLabel(c.absentDate)} ${c.kind === '조퇴보강' ? '조퇴' : '결석'}분` : '', c.note || ''].filter(Boolean).join(' · ')
 }));
@@ -1215,12 +1229,13 @@ num.textContent = d.getDate();
 week.appendChild(num);
 
 const items = byDate[dateStr] || [];
-if(items.length){
+const maths = mathExamsOn(dateStr);
+if(items.length || maths.length){
 const ev = document.createElement('div');
 ev.className = 'cal-evs';
 ev.style.gridColumn = `${i + 1}`; ev.style.gridRow = `${evRow}`;
 const MAX = 4;
-ev.innerHTML = items.slice(0, MAX).map(b => `<div class="cal-ev ${bogangTypeClass(b.type)}" title="${esc(b.type)} ${esc(b.name)} ${esc(b.time || '')}"><span class="cal-ev-t">${b.time ? esc(fmtT(b.time)) : ''}</span> ${b.name ? esc(b.name) : '예약'}${b.type === '반이동' || b.type === '첫수업' ? ' · ' + esc(kindShort(b.type)) : ''}</div>`).join('')
+ev.innerHTML = maths.map(x => `<div class="cal-math" style="${examStyle(x)}" title="${esc(examLabel(x))} · 수학 시험일">✎ ${esc(shortSchool(x.school))} 수학</div>`).join('') + items.slice(0, MAX).map(b => `<div class="cal-ev ${bogangTypeClass(b.type)}" title="${esc(b.type)} ${esc(b.name)} ${esc(b.time || '')}"><span class="cal-ev-t">${b.time ? esc(fmtT(b.time)) : ''}</span> ${b.name ? esc(b.name) : '예약'}${b.type === '반이동' || b.type === '첫수업' ? ' · ' + esc(kindShort(b.type)) : ''}</div>`).join('')
 + (items.length > MAX ? `<div class="cal-ev more">+${items.length - MAX}건</div>` : '');
 week.appendChild(ev);
 }
@@ -1229,8 +1244,8 @@ segs.forEach(sg => {
 const band = document.createElement('div');
 band.className = 'cal-band' + (sg.contL ? ' cont-l' : '') + (sg.contR ? ' cont-r' : '');
 band.style.cssText = examStyle(sg.x) + `grid-column:${sg.s + 1} / ${sg.e + 2};grid-row:${sg.lane + 2};`;
-band.title = examLabel(sg.x) + (sg.x.memo ? ' · ' + sg.x.memo : '');
-band.textContent = `${sg.x.school}${sg.x.grades && sg.x.grades.length ? ' ' + sg.x.grades.join('·') + '학년' : ''} ${sg.x.name.replace('2학기 ', '').replace('1학기 ', '')}`;
+band.title = examLabel(sg.x) + (sg.x.mathDate ? ' · ' + mathLabel(sg.x) : '') + (sg.x.memo ? ' · ' + sg.x.memo : '');
+band.textContent = `${sg.x.school}${sg.x.grades && sg.x.grades.length ? ' ' + sg.x.grades.join('·') + '학년' : ''} ${sg.x.name.replace('2학기 ', '').replace('1학기 ', '')}${sg.x.mathDate ? ' · ' + mathLabel(sg.x) : ''}`;
 band.onclick = () => { selectedDate = ds[sg.s]; renderCalendar(); renderBogangList(); };
 week.appendChild(band);
 });
@@ -1429,7 +1444,7 @@ function renderBogang(){
 const pd = document.getElementById('bg-pending');
 if(pd) pd.innerHTML = pendingHtml();
 const lg = document.getElementById('bg-legend');
-if(lg) lg.innerHTML = legendChipsHtml() + '<span class="type-chip k-exam tt-tag">시험</span> 학교 시험기간(학교별 색 띠)';
+if(lg) lg.innerHTML = legendChipsHtml() + '<span class="type-chip k-exam tt-tag">시험</span> 학교 시험기간(학교별 색 띠) <span class="type-chip k-math tt-tag">✎ 수학</span> 수학 시험일';
 renderCalDow();
 renderCalendar();
 renderBogangList();
@@ -1798,12 +1813,14 @@ const DEFAULT_EXAMS = [
 { school:'서일중', grades:[3], name:'2학기 기말고사', start:'2026-11-02', end:'2026-11-04', memo:'' },
 { school:'서문여중', grades:[3], name:'2학기 기말고사', start:'2026-11-03', end:'2026-11-06', memo:'3학년 조기 기말(추정)' },
 { school:'동덕여중', grades:[], name:'2학기 기말고사', start:'2026-12-08', end:'2026-12-10', memo:'' },
-{ school:'원촌중', grades:[1,2], name:'2학기 기말고사', start:'2026-12-09', end:'2026-12-10', memo:'' },
+{ school:'원촌중', grades:[1,2], name:'2학기 기말고사', start:'2026-12-09', end:'2026-12-10', memo:'', mathDate:'2026-12-09' },
 { school:'서문여중', grades:[1,2], name:'2학기 기말고사', start:'2026-12-11', end:'2026-12-15', memo:'' },
-{ school:'이수중', grades:[1,2], name:'2학기 기말고사', start:'2026-12-14', end:'2026-12-16', memo:'' },
+{ school:'이수중', grades:[1,2], name:'2학기 기말고사', start:'2026-12-14', end:'2026-12-16', memo:'', mathDate:'2026-12-15' },
 { school:'서초중', grades:[1,2], name:'2학기 기말고사', start:'2026-12-14', end:'2026-12-17', memo:'' },
 { school:'서일중', grades:[1,2], name:'2학기 기말고사', start:'2026-12-14', end:'2026-12-16', memo:'' },
-{ school:'세화여중', grades:[1,2], name:'2학기 기말고사', start:'2026-12-14', end:'2026-12-17', memo:'수학 시험일 12/14(월)' },
+{ school:'세화여중', grades:[1,2], name:'2학기 기말고사', start:'2026-12-14', end:'2026-12-17', memo:'', mathDate:'2026-12-14' },
+{ school:'방배중', grades:[], name:'2학기 기말고사', start:'2026-12-15', end:'2026-12-15', memo:'시험 기간 미확인(수학 날짜만)', mathDate:'2026-12-15' },
+{ school:'서운중', grades:[], name:'2학기 기말고사', start:'2026-12-16', end:'2026-12-16', memo:'시험 기간 미확인(수학 날짜만)', mathDate:'2026-12-16' },
 { school:'신반포중', grades:[1,2], name:'2학기 기말고사', start:'2026-12-21', end:'2026-12-23', memo:'' },
 ];
 function getExams(){
@@ -1818,6 +1835,45 @@ return obj;
 function examList(){
 return Object.entries(getExams()).map(([id,x]) => ({ id, ...x })).sort((a,b) => a.start.localeCompare(b.start));
 }
+// 수학 시험일: 시험기간(exam)에 mathDate 로 저장. 달력·시간표에 따로 강조해서 보여 준다.
+// 2026-11-18 안내받은 2학기 기말 수학 시험일. 처음 한 번만 시험기간에 넣는다(이미 값이 있으면 그대로 둠).
+const MATH_SEED_TAG = '수학 시험일 일괄 입력(11/18 안내)';
+const MATH_SEED = [['원촌중','2026-12-09'], ['세화여중','2026-12-14'], ['방배중','2026-12-15'], ['이수중','2026-12-15'], ['서운중','2026-12-16']];
+function mathSeedPlan(exams){
+const sets = [], adds = [];
+MATH_SEED.forEach(([school, d]) => {
+const hit = Object.entries(exams).find(([id, x]) => x.school === school && x.start <= d && d <= (x.end || x.start));
+if(hit){ if(!hit[1].mathDate) sets.push([hit[0], { ...hit[1], mathDate: d, memo: /수학 시험일/.test(hit[1].memo || '') ? '' : (hit[1].memo || '') }]); }
+else adds.push({ school, grades: [], name: '2학기 기말고사', start: d, end: d, memo: '시험 기간 미확인(수학 날짜만)', mathDate: d });
+});
+return { sets, adds };
+}
+let mathSeedRunning = false;
+let ttUploading = false;   // 시간표를 처음 올리는 중에는 자동 입력을 미룬다
+async function applyMathSeedCloud(){
+if(mathSeedRunning || ttUploading || cloudRole !== 'teacher' || !cloudData.exams || !cloudLoaded.log) return;
+if(Object.values(cloudData.log).some(l => (l.text || '').startsWith(MATH_SEED_TAG))) return;
+mathSeedRunning = true;
+try{
+const { sets, adds } = mathSeedPlan(cloudData.exams);
+for(const [id, x] of sets){ const { id: _, ...rest } = x; await cloud.set('exams', id, rest); }
+for(const x of adds) await cloud.add('exams', x);
+await cloud.add('log', { at: new Date().toISOString(), by: myName(), text: `${MATH_SEED_TAG}: ${MATH_SEED.map(([sc, d]) => `${sc} ${mdLabel(d)}`).join(', ')}` });
+}catch(e){ console.warn(e); }
+}
+function applyMathSeedLocal(){
+try{
+if(localStorage.getItem('kladi_math_seed_20261118')) return;
+const all = getExams();
+const { sets, adds } = mathSeedPlan(all);
+sets.forEach(([id, x]) => { all[id] = x; });
+adds.forEach(x => { all[uid()] = x; });
+saveObj(EXAM_KEY, all);
+localStorage.setItem('kladi_math_seed_20261118', '1');
+}catch(e){}
+}
+function mathExamsOn(date){ return examList().filter(x => x.mathDate === date); }
+const mathLabel = (x) => x.mathDate ? `수학 ${mdLabel(x.mathDate)}` : '';
 function examsOn(date){ return examList().filter(x => x.start <= date && date <= (x.end || x.start)); }
 const shortSchool = (s) => String(s || '').replace(/(여중|중|학교)$/, '');
 const mdLabel = (s) => { const p = s.split('-'); return `${+p[1]}/${+p[2]}(${dowLabel(s)})`; };
@@ -1833,7 +1889,8 @@ return `
 <div class="bogang-row">
 <div class="bogang-row-top"><span class="exam-chip" style="${examStyle(x)}">시험기간</span><span class="bogang-meta">${mdLabel(x.start)}${x.end && x.end !== x.start ? ' ~ ' + mdLabel(x.end) : ''}</span></div>
 <div class="bogang-body">
-<div class="bogang-name">${esc(examTarget(x))} ${esc(x.name)}</div>
+<div class="bogang-name">${esc(examTarget(x))} ${esc(x.name)}${x.mathDate === date ? ' <span class="type-chip k-math tt-tag">오늘 수학</span>' : ''}</div>
+${x.mathDate ? `<div class="bogang-meta">수학 시험일: ${mdLabel(x.mathDate)}</div>` : ''}
 ${ours.length ? `<div class="bogang-meta">우리 학생: ${ours.map(esc).join(', ')}</div>` : ''}
 ${x.memo ? `<div class="bogang-memo">${esc(x.memo)}</div>` : ''}
 </div>
@@ -1859,6 +1916,7 @@ ${list.map(x => `
 <button class="ghost" data-exam-del="${esc(x.id)}" style="padding:4px 9px;font-size:12.5px;">삭제</button>
 </div>
 <div class="bogang-meta">${mdLabel(x.start)}${x.end && x.end !== x.start ? ' ~ ' + mdLabel(x.end) : ''}${x.memo ? ' · ' + esc(x.memo) : ''}</div>
+<label class="bogang-meta exam-math-edit">수학 시험일 <input type="date" data-exam-math="${esc(x.id)}" value="${esc(x.mathDate || '')}"></label>
 </div>`).join('')}
 </div>
 <datalist id="exam-school-list">${schools.map(s => `<option value="${esc(s)}">`).join('')}</datalist>
@@ -1870,7 +1928,8 @@ ${list.map(x => `
 <div class="form-row">
 <div class="field"><label>시작일</label><input type="date" id="ex-start"></div>
 <div class="field"><label>종료일</label><input type="date" id="ex-end"></div>
-<div class="field"><label>메모 (선택)</label><input type="text" id="ex-memo" placeholder="예: 수학 시험일 12/14"></div>
+<div class="field"><label>수학 시험일 (선택)</label><input type="date" id="ex-math"></div>
+<div class="field"><label>메모 (선택)</label><input type="text" id="ex-memo" placeholder="예: 3학년 조기 기말"></div>
 </div>
 <div class="form-actions"><button id="exam-manage-close">닫기</button><button class="primary" id="ex-add">추가</button></div>
 </div>`;
@@ -1884,6 +1943,15 @@ return;
 delete all[btn.dataset.examDel]; saveObj(EXAM_KEY, all);
 renderExamPanel(); renderCalendar(); renderBogangList();
 });
+slot.querySelectorAll('[data-exam-math]').forEach(inp => inp.onchange = () => {
+const id = inp.dataset.examMath; const all = getExams(); const x = all[id];
+if(!x) return;
+const next = { ...x, mathDate: inp.value || '' };
+const text = inp.value ? `수학 시험일 입력: ${examTarget(x)} ${mdLabel(inp.value)}` : `수학 시험일 지움: ${examTarget(x)}`;
+if(cloudOn() && cloudData.exams && cloudData.exams[id]){ const { id: _, ...rest } = next; cloudWrite(() => cloud.set('exams', id, rest), text); return; }
+all[id] = next; saveObj(EXAM_KEY, all);
+renderExamPanel(); renderCalendar(); renderBogangList();
+});
 document.getElementById('exam-manage-close').onclick = () => { slot.classList.remove('open'); renderExamPanel(); };
 document.getElementById('ex-add').onclick = () => {
 const school = document.getElementById('ex-school').value.trim();
@@ -1892,6 +1960,8 @@ const end = document.getElementById('ex-end').value || start;
 if(!school || !start) return;
 const grades = document.getElementById('ex-grades').value.split(/[,·\s]+/).map(n => parseInt(n,10)).filter(n => n >= 1 && n <= 3);
 const exam = { school, grades, name: document.getElementById('ex-name').value.trim() || '시험', start, end: end < start ? start : end, memo: document.getElementById('ex-memo').value.trim() };
+const mathDate = document.getElementById('ex-math').value;
+if(mathDate) exam.mathDate = mathDate;
 if(cloudOn()){
 cloudWrite(() => cloud.add('exams', exam), `시험기간 추가: ${examLabel(exam)}`);
 return;
@@ -1919,7 +1989,15 @@ const TIMETABLE_KEY = 'kladi_timetable_v1';
 const TEACHER_EMAIL = 'yuuuukk77@gmail.com';
 const TEACHER_NAME = '박유경T';
 const MAKEUP_KINDS = ['관리보강', '결석보강', '직전보강'];
-const COMMON_TIMES = ['10:30', '13:30', '16:00', '17:30', '19:00'];
+const COMMON_TIMES = ['10:30', '12:00', '13:30', '16:00', '17:30', '19:00'];
+// 직보는 수학 시험 전날 12시가 기본
+const JIKBO_TIME = '12:00';
+function upcomingMath(name){
+const st = ttStudents()[name];
+if(!st) return null;
+const today = localToday();
+return examList().filter(x => x.mathDate && x.mathDate >= today && examMatches(x, st)).sort((a,b) => a.mathDate.localeCompare(b.mathDate))[0] || null;
+}
 
 let cloud = null;          // Firebase 연결 (index.html 맨 아래 module 스크립트가 넣어 준다)
 let cloudError = '';
@@ -1927,6 +2005,7 @@ let cloudUser = null;      // { email }
 let cloudRole = null;      // 'teacher' | 'desk'
 let cloudData = { students: null, changes: {}, exams: null, log: {}, staff: {} };
 let cloudUnsubs = [];
+let cloudLoaded = {};
 let cloudDenied = false;
 
 const cloudOn = () => !!(cloud && cloudUser && cloudData.students);
@@ -1957,6 +2036,7 @@ cloud.onAuth(user => {
 cloudUnsubs.forEach(u => { try{ u(); }catch(e){} });
 cloudUnsubs = [];
 cloudData = { students: null, changes: {}, exams: null, log: {}, staff: {} };
+cloudLoaded = {};
 cloudDenied = false;
 cloudUser = user ? { email: (user.email || '').toLowerCase() } : null;
 cloudRole = cloudUser ? (cloudUser.email === TEACHER_EMAIL ? 'teacher' : 'desk') : null;
@@ -1965,6 +2045,8 @@ if(cloudUser){
 const onErr = (e) => { cloudDenied = true; console.warn(e); renderTimetableIfOpen(); };
 const watch = (col, key) => cloudUnsubs.push(cloud.watch(col, (data) => {
 cloudData[key] = data;
+cloudLoaded[key] = true;
+if((key === 'exams' || key === 'log') && cloudData.exams && Object.keys(cloudData.exams).length) applyMathSeedCloud();
 renderTimetableIfOpen();
 if(key === 'exams' || key === 'students' || key === 'changes') refreshOtherViews(key);
 }, onErr));
@@ -2051,7 +2133,7 @@ const range = x.from ? ` (${mdLabel(x.from)}부터)` : (x.until ? ` (${mdLabel(x
 return `<span class="chip has-data" style="cursor:default;">${DOW[x.day]} ${fmtT(x.time)}${range}</span>`;
 }).join('');
 const upcoming = cloudOn()
-? Object.values(cloudData.changes).filter(c => c.name === name && c.date >= today).sort((a,b) => (a.date + a.time).localeCompare(b.date + b.time))
+? Object.values(cloudData.changes).filter(c => c.name === name && c.date >= today && c.kind !== '시험출석').sort((a,b) => (a.date + a.time).localeCompare(b.date + b.time))
 : (tt.extras || []).filter(e => e.name === name && e.date >= today).map(e => ({ ...e, kind: '보강' }));
 const exams = examList().filter(x => examMatches(x, s) && (x.end || x.start) >= today);
 const dday = (d) => { const n = Math.round((new Date(d+'T00:00:00') - new Date(today+'T00:00:00')) / 86400000); return n > 0 ? `D-${n}` : '진행 중'; };
@@ -2060,7 +2142,7 @@ return `
 <div class="st-section-head"><div class="form-title">수업 시간</div><span class="bogang-meta">${esc(s.label)}</span></div>
 <div class="chips">${slotChips}</div>
 ${upcoming.length ? `<div class="chip-label">다가오는 결석·보강</div><div class="chips">${upcoming.map(e => `<span class="type-chip ${kindCls(e.kind)}">${esc(kindShort(e.kind))} ${mdLabel(e.date)} ${fmtT(e.time)}${e.note ? ' · ' + esc(e.note) : ''}</span>`).join('')}</div>` : ''}
-${exams.length ? `<div class="chip-label">다가오는 시험</div>${exams.map(x => `<div class="bogang-meta"><span class="exam-chip">${dday(x.start)}</span> ${esc(x.name)} ${mdLabel(x.start)}${x.end && x.end !== x.start ? ' ~ ' + mdLabel(x.end) : ''}${x.memo ? ' · ' + esc(x.memo) : ''}</div>`).join('')}` : ''}
+${exams.length ? `<div class="chip-label">다가오는 시험</div>${exams.map(x => `<div class="bogang-meta"><span class="exam-chip">${dday(x.mathDate || x.start)}</span> ${esc(x.name)} ${mdLabel(x.start)}${x.end && x.end !== x.start ? ' ~ ' + mdLabel(x.end) : ''}${x.mathDate ? ` · <b>${mathLabel(x)}</b>` : ''}${x.memo ? ' · ' + esc(x.memo) : ''}</div>`).join('')}` : ''}
 ${s.wait ? `<div class="modal-hint">대기·희망: ${esc(s.wait)}</div>` : ''}
 </div>`;
 }
@@ -2117,6 +2199,8 @@ function dayEntries(dateStr, dow){
 const tt = getTimetable();
 const students = tt.students || {};
 const out = [];
+// 시험기간 자동 결석을 그날만 풀어 둔 기록('시험출석')
+const examAttend = cloudOn() ? Object.entries(cloudData.changes).map(([id,c]) => ({ id, ...c })).filter(c => c.kind === '시험출석' && c.date === dateStr) : [];
 if(cloudOn()){
 const changes = Object.entries(cloudData.changes).map(([id,c]) => ({ id, ...c })).filter(c => c.date === dateStr);
 Object.entries(students).forEach(([name, s]) => {
@@ -2126,7 +2210,7 @@ const absent = changes.find(c => c.kind === '결석' && c.name === name && (!c.t
 out.push({ name, time: x.time, kind: '정규', absent: absent || null });
 });
 });
-changes.filter(c => c.kind !== '결석').forEach(c => {
+changes.filter(c => c.kind !== '결석' && c.kind !== '시험출석').forEach(c => {
 // 반이동·첫수업·조퇴는 그날 정규 수업 줄에 꼬리표만 붙인다(조퇴는 출석으로 센다)
 const same = (c.kind === '반이동' || c.kind === '첫수업' || c.kind === '조퇴') && out.find(o => o.kind === '정규' && o.name === c.name && o.time === (c.time || ''));
 if(same){ same.tag = c.kind; same.change = c; return; }
@@ -2146,7 +2230,15 @@ if(!bogang.some(b => b.name === e.name)) out.push({ name: e.name, time: e.time, 
 });
 }
 const exams = examsOn(dateStr);
-out.forEach(o => { o.exam = exams.some(x => examMatches(x, students[o.name])); });
+out.forEach(o => {
+const mine = exams.filter(x => examMatches(x, students[o.name]));
+o.exam = mine.length > 0; o.math = mine.some(x => x.mathDate === dateStr);
+// 시험기간에는 정규 수업을 자동으로 결석 처리 (따로 결석을 넣지 않아도 됨). '이날은 수업함'으로 풀 수 있다.
+if(o.exam && o.kind === '정규' && !o.absent && !o.tag){
+const ov = examAttend.find(c => c.name === o.name && (!c.time || c.time === o.time));
+if(ov) o.examOverride = ov; else o.examAbsent = true;
+}
+});
 return out;
 }
 
@@ -2269,21 +2361,18 @@ entries.forEach(e => { (byTime[e.time || '시간 미정'] = byTime[e.time || '�
 const exams = examsOn(date);
 const times = Object.keys(byTime).sort();
 const present = entries.filter(e => !e.absent).length;
-return `
-<div class="tt-col${date === today ? ' today' : ''}">
-<div class="tt-day">${DOW[dow]} <span>${+date.slice(5,7)}/${+date.slice(8)}</span>${editable ? `<button class="tt-add" data-tt-add="${date}" title="이 날 결석·보강 추가">+</button>` : ''}</div>
-${exams.length ? `<div class="tt-exams">${exams.map(x => `<span class="cal-exam" style="${examStyle(x)}" title="${esc(examLabel(x))}">${esc(shortSchool(x.school))}${x.grades && x.grades.length ? x.grades.join('·') : ''} 시험</span>`).join('')}</div>` : ''}
+return { date, head: `<div class="tt-day">${DOW[dow]} <span>${+date.slice(5,7)}/${+date.slice(8)}</span>${editable ? `<button class="tt-add" data-tt-add="${date}" title="이 날 결석·보강 추가">+</button>` : ''}</div>`, body: `
+${exams.some(x => x.mathDate === date) ? `<div class="tt-exams">${exams.filter(x => x.mathDate === date).map(x => `<span class="cal-math" style="${examStyle(x)}" title="${esc(examLabel(x))} · 수학 시험일">✎ ${esc(shortSchool(x.school))} 수학</span>`).join('')}</div>` : ''}
 ${times.length ? times.map(t => `
-<div class="tt-time">${t === '시간 미정' ? t : fmtT(t)} <span>${byTime[t].filter(e => !e.absent).length}명</span></div>
+<div class="tt-time">${t === '시간 미정' ? t : fmtT(t)} <span>${byTime[t].filter(e => !e.absent && !e.examAbsent).length}명</span></div>
 ${byTime[t].sort((a,b) => (a.kind === '정규' ? 0 : 1) - (b.kind === '정규' ? 0 : 1) || a.name.localeCompare(b.name,'ko')).map(e => {
 const pend = (c) => c && c.makeup === '미정' ? ' · 미정' : '';
-const tag = e.absent ? `<span class="type-chip k-absent tt-tag">결석${pend(e.absent)}</span>` : e.tag ? `<span class="type-chip ${kindCls(e.tag)} tt-tag">${esc(kindShort(e.tag))}${e.tag === '조퇴' ? pend(e.change) : ''}</span>` : (e.kind !== '정규' ? `<span class="type-chip ${kindCls(e.kind)} tt-tag" title="${esc(e.memo || '')}">${esc(kindShort(e.kind))}</span>` : '');
-const attrs = editable ? ` data-tt-name="${esc(e.name)}" data-tt-date="${date}" data-tt-time="${esc(e.time)}" data-tt-kind="${esc(e.kind)}" data-tt-change="${esc(e.change ? e.change.id : (e.absent ? e.absent.id : ''))}" role="button" tabindex="0"` : '';
-return `<div class="tt-name${e.absent ? ' absent' : ''}${editable ? ' editable' : ''}"${attrs}>${e.name && tt.students[e.name] && tt.students[e.name].label ? `<span class="tt-school">${esc(tt.students[e.name].label)}</span>` : ''}<span class="tt-n">${esc(displayName(e))}</span>${tag}${e.exam ? '<span class="type-chip k-exam tt-tag">시험</span>' : ''}</div>`;
+const tag = e.examAbsent ? `<span class="type-chip k-absent tt-tag" title="시험기간 자동 결석">시험결석</span>` : e.absent ? `<span class="type-chip k-absent tt-tag">결석${pend(e.absent)}</span>` : e.tag ? `<span class="type-chip ${kindCls(e.tag)} tt-tag">${esc(kindShort(e.tag))}${e.tag === '조퇴' ? pend(e.change) : ''}</span>` : (e.kind !== '정규' ? `<span class="type-chip ${kindCls(e.kind)} tt-tag" title="${esc(e.memo || '')}">${esc(kindShort(e.kind))}</span>` : '');
+const attrs = editable ? ` data-tt-name="${esc(e.name)}" data-tt-date="${date}" data-tt-time="${esc(e.time)}" data-tt-kind="${esc(e.kind)}" data-tt-change="${esc(e.change ? e.change.id : (e.absent ? e.absent.id : ''))}"${e.examAbsent ? ' data-tt-exam="1"' : ''}${e.examOverride ? ` data-tt-override="${esc(e.examOverride.id)}"` : ''} role="button" tabindex="0"` : '';
+return `<div class="tt-name${e.absent || e.examAbsent ? ' absent' : ''}${editable ? ' editable' : ''}"${attrs}>${e.name && tt.students[e.name] && tt.students[e.name].label ? `<span class="tt-school">${esc(tt.students[e.name].label)}</span>` : ''}<span class="tt-n">${esc(displayName(e))}</span>${tag}${e.math ? '<span class="type-chip k-math tt-tag">수학시험</span>' : (e.exam && !e.examAbsent ? '<span class="type-chip k-exam tt-tag">시험</span>' : '')}${e.examOverride ? '<span class="type-chip k-exam tt-tag" title="시험기간이지만 수업">수업함</span>' : ''}</div>`;
 }).join('')}
-`).join('') : '<div class="empty-note" style="padding:8px 0;">수업 없음</div>'}
-</div>`;
-}).join('');
+`).join('') : '<div class="empty-note" style="padding:8px 0;">수업 없음</div>'}` };
+});
 
 const waits = Object.entries(tt.students).filter(([n,s]) => s.wait);
 const last = days[5].date;
@@ -2305,8 +2394,8 @@ body.innerHTML = userBar + `
 <span class="bogang-meta">${editable ? '학생 이름을 누르면 결석·보강을 처리하고, 날짜 옆 +로 보강을 추가해요.' : '정규 수업에 이번 주 보강(보강 관리 + 시간표에 적힌 보강)과 시험기간을 함께 표시해요.'}</span>
 <button class="ghost" id="tt-this-week">이번 주</button>
 </div>
-<div class="tt-scroll"><div class="tt-grid">${cols}</div></div>
-<div class="tt-legend">${['결석','조퇴','관리보강','직전보강','결석보강','조퇴보강','예약','반이동','첫수업'].map(k => `<span class="type-chip ${kindCls(k)} tt-tag">${kindShort(k)}</span>`).join('')}<span class="type-chip k-exam tt-tag">시험</span> 그 학생 학교가 시험기간</div>
+<div class="tt-scroll">${ttGridHtml(cols, today)}</div>
+<div class="tt-legend">${['결석','조퇴','관리보강','직전보강','결석보강','조퇴보강','예약','반이동','첫수업'].map(k => `<span class="type-chip ${kindCls(k)} tt-tag">${kindShort(k)}</span>`).join('')}<span class="type-chip k-exam tt-tag">시험</span> 그 학생 학교가 시험기간 <span class="type-chip k-math tt-tag">수학시험</span> 수학 시험 보는 날</div>
 </div>
 ${editable ? pendingHtml() + scheduleChangesHtml() : ''}
 ${editable ? `
@@ -2336,6 +2425,48 @@ if(lo) lo.onclick = () => { ttShowOldLogs = !ttShowOldLogs; renderTimetable(); }
 if(editable){ bindWaitlist(); if(cloudRole === 'teacher') bindStaffCard(); }
 }
 
+// 시간표 위 시험기간 띠: 보강 관리 달력처럼 시작~끝 요일을 한 줄로 잇는다(월~토 6칸)
+function ttGridHtml(cols, today){
+const ds = cols.map(c => c.date);
+const { html: bands, lanes } = ttBandsParts(ds);
+const bodyRow = lanes + 2;
+return `<div class="tt-grid2" style="grid-template-rows:auto${lanes ? ` repeat(${lanes}, 21px)` : ''} 1fr;">${cols.map((c, i) => `
+<div class="tt-colbg${c.date === today ? ' today' : ''}" style="grid-column:${i + 1};grid-row:1 / -1;"></div>
+<div class="tt-colhead" style="grid-column:${i + 1};grid-row:1;">${c.head}</div>
+<div class="tt-colbody" style="grid-column:${i + 1};grid-row:${bodyRow};">${c.body}</div>`).join('')}${bands}</div>`;
+}
+function ttBandsParts(ds){
+const segs = examList().filter(x => x.start <= ds[5] && (x.end || x.start) >= ds[0]).map(x => {
+const end = x.end || x.start;
+const s = ds.findIndex(d => d >= x.start); let e = -1;
+ds.forEach((d, i) => { if(d <= end) e = i; });
+return { x, s, e, contL: x.start < ds[0], contR: end > ds[5] };
+}).filter(g => g.s >= 0 && g.e >= g.s).sort((a,b) => a.s - b.s || (b.e - b.s) - (a.e - a.s));
+const lanes = [];
+segs.forEach(g => { let l = lanes.findIndex(end => end < g.s); if(l < 0){ l = lanes.length; lanes.push(-1); } lanes[l] = g.e; g.lane = l; });
+const html = segs.map(g => {
+const inWeek = g.x.mathDate && g.x.mathDate >= ds[0] && g.x.mathDate <= ds[5];
+return `<div class="cal-band tt-band${g.contL ? ' cont-l' : ''}${g.contR ? ' cont-r' : ''}" style="${examStyle(g.x)}grid-column:${g.s + 1} / ${g.e + 2};grid-row:${g.lane + 2};" title="${esc(examLabel(g.x))}${g.x.mathDate ? ' · ' + mathLabel(g.x) : ''}">${esc(g.x.school)}${g.x.grades && g.x.grades.length ? ' ' + g.x.grades.join('·') + '학년' : ''} ${esc(g.x.name.replace('2학기 ', '').replace('1학기 ', ''))}${inWeek ? ' · ' + mathLabel(g.x) : ''}</div>`;
+}).join('');
+return { html, lanes: lanes.length };
+}
+// (예전 방식: 칸 밖 띠) 사용 안 함
+function ttBandsHtml(ds){
+const segs = examList().filter(x => x.start <= ds[5] && (x.end || x.start) >= ds[0]).map(x => {
+const end = x.end || x.start;
+const s = ds.findIndex(d => d >= x.start); let e = -1;
+ds.forEach((d, i) => { if(d <= end) e = i; });
+return { x, s, e, contL: x.start < ds[0], contR: end > ds[5] };
+}).filter(g => g.s >= 0 && g.e >= g.s).sort((a,b) => a.s - b.s || (b.e - b.s) - (a.e - a.s));
+if(!segs.length) return '';
+const lanes = [];
+segs.forEach(g => { let l = lanes.findIndex(end => end < g.s); if(l < 0){ l = lanes.length; lanes.push(-1); } lanes[l] = g.e; g.lane = l; });
+return `<div class="tt-bands" style="grid-template-rows:repeat(${lanes.length}, 21px);">${segs.map(g => {
+const inWeek = g.x.mathDate && g.x.mathDate >= ds[0] && g.x.mathDate <= ds[5];
+return `<div class="cal-band${g.contL ? ' cont-l' : ''}${g.contR ? ' cont-r' : ''}" style="${examStyle(g.x)}grid-column:${g.s + 1} / ${g.e + 2};grid-row:${g.lane + 1};" title="${esc(examLabel(g.x))}${g.x.mathDate ? ' · ' + mathLabel(g.x) : ''}">${esc(g.x.school)}${g.x.grades && g.x.grades.length ? ' ' + g.x.grades.join('·') + '학년' : ''} ${esc(g.x.name.replace('2학기 ', '').replace('1학기 ', ''))}${inWeek ? ' · ' + mathLabel(g.x) : ''}</div>`;
+}).join('')}</div>`;
+}
+
 function importCardHtml(title, hint){
 return `
 <div class="form-card st-section">
@@ -2363,6 +2494,7 @@ async function uploadLocalTimetable(btn){
 const local = loadObj(TIMETABLE_KEY);
 if(!local.students) return;
 btn.disabled = true; btn.textContent = '올리는 중…';
+ttUploading = true;
 try{
 const at = new Date().toISOString();
 for(const [name, s] of Object.entries(local.students)){
@@ -2376,8 +2508,11 @@ const { id, ...rest } = x;
 await cloud.add('exams', rest);
 }
 await cloud.add('log', { at, by: myName(), text: `시간표 처음 올림 (학생 ${Object.keys(local.students).length}명)` });
+ttUploading = false;
+applyMathSeedCloud();
 }catch(e){
 console.warn(e);
+ttUploading = false;
 alert('올리지 못했어요. 인터넷 연결과 로그인 상태를 확인해 주세요.');
 btn.disabled = false; btn.textContent = '공유 시간표로 올리기';
 }
@@ -2414,6 +2549,7 @@ ${studentDatalist()}
 <div class="field"><label>시간</label><select id="tc-time">${timeOptions(p.time || '16:00')}<option value="__custom">직접 입력</option></select>
 <input type="time" id="tc-time-custom" style="display:none;margin-top:6px;width:100%;"></div>
 </div>
+<div class="modal-hint" id="tc-jikbo-hint" style="display:none;"></div>
 <div class="field" id="tc-absent-wrap" style="${MISS_OF[p.kind || '관리보강'] && !p.absentDate ? '' : 'display:none;'}"><label id="tc-absent-label">빠진 수업 날짜 (선택, 넣으면 그날은 결석으로 표시)</label><input type="date" id="tc-absent" style="width:100%;"></div>
 <div id="tc-regular-wrap" style="display:none;">
 <div class="field"><label>학교·학년 (시간표에 없는 학생이면)</label><input type="text" id="tc-label" placeholder="예: 서일중2" style="width:100%;"></div>
@@ -2434,7 +2570,22 @@ ov.querySelector('#tc-note').placeholder = k === '예약' ? '예: 신규 상담 
 ov.querySelector('#tc-dt-row').style.display = k === '미정' ? 'none' : '';
 ov.querySelector('#tc-save').textContent = k === '미정' ? '미정으로 저장' : '저장';
 };
-kindSel.onchange = syncKind; syncKind();
+// 직보: 시간 12시 기본, 그 학생 수학 시험 전날을 안내하고 버튼으로 날짜를 맞춘다
+let lastKind = kindSel.value;
+const syncJikbo = () => {
+const k = kindSel.value, hint = ov.querySelector('#tc-jikbo-hint');
+if(k === '직전보강' && lastKind !== '직전보강') timeSel.value = JIKBO_TIME;
+lastKind = k;
+const ex = k === '직전보강' ? upcomingMath(ov.querySelector('#tc-name').value.trim()) : null;
+if(!ex){ hint.style.display = 'none'; return; }
+const prev = dayBefore(ex.mathDate);
+hint.style.display = '';
+hint.innerHTML = `${esc(ex.school)} 수학 시험 ${mdLabel(ex.mathDate)} → 직보는 보통 전날 <b>${mdLabel(prev)}</b> 12시 <button class="ghost" id="tc-jikbo-set" style="padding:2px 8px;font-size:12.5px;">이 날로 맞추기</button>`;
+hint.querySelector('#tc-jikbo-set').onclick = () => { ov.querySelector('#tc-date').value = prev; timeSel.value = JIKBO_TIME; };
+};
+kindSel.onchange = () => { syncKind(); syncJikbo(); }; syncKind();
+if(kindSel.value === '직전보강'){ lastKind = ''; syncJikbo(); }
+ov.querySelector('#tc-name').addEventListener('input', syncJikbo);
 timeSel.onchange = () => { ov.querySelector('#tc-time-custom').style.display = timeSel.value === '__custom' ? '' : 'none'; };
 ov.querySelector('#tc-cancel').onclick = close;
 ov.querySelector('#tc-save').onclick = async () => {
@@ -2537,8 +2688,19 @@ const name = el.dataset.ttName, date = el.dataset.ttDate, time = el.dataset.ttTi
 const change = changeId ? Object.assign({ id: changeId }, cloudData.changes[changeId]) : null;
 const missKind = change && (change.kind === '결석' || change.kind === '조퇴') ? change.kind : '';
 const isAbsent = !!missKind;
+const examAbsent = el.dataset.ttExam === '1', overrideId = el.dataset.ttOverride || '';
 let body;
-if(kind === '정규' && !isAbsent){
+if(kind === '정규' && examAbsent){
+body = `
+<div class="modal-title">${esc(name)} · ${mdLabel(date)} ${fmtT(time)}</div>
+<div class="modal-hint">학교 시험기간이라 자동으로 결석 처리됐어요. 이날 수업을 한다면 "이날은 수업함"을 눌러 주세요.</div>
+<div class="tt-actions">
+<button id="ea-exam-attend" class="primary">이날은 수업함 (자동 결석 풀기)</button>
+<button id="ea-gwanli" class="k-gwanli">관리보강 잡기</button>
+<button id="ea-regular">정규 시간표 수정 (요일·시간 변경)</button>
+<button id="ea-close" class="ghost">닫기</button>
+</div>`;
+}else if(kind === '정규' && !isAbsent){
 body = `
 <div class="modal-title">${esc(name)} · ${mdLabel(date)} ${fmtT(time)}</div>
 <div class="modal-hint">정규 수업이에요. 결석·보강을 잡거나, 요일·시간이 바뀌면 정규 시간표를 수정해 주세요.</div>
@@ -2549,6 +2711,7 @@ body = `
 <button id="ea-early" class="k-early">조퇴만 표시</button>
 <button id="ea-gwanli" class="k-gwanli">관리보강 잡기</button>
 <button id="ea-regular">정규 시간표 수정 (요일·시간 변경)</button>
+${overrideId ? '<button id="ea-exam-reset">다시 시험결석으로</button>' : ''}
 <button id="ea-close" class="ghost">닫기</button>
 </div>`;
 }else if(isAbsent){
@@ -2585,6 +2748,8 @@ on('ea-pending', async () => { close(); await setMakeupFlag(change, '미정'); }
 on('ea-makeup', () => { close(); openAddChange({ name, kind: MAKEUP_OF[missKind] || '결석보강', absentDate: date, absentTime: time, date }); });
 on('ea-gwanli', () => { close(); openAddChange({ name, kind: '관리보강', date }); });
 on('ea-edit', () => { close(); openEditChange(change); });
+on('ea-exam-attend', async () => { close(); await cloudWrite(() => cloud.add('changes', { date, time, name, kind: '시험출석', note: '', by: myName(), at: new Date().toISOString() }), `${name} ${mdLabel(date)} ${fmtT(time)} 시험기간이지만 수업함`); });
+on('ea-exam-reset', async () => { close(); await cloudWrite(() => cloud.remove('changes', overrideId), `${name} ${mdLabel(date)} 다시 시험결석`); });
 on('ea-regular', () => { close(); openRegularEdit(name, { day: new Date(date + 'T00:00:00').getDay(), time }); });
 on('ea-undo', async () => { close(); await cloudWrite(() => cloud.remove('changes', change.id), `${name} ${mdLabel(date)} ${missKind} 취소`); });
 on('ea-delete', async () => {
@@ -2927,6 +3092,7 @@ await cloudWrite(() => cloud.remove('staff', b.dataset.staffDel), `데스크 계
 }
 
 // ================= INIT =================
+applyMathSeedLocal();
 renderFeedbackChips();
 renderFeedbackList();
 // 주소 끝 #timetable, #bogang, #student 로 해당 탭을 바로 연다 (예약 작업의 "시간표 창 열기"에서 사용)
