@@ -2001,6 +2001,12 @@ return d;
 // 수학 시험일이 있는 시험기간마다, 그 학교·학년 학생에게 직보(전날 12시)를 자동으로 잡는다.
 // 한 번 잡은 학생은 시험기간에 기록(jikbo)해 두어서, 나중에 지우거나 시간을 바꿔도 다시 만들지 않는다.
 // 수학 시험일이 바뀌면 자동으로 잡은 직보도 새 날짜로 옮긴다.
+// 직보 날 정규 수업이 있으면 따로 12시에 잡지 않고 그 정규 수업 시간에 직보를 한다
+function jikboTimeFor(s, date){
+const dow = new Date(date + 'T00:00:00').getDay();
+const t = ((s && s.slots) || []).filter(x => x.day === dow && slotActive(x, date)).map(x => x.time).sort()[0];
+return t || JIKBO_TIME;
+}
 let autoJikboRunning = false;
 async function applyAutoJikbo(){
 if(autoJikboRunning || ttUploading || !cloudUser || !cloudData.students || !cloudData.exams || !cloudLoaded.changes) return;
@@ -2010,15 +2016,23 @@ const jobs = [];
 Object.entries(cloudData.exams).forEach(([examId, x]) => {
 if(!x.mathDate || x.mathDate < today) return;
 const jd = jikboDateFor(x.mathDate);
+
 const done = x.jikbo || {};
 const names = Object.entries(students)
 .filter(([n, s]) => examMatches(x, s) && (s.slots || []).some(sl => slotActive(sl, jd)) && done[n] !== x.mathDate)
 .map(([n]) => n);
 if(names.length) jobs.push({ examId, x, jd, names });
 });
-if(!jobs.length) return;
+// 이미 12시로 자동으로 잡혔는데 그날 정규 수업이 있는 학생은 정규 수업 시간으로 옮긴다(직접 고친 것은 그대로)
+const moves = Object.entries(changes).filter(([id, c]) => c.auto === 'jikbo' && !c.editedAt && c.date >= today && c.time === JIKBO_TIME && jikboTimeFor(students[c.name], c.date) !== JIKBO_TIME);
+if(!jobs.length && !moves.length) return;
 autoJikboRunning = true;
 try{
+for(const [id, c] of moves){
+const t = jikboTimeFor(students[c.name], c.date);
+await cloud.set('changes', id, { ...c, time: t });
+}
+if(moves.length) await cloud.add('log', { at: new Date().toISOString(), by: myName(), text: `직보를 정규 수업 시간으로 맞춤: ${moves.map(([id, c]) => `${c.name} ${mdLabel(c.date)} ${fmtT(jikboTimeFor(students[c.name], c.date))}`).join(', ')}` });
 for(const { examId, x, jd, names } of jobs){
 const made = [];
 const weekBefore = fmtDate(new Date(new Date(x.mathDate + 'T00:00:00').getTime() - 7 * 86400000));
@@ -2027,14 +2041,18 @@ const id = `auto-jikbo_${examId}_${n}`;
 // 이미 직접 잡아 둔 직보(시험 1주일 안)가 있으면 새로 만들지 않는다
 const manual = Object.entries(changes).some(([cid, c]) => cid !== id && c.name === n && c.kind === '직전보강' && c.date < x.mathDate && c.date >= weekBefore);
 if(manual && !changes[id]) continue;
-await cloud.set('changes', id, { date: jd, time: JIKBO_TIME, name: n, kind: '직전보강', note: `${shortSchool(x.school)} 수학 ${mdLabel(x.mathDate)} 전날(자동)`, by: '자동', at: new Date().toISOString(), auto: 'jikbo' });
+await cloud.set('changes', id, { date: jd, time: jikboTimeFor(students[n], jd), name: n, kind: '직전보강', note: `${shortSchool(x.school)} 수학 ${mdLabel(x.mathDate)} 전날(자동)`, by: '자동', at: new Date().toISOString(), auto: 'jikbo' });
 made.push(n);
 }
 const jikbo = { ...(x.jikbo || {}) };
 names.forEach(n => { jikbo[n] = x.mathDate; });
 const { id: _, ...rest } = x;
 await cloud.set('exams', examId, { ...rest, jikbo });
-if(made.length) await cloud.add('log', { at: new Date().toISOString(), by: myName(), text: `직보 자동 등록: ${examTarget(x)} 수학 ${mdLabel(x.mathDate)} → ${mdLabel(jd)} ${fmtT(JIKBO_TIME)} (${made.join(', ')})` });
+if(made.length) await cloud.add('log', { at: new Date().toISOString(), by: myName(), text: (() => {
+const noon = made.filter(n => jikboTimeFor(students[n], jd) === JIKBO_TIME);
+const reg = made.filter(n => jikboTimeFor(students[n], jd) !== JIKBO_TIME).map(n => `${n} ${fmtT(jikboTimeFor(students[n], jd))}`);
+return `직보 자동 등록: ${examTarget(x)} 수학 ${mdLabel(x.mathDate)} → ${mdLabel(jd)}` + (noon.length ? ` ${fmtT(JIKBO_TIME)}: ${noon.join(', ')}` : '') + (reg.length ? `${noon.length ? ' ·' : ''} 정규 수업 때: ${reg.join(', ')}` : '');
+})() });
 }
 }catch(e){ console.warn(e); }
 autoJikboRunning = false;
@@ -2259,8 +2277,8 @@ out.push({ name, time: x.time, kind: '정규', absent: absent || null });
 });
 });
 changes.filter(c => c.kind !== '결석' && c.kind !== '시험출석').forEach(c => {
-// 반이동·첫수업·조퇴는 그날 정규 수업 줄에 꼬리표만 붙인다(조퇴는 출석으로 센다)
-const same = (c.kind === '반이동' || c.kind === '첫수업' || c.kind === '조퇴') && out.find(o => o.kind === '정규' && o.name === c.name && o.time === (c.time || ''));
+// 반이동·첫수업·조퇴·직보(정규 수업 시간에 하는 직보)는 그날 정규 수업 줄에 꼬리표만 붙인다(조퇴는 출석으로 센다)
+const same = (c.kind === '반이동' || c.kind === '첫수업' || c.kind === '조퇴' || c.kind === '직전보강') && out.find(o => o.kind === '정규' && o.name === c.name && o.time === (c.time || ''));
 if(same){ same.tag = c.kind; same.change = c; return; }
 out.push({ name: c.name, time: c.time || '', kind: c.kind, memo: c.note, change: c });
 });
@@ -2627,10 +2645,11 @@ if(k === '직전보강' && lastKind !== '직전보강') timeSel.value = JIKBO_TI
 lastKind = k;
 const ex = k === '직전보강' ? upcomingMath(ov.querySelector('#tc-name').value.trim()) : null;
 if(!ex){ hint.style.display = 'none'; return; }
-const prev = dayBefore(ex.mathDate);
+const prev = jikboDateFor(ex.mathDate);
+const pt = jikboTimeFor(ttStudents()[ov.querySelector('#tc-name').value.trim()], prev);
 hint.style.display = '';
-hint.innerHTML = `${esc(ex.school)} 수학 시험 ${mdLabel(ex.mathDate)} → 직보는 보통 전날 <b>${mdLabel(prev)}</b> 12시 <button class="ghost" id="tc-jikbo-set" style="padding:2px 8px;font-size:12.5px;">이 날로 맞추기</button>`;
-hint.querySelector('#tc-jikbo-set').onclick = () => { ov.querySelector('#tc-date').value = prev; timeSel.value = JIKBO_TIME; };
+hint.innerHTML = `${esc(ex.school)} 수학 시험 ${mdLabel(ex.mathDate)} → 직보는 <b>${mdLabel(prev)}</b> ${fmtT(pt)}${pt !== JIKBO_TIME ? '(정규 수업 시간)' : ''} <button class="ghost" id="tc-jikbo-set" style="padding:2px 8px;font-size:12.5px;">이 날로 맞추기</button>`;
+hint.querySelector('#tc-jikbo-set').onclick = () => { ov.querySelector('#tc-date').value = prev; timeSel.value = pt; };
 };
 kindSel.onchange = () => { syncKind(); syncJikbo(); }; syncKind();
 if(kindSel.value === '직전보강'){ lastKind = ''; syncJikbo(); }
@@ -2752,13 +2771,14 @@ body = `
 }else if(kind === '정규' && !isAbsent){
 body = `
 <div class="modal-title">${esc(name)} · ${mdLabel(date)} ${fmtT(time)}</div>
-<div class="modal-hint">정규 수업이에요. 결석·보강을 잡거나, 요일·시간이 바뀌면 정규 시간표를 수정해 주세요.</div>
+<div class="modal-hint">${change && change.kind === '직전보강' ? `정규 수업 시간에 직보를 해요${change.note ? ' · ' + esc(change.note) : ''}.` : '정규 수업이에요. 결석·보강을 잡거나, 요일·시간이 바뀌면 정규 시간표를 수정해 주세요.'}</div>
 <div class="tt-actions">
 <button id="ea-absent-makeup" class="primary">결석 + 결석보강 잡기</button>
 <button id="ea-absent">결석만 표시</button>
 <button id="ea-early-makeup" class="k-early">조퇴 + 조퇴보강 잡기</button>
 <button id="ea-early" class="k-early">조퇴만 표시</button>
 <button id="ea-gwanli" class="k-gwanli">관리보강 잡기</button>
+${change && change.kind === '직전보강' ? '<button id="ea-edit" class="k-jikbo">직보 날짜·시간 수정</button><button id="ea-jikbo-del" class="k-jikbo">직보 취소</button>' : ''}
 <button id="ea-regular">정규 시간표 수정 (요일·시간 변경)</button>
 ${overrideId ? '<button id="ea-exam-reset">다시 시험결석으로</button>' : ''}
 <button id="ea-close" class="ghost">닫기</button>
@@ -2800,6 +2820,11 @@ on('ea-edit', () => { close(); openEditChange(change); });
 on('ea-exam-attend', async () => { close(); await cloudWrite(() => cloud.add('changes', { date, time, name, kind: '시험출석', note: '', by: myName(), at: new Date().toISOString() }), `${name} ${mdLabel(date)} ${fmtT(time)} 시험기간이지만 수업함`); });
 on('ea-exam-reset', async () => { close(); await cloudWrite(() => cloud.remove('changes', overrideId), `${name} ${mdLabel(date)} 다시 시험결석`); });
 on('ea-regular', () => { close(); openRegularEdit(name, { day: new Date(date + 'T00:00:00').getDay(), time }); });
+on('ea-jikbo-del', async () => {
+if(!confirm(`${name} ${mdLabel(date)} 직보를 취소할까요? (정규 수업은 그대로)`)) return;
+close();
+await cloudWrite(() => cloud.remove('changes', change.id), `${name} ${mdLabel(date)} 직보 취소`);
+});
 on('ea-undo', async () => { close(); await cloudWrite(() => cloud.remove('changes', change.id), `${name} ${mdLabel(date)} ${missKind} 취소`); });
 on('ea-delete', async () => {
 if(!confirm(`${name} ${mdLabel(date)} ${kind}를 삭제할까요?`)) return;
