@@ -1,6 +1,7 @@
 // 클라디 공유 시간표 접근 규칙 (Firebase 콘솔 → Firestore Database → 규칙 탭에 붙여넣기)
 // - 박유경T(yuuuukk77@gmail.com): 전부 읽고 쓰기, 데스크 계정 등록·삭제
 // - 데스크: 사이트의 "데스크 계정"에 등록된 이메일만 시간표·결석·보강·시험기간 읽고 쓰기
+// - 보기 전용 링크: 링크의 비밀값을 아는 사람만 share/{비밀값} 문서 하나를 읽을 수 있음(목록 보기 불가)
 // - 그 밖의 계정(직접 가입한 사람 포함)은 아무것도 볼 수 없음
 rules_version = '2';
 service cloud.firestore {
@@ -28,6 +29,15 @@ service cloud.firestore {
     match /log/{id} {
       allow read, create: if isStaff();
       allow update, delete: if isTeacher();
+    }
+    match /config/{id} {
+      allow read: if isStaff();
+      allow write: if isTeacher();
+    }
+    match /share/{token} {
+      allow get: if true;
+      allow list: if false;
+      allow write: if isStaff();
     }
     match /{document=**} {
       allow read, write: if false;
