@@ -1996,7 +1996,7 @@ const TIMETABLE_KEY = 'kladi_timetable_v1';
 const TEACHER_EMAIL = 'yuuuukk77@gmail.com';
 const TEACHER_NAME = '박유경T';
 const MAKEUP_KINDS = ['관리보강', '결석보강', '직전보강'];
-const COMMON_TIMES = ['10:30', '12:00', '13:30', '16:00', '17:30', '19:00'];
+const COMMON_TIMES = ['10:30', '12:00', '13:30', '15:00', '16:00', '17:30', '19:00'];
 // 직보는 수학 시험 전날 12시가 기본
 const JIKBO_TIME = '12:00';
 // 직보 날짜: 수학 시험 전날. 전날이 일요일이면 토요일로.
@@ -2009,10 +2009,17 @@ return d;
 // 한 번 잡은 학생은 시험기간에 기록(jikbo)해 두어서, 나중에 지우거나 시간을 바꿔도 다시 만들지 않는다.
 // 수학 시험일이 바뀌면 자동으로 잡은 직보도 새 날짜로 옮긴다.
 // 직보 날 정규 수업이 있으면 따로 12시에 잡지 않고 그 정규 수업 시간에 직보를 한다
-function jikboTimeFor(s, date){
+// 수학이 시험 첫날이면 전날은 평소처럼 학교 수업이 있어서 12시에 못 온다 → 평일이면 3시 (토요일은 12시 그대로)
+const JIKBO_FIRST_TIME = '15:00';
+const mathFirstDay = (x) => !!(x && x.mathDate && x.start === x.mathDate);
+function jikboBaseTime(x, date){
 const dow = new Date(date + 'T00:00:00').getDay();
-const t = ((s && s.slots) || []).filter(x => x.day === dow && slotActive(x, date)).map(x => x.time).sort()[0];
-return t || JIKBO_TIME;
+return mathFirstDay(x) && dow >= 1 && dow <= 5 ? JIKBO_FIRST_TIME : JIKBO_TIME;
+}
+function jikboTimeFor(s, date, x){
+const dow = new Date(date + 'T00:00:00').getDay();
+const t = ((s && s.slots) || []).filter(y => y.day === dow && slotActive(y, date)).map(y => y.time).sort()[0];
+return t || jikboBaseTime(x, date);
 }
 let autoJikboRunning = false;
 async function applyAutoJikbo(){
@@ -2030,16 +2037,16 @@ const names = Object.entries(students)
 .map(([n]) => n);
 if(names.length) jobs.push({ examId, x, jd, names });
 });
-// 이미 12시로 자동으로 잡혔는데 그날 정규 수업이 있는 학생은 정규 수업 시간으로 옮긴다(직접 고친 것은 그대로)
-const moves = Object.entries(changes).filter(([id, c]) => c.auto === 'jikbo' && !c.editedAt && c.date >= today && c.time === JIKBO_TIME && jikboTimeFor(students[c.name], c.date) !== JIKBO_TIME);
+// 자동으로 잡힌 직보의 시간이 규칙(정규 수업 시간 / 수학 첫날 평일 3시 / 그 밖 12시)과 다르면 맞춘다(직접 고친 것은 그대로)
+const examOf = (id) => cloudData.exams[String(id).split('_')[1]];
+const moves = Object.entries(changes).filter(([id, c]) => c.auto === 'jikbo' && !c.editedAt && c.date >= today && examOf(id) && c.time !== jikboTimeFor(students[c.name], c.date, examOf(id)));
 if(!jobs.length && !moves.length) return;
 autoJikboRunning = true;
 try{
 for(const [id, c] of moves){
-const t = jikboTimeFor(students[c.name], c.date);
-await cloud.set('changes', id, { ...c, time: t });
+await cloud.set('changes', id, { ...c, time: jikboTimeFor(students[c.name], c.date, examOf(id)) });
 }
-if(moves.length) await cloud.add('log', { at: new Date().toISOString(), by: myName(), text: `직보를 정규 수업 시간으로 맞춤: ${moves.map(([id, c]) => `${c.name} ${mdLabel(c.date)} ${fmtT(jikboTimeFor(students[c.name], c.date))}`).join(', ')}` });
+if(moves.length) await cloud.add('log', { at: new Date().toISOString(), by: myName(), text: `직보 시간 자동 조정: ${moves.map(([id, c]) => `${c.name} ${mdLabel(c.date)} ${fmtT(jikboTimeFor(students[c.name], c.date, examOf(id)))}`).join(', ')}` });
 for(const { examId, x, jd, names } of jobs){
 const made = [];
 const weekBefore = fmtDate(new Date(new Date(x.mathDate + 'T00:00:00').getTime() - 7 * 86400000));
@@ -2048,7 +2055,7 @@ const id = `auto-jikbo_${examId}_${n}`;
 // 이미 직접 잡아 둔 직보(시험 1주일 안)가 있으면 새로 만들지 않는다
 const manual = Object.entries(changes).some(([cid, c]) => cid !== id && c.name === n && c.kind === '직전보강' && c.date < x.mathDate && c.date >= weekBefore);
 if(manual && !changes[id]) continue;
-await cloud.set('changes', id, { date: jd, time: jikboTimeFor(students[n], jd), name: n, kind: '직전보강', note: `${shortSchool(x.school)} 수학 ${mdLabel(x.mathDate)} 전날(자동)`, by: '자동', at: new Date().toISOString(), auto: 'jikbo' });
+await cloud.set('changes', id, { date: jd, time: jikboTimeFor(students[n], jd, x), name: n, kind: '직전보강', note: `${shortSchool(x.school)} 수학 ${mdLabel(x.mathDate)} 전날(자동)`, by: '자동', at: new Date().toISOString(), auto: 'jikbo' });
 made.push(n);
 }
 const jikbo = { ...(x.jikbo || {}) };
@@ -2056,9 +2063,10 @@ names.forEach(n => { jikbo[n] = x.mathDate; });
 const { id: _, ...rest } = x;
 await cloud.set('exams', examId, { ...rest, jikbo });
 if(made.length) await cloud.add('log', { at: new Date().toISOString(), by: myName(), text: (() => {
-const noon = made.filter(n => jikboTimeFor(students[n], jd) === JIKBO_TIME);
-const reg = made.filter(n => jikboTimeFor(students[n], jd) !== JIKBO_TIME).map(n => `${n} ${fmtT(jikboTimeFor(students[n], jd))}`);
-return `직보 자동 등록: ${examTarget(x)} 수학 ${mdLabel(x.mathDate)} → ${mdLabel(jd)}` + (noon.length ? ` ${fmtT(JIKBO_TIME)}: ${noon.join(', ')}` : '') + (reg.length ? `${noon.length ? ' ·' : ''} 정규 수업 때: ${reg.join(', ')}` : '');
+const base = jikboBaseTime(x, jd);
+const noon = made.filter(n => jikboTimeFor(students[n], jd, x) === base);
+const reg = made.filter(n => jikboTimeFor(students[n], jd, x) !== base).map(n => `${n} ${fmtT(jikboTimeFor(students[n], jd, x))}`);
+return `직보 자동 등록: ${examTarget(x)} 수학 ${mdLabel(x.mathDate)} → ${mdLabel(jd)}` + (noon.length ? ` ${fmtT(base)}${base === JIKBO_FIRST_TIME ? '(수학 첫날)' : ''}: ${noon.join(', ')}` : '') + (reg.length ? `${noon.length ? ' ·' : ''} 정규 수업 때: ${reg.join(', ')}` : '');
 })() });
 }
 }catch(e){ console.warn(e); }
@@ -2758,9 +2766,10 @@ lastKind = k;
 const ex = k === '직전보강' ? upcomingMath(ov.querySelector('#tc-name').value.trim()) : null;
 if(!ex){ hint.style.display = 'none'; return; }
 const prev = jikboDateFor(ex.mathDate);
-const pt = jikboTimeFor(ttStudents()[ov.querySelector('#tc-name').value.trim()], prev);
+const pt = jikboTimeFor(ttStudents()[ov.querySelector('#tc-name').value.trim()], prev, ex);
+const pbase = jikboBaseTime(ex, prev);
 hint.style.display = '';
-hint.innerHTML = `${esc(ex.school)} 수학 시험 ${mdLabel(ex.mathDate)} → 직보는 <b>${mdLabel(prev)}</b> ${fmtT(pt)}${pt !== JIKBO_TIME ? '(정규 수업 시간)' : ''} <button class="ghost" id="tc-jikbo-set" style="padding:2px 8px;font-size:12.5px;">이 날로 맞추기</button>`;
+hint.innerHTML = `${esc(ex.school)} 수학 시험 ${mdLabel(ex.mathDate)} → 직보는 <b>${mdLabel(prev)}</b> ${fmtT(pt)}${pt !== pbase ? '(정규 수업 시간)' : pt === JIKBO_FIRST_TIME ? '(수학이 시험 첫날이라 학교 끝나고)' : ''} <button class="ghost" id="tc-jikbo-set" style="padding:2px 8px;font-size:12.5px;">이 날로 맞추기</button>`;
 hint.querySelector('#tc-jikbo-set').onclick = () => { ov.querySelector('#tc-date').value = prev; timeSel.value = pt; };
 };
 kindSel.onchange = () => { syncKind(); syncJikbo(); }; syncKind();
